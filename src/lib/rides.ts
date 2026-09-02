@@ -58,7 +58,7 @@ export async function fetchPendingRides(): Promise<Ride[]> {
   return (data ?? []) as Ride[]
 }
 
-export async function fetchRideById(rideId: number): Promise<Ride | null> {
+export async function fetchRideById(rideId: string): Promise<Ride | null> {
   const { data, error } = await supabase
     .from('rides')
     .select('*')
@@ -72,7 +72,7 @@ export async function fetchRideById(rideId: number): Promise<Ride | null> {
   return (data as Ride | null) ?? null
 }
 
-export async function acceptRide(rideId: number, driverId: string): Promise<Ride> {
+export async function acceptRide(rideId: string, driverId: string): Promise<Ride> {
   const { data, error } = await supabase
     .from('rides')
     .update({
@@ -92,7 +92,7 @@ export async function acceptRide(rideId: number, driverId: string): Promise<Ride
   return data as Ride
 }
 
-export async function updateRideStatus(rideId: number, status: RideStatus, driverId?: string): Promise<Ride> {
+export async function updateRideStatus(rideId: string, status: RideStatus, driverId?: string): Promise<Ride> {
   let query = supabase
     .from('rides')
     .update({ status })

@@ -6,7 +6,7 @@ export type RideStatus =
   | 'completed'
 
 export type Ride = {
-  id: number
+  id: string
   customer_name: string
   customer_phone: string
   pickup_address: string

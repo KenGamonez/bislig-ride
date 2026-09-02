@@ -46,16 +46,19 @@ export function DriverExperience() {
   const [transitioning, setTransitioning] = useState(false)
 
   useEffect(() => {
-    if (!driverOnline) {
-      return
-    }
-
     const refreshRides = async () => {
       try {
         const [pendingRides, assignedRides] = await Promise.all([
           fetchPendingRides(),
           fetchAssignedRidesForDriver(TEST_DRIVER_ID),
         ])
+
+        if (!driverOnline) {
+          setRequest(pendingRides[0] ?? null)
+          setActiveRide(null)
+          setPhase('offline')
+          return
+        }
 
         const activeAssignedRide = assignedRides[0] ?? null
         if (activeAssignedRide) {
