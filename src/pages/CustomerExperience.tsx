@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
@@ -215,7 +216,7 @@ export function CustomerExperience() {
             </option>
           ))}
         </select>
-        <small className="field-note">Fare will be based on the official Bislig City fare matrix.</small>
+        <small className="field-note">Fare is calculated based on the official Bislig City fare matrix.</small>
       </div>
 
       {submitError ? <p className="form-error-message">{submitError}</p> : null}
@@ -445,7 +446,7 @@ export function CustomerExperience() {
 
       <div className="fare-box">
         <span className="field-label">Fare</span>
-        <strong>Fare calculation will be based on the official Bislig City Fare Matrix.</strong>
+        <strong>Fare is calculated based on the official Bislig City fare matrix.</strong>
         <small>Ordinance No. 2023-21</small>
       </div>
 
@@ -488,13 +489,7 @@ export function CustomerExperience() {
     <div className="shell-container">
       <header className="app-header">
         <div className="brand-block">
-          <div className="brand-badge" aria-hidden="true">
-            B
-          </div>
-          <div>
-            <p className="brand-name">Bislig Ride</p>
-            <span className="brand-location">Bislig City</span>
-          </div>
+          <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
         </div>
 
         <nav className="top-nav" aria-label="Main navigation">
@@ -510,9 +505,9 @@ export function CustomerExperience() {
       <main className="customer-layout">
         <section className="primary-panel">
           <div className="section-header">
-            <p className="eyebrow">Your city. Your ride.</p>
+            <p className="eyebrow">BISLIG CITY</p>
             <h1>Where are you going?</h1>
-            <p className="subtitle">Request a ride anywhere in Bislig City.</p>
+            <p className="subtitle">Get a reliable ride around Bislig City — simple, convenient, and made for your everyday trips.</p>
           </div>
 
           {showProfile ? (

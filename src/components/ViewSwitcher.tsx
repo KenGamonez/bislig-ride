@@ -1,11 +1,12 @@
 type ViewSwitcherProps = {
   currentView: 'customer' | 'driver' | 'admin'
   onSwitch: (view: 'customer' | 'driver' | 'admin') => void
+  className?: string
 }
 
-export function ViewSwitcher({ currentView, onSwitch }: ViewSwitcherProps) {
+export function ViewSwitcher({ currentView, onSwitch, className = '' }: ViewSwitcherProps) {
   return (
-    <div className="view-switcher" aria-label="Development preview switcher">
+    <div className={`view-switcher ${className}`.trim()} aria-label="Development preview switcher">
       <span className="switcher-label">Development Preview</span>
       <div className="switcher-buttons">
         <button
