@@ -204,7 +204,7 @@ export function CustomerExperience() {
   }
 
   useEffect(() => {
-    if (!ride.id) {
+    if (!ride.id || phase === 'payment' || phase === 'payment_confirmed') {
       return
     }
 
@@ -233,7 +233,7 @@ export function CustomerExperience() {
       isMounted = false
       window.clearInterval(timer)
     }
-  }, [ride.id])
+  }, [ride.id, phase])
 
   useEffect(() => {
     const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
