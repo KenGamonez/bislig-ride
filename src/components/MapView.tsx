@@ -11,12 +11,14 @@ export function MapView({ className = '' }: MapViewProps) {
   const mapRef = useRef<maplibregl.Map | null>(null)
 
   useEffect(() => {
-    if (!containerRef.current || mapRef.current) {
+    const container = containerRef.current
+
+    if (!container || mapRef.current) {
       return
     }
 
     const map = new maplibregl.Map({
-      container: containerRef.current,
+      container,
       style: 'https://tiles.openfreemap.org/styles/liberty',
       center: [126.327, 8.188],
       zoom: 12,
@@ -25,6 +27,26 @@ export function MapView({ className = '' }: MapViewProps) {
 
     mapRef.current = map
 
+    const handleResize = () => {
+      map.resize()
+    }
+
+    map.on('load', () => {
+      console.log('MapLibre load complete. Style URL:', map.getStyle().sprite)
+      console.log('MapLibre render style sources:', Object.keys(map.getStyle().sources))
+      requestAnimationFrame(handleResize)
+    })
+
+    map.on('styledata', () => {
+      console.log('MapLibre style data updated')
+    })
+
+    map.on('sourcedata', (event) => {
+      if (event.isSourceLoaded) {
+        console.log('MapLibre source loaded:', event.sourceId)
+      }
+    })
+
     map.on('error', (event) => {
       console.error('MapLibre failed to load:', event.error)
     })
@@ -32,7 +54,12 @@ export function MapView({ className = '' }: MapViewProps) {
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left')
 
+    window.addEventListener('resize', handleResize)
+
+    requestAnimationFrame(handleResize)
+
     return () => {
+      window.removeEventListener('resize', handleResize)
       map.remove()
       mapRef.current = null
     }
