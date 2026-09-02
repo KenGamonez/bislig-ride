@@ -106,31 +106,23 @@ h4 {
   margin: 0 auto;
   padding: 18px 16px 0;
   display: flex;
-  flex-direction: column;
+  justify-content: flex-end;
   align-items: center;
-  gap: 10px;
 }
 
-.dev-switcher.hidden {
-  display: none;
-}
-
-.switcher-label {
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--text-secondary);
-  font-weight: 700;
+.header-role-switcher {
+  padding-top: 18px;
 }
 
 .switcher-buttons {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: rgba(28, 31, 35, 0.04);
-  border: 1px solid rgba(154, 160, 166, 0.2);
+  gap: 6px;
+  background: rgba(17, 24, 39, 0.03);
+  border: 1px solid rgba(17, 24, 39, 0.08);
   border-radius: 999px;
-  padding: 4px;
+  padding: 5px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
 }
 
 .switch-button {
@@ -141,8 +133,13 @@ h4 {
   font-weight: 700;
   letter-spacing: 0.04em;
   padding: 10px 16px;
-  min-width: 110px;
+  min-width: 96px;
   transition: all var(--transition);
+}
+
+.switch-button:hover,
+.switch-button:focus-visible {
+  color: var(--graphite);
 }
 
 .switch-button.active {

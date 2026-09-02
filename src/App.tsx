@@ -12,9 +12,7 @@ function App() {
 
   return (
     <div className="app-stage">
-      {view !== 'customer' ? (
-        <ViewSwitcher currentView={view} onSwitch={setView} className="dev-switcher" />
-      ) : null}
+      <ViewSwitcher currentView={view} onSwitch={setView} className="header-role-switcher" />
       {view === 'customer' ? (
         <CustomerExperience />
       ) : view === 'driver' ? (
