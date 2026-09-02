@@ -11,11 +11,13 @@ export type CreateRideInput = {
   destination_lat?: number | null
   destination_lng?: number | null
   driver_id?: string | null
-  passenger_count: string
+  passenger_count: string | number
   status?: RideStatus
 }
 
 export async function createRide(input: CreateRideInput): Promise<Ride> {
+  const normalizedPassengerCount = Number.parseInt(String(input.passenger_count), 10)
+
   const { data, error } = await supabase
     .from('rides')
     .insert({
@@ -28,7 +30,7 @@ export async function createRide(input: CreateRideInput): Promise<Ride> {
       destination_lat: input.destination_lat ?? null,
       destination_lng: input.destination_lng ?? null,
       driver_id: input.driver_id ?? null,
-      passenger_count: input.passenger_count,
+      passenger_count: Number.isFinite(normalizedPassengerCount) ? normalizedPassengerCount : 1,
       status: input.status ?? 'requested',
     })
     .select()

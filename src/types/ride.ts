@@ -16,7 +16,7 @@ export type Ride = {
   destination_lat: number | null
   destination_lng: number | null
   driver_id: string | null
-  passenger_count: string
+  passenger_count: number
   status: RideStatus
   created_at: string
 }

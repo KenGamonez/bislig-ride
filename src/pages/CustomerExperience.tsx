@@ -43,6 +43,17 @@ const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'payment' | 'paym
   completed: 'RIDE COMPLETED',
 }
 
+const formatPassengerCount = (value: string | number | null | undefined) => {
+  const parsed = Number.parseInt(String(value ?? '1'), 10)
+  const safeValue = Number.isFinite(parsed) ? parsed : 1
+
+  if (safeValue >= 5) {
+    return '5+ passengers'
+  }
+
+  return `${safeValue} passenger${safeValue === 1 ? '' : 's'}`
+}
+
 const initialRide: Ride = {
   id: 1,
   customer_name: '',
@@ -54,7 +65,7 @@ const initialRide: Ride = {
   destination_lat: null,
   destination_lng: null,
   driver_id: null,
-  passenger_count: '1 passenger',
+  passenger_count: 1,
   status: 'requested',
   created_at: new Date().toISOString(),
 }
@@ -231,7 +242,15 @@ export function CustomerExperience() {
       setPhase('searching')
     } catch (error) {
       console.error('Unable to create ride:', error)
-      setSubmitError('Unable to request a ride right now. Please try again.')
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error && 'message' in error && typeof error.message === 'string'
+            ? error.message
+            : 'Unable to request a ride right now. Please try again.'
+
+      setSubmitError(message)
     } finally {
       setIsSubmitting(false)
     }
@@ -355,7 +374,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Passengers</dt>
-          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
+          <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
         </div>
         <div>
           <dt>Passenger Type</dt>
@@ -481,7 +500,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Passengers</dt>
-          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
+          <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
         </div>
         <div>
           <dt>Driver</dt>
@@ -519,7 +538,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Passengers</dt>
-          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
+          <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
         </div>
         <div>
           <dt>Passenger Type</dt>
