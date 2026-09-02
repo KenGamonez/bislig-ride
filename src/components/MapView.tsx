@@ -1,10 +1,17 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 
-export function MapView() {
+type MapViewProps = {
+  driverLatitude?: number | null
+  driverLongitude?: number | null
+}
+
+export function MapView({ driverLatitude = null, driverLongitude = null }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
+  const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
+  const [mapReady, setMapReady] = useState(false)
 
   useEffect(() => {
     const container = containerRef.current
@@ -28,13 +35,55 @@ export function MapView() {
 
     map.on('load', () => {
       map.resize()
+      setMapReady(true)
     })
 
     return () => {
+      driverMarkerRef.current?.remove()
+      driverMarkerRef.current = null
+      setMapReady(false)
       map.remove()
       mapRef.current = null
     }
   }, [])
+
+  useEffect(() => {
+    const map = mapRef.current
+    const hasDriverLocation =
+      typeof driverLatitude === 'number' &&
+      Number.isFinite(driverLatitude) &&
+      typeof driverLongitude === 'number' &&
+      Number.isFinite(driverLongitude)
+
+    if (!mapReady || !map) {
+      return
+    }
+
+    if (!hasDriverLocation) {
+      driverMarkerRef.current?.remove()
+      driverMarkerRef.current = null
+      return
+    }
+
+    if (!driverMarkerRef.current) {
+      const markerElement = document.createElement('div')
+      markerElement.setAttribute('aria-label', 'Driver location')
+      markerElement.style.width = '18px'
+      markerElement.style.height = '18px'
+      markerElement.style.borderRadius = '50%'
+      markerElement.style.backgroundColor = '#1f6feb'
+      markerElement.style.border = '3px solid #ffffff'
+      markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
+
+      driverMarkerRef.current = new maplibregl.Marker({ element: markerElement }).setLngLat([
+        driverLongitude,
+        driverLatitude,
+      ]).addTo(map)
+      return
+    }
+
+    driverMarkerRef.current.setLngLat([driverLongitude, driverLatitude])
+  }, [driverLatitude, driverLongitude, mapReady])
 
   return (
     <div

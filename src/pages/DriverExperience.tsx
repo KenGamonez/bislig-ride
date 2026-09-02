@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapView } from '../components/MapView'
 import { demoDriver } from '../lib/demoDriver'
+import { updateDriverLocation } from '../lib/driverLocations'
 import { acceptRide, fetchAssignedRidesForDriver, fetchPendingRides, updateRideStatus } from '../lib/rides'
 import type { Ride } from '../types/ride'
 
@@ -44,6 +45,28 @@ export function DriverExperience() {
   const [request, setRequest] = useState<Ride | null>(null)
   const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [transitioning, setTransitioning] = useState(false)
+
+  useEffect(() => {
+    if (!driverOnline || !navigator.geolocation) {
+      return
+    }
+
+    const watchId = navigator.geolocation.watchPosition(
+      (position) => {
+        void updateDriverLocation(TEST_DRIVER_ID, position.coords.latitude, position.coords.longitude).catch((error) => {
+          console.error('Unable to update driver location:', error)
+        })
+      },
+      (error) => {
+        console.error('Unable to get driver location:', error)
+      },
+      { enableHighAccuracy: true },
+    )
+
+    return () => {
+      navigator.geolocation.clearWatch(watchId)
+    }
+  }, [driverOnline])
 
   useEffect(() => {
     const refreshRides = async () => {

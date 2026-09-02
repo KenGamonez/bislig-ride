@@ -4,6 +4,7 @@ import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { demoDriver, passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
+import { subscribeToDriverLocation } from '../lib/driverLocations'
 import { createRide, fetchRideById } from '../lib/rides'
 import type { Ride } from '../types/ride'
 
@@ -96,6 +97,7 @@ export function CustomerExperience() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showProfile, setShowProfile] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
+  const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
 
@@ -205,6 +207,19 @@ export function CustomerExperience() {
       window.clearInterval(timer)
     }
   }, [ride.id])
+
+  useEffect(() => {
+    const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
+
+    if (!ride.driver_id || !activeStatuses.includes(ride.status)) {
+      setDriverLocation(null)
+      return
+    }
+
+    return subscribeToDriverLocation(ride.driver_id, (location) => {
+      setDriverLocation({ latitude: location.latitude, longitude: location.longitude })
+    })
+  }, [ride.driver_id, ride.status])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -666,7 +681,7 @@ export function CustomerExperience() {
         </section>
 
         <aside className="map-panel" aria-label="Bislig City map preview">
-          <MapView />
+          <MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} />
         </aside>
       </main>
     </div>
