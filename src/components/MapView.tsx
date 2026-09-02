@@ -5,12 +5,20 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 type MapViewProps = {
   driverLatitude?: number | null
   driverLongitude?: number | null
+  pickupLatitude?: number | null
+  pickupLongitude?: number | null
 }
 
-export function MapView({ driverLatitude = null, driverLongitude = null }: MapViewProps) {
+export function MapView({
+  driverLatitude = null,
+  driverLongitude = null,
+  pickupLatitude = null,
+  pickupLongitude = null,
+}: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
+  const pickupMarkerRef = useRef<maplibregl.Marker | null>(null)
   const [mapReady, setMapReady] = useState(false)
 
   useEffect(() => {
@@ -41,6 +49,8 @@ export function MapView({ driverLatitude = null, driverLongitude = null }: MapVi
     return () => {
       driverMarkerRef.current?.remove()
       driverMarkerRef.current = null
+      pickupMarkerRef.current?.remove()
+      pickupMarkerRef.current = null
       setMapReady(false)
       map.remove()
       mapRef.current = null
@@ -84,6 +94,44 @@ export function MapView({ driverLatitude = null, driverLongitude = null }: MapVi
 
     driverMarkerRef.current.setLngLat([driverLongitude, driverLatitude])
   }, [driverLatitude, driverLongitude, mapReady])
+
+  useEffect(() => {
+    const map = mapRef.current
+    const hasPickupLocation =
+      typeof pickupLatitude === 'number' &&
+      Number.isFinite(pickupLatitude) &&
+      typeof pickupLongitude === 'number' &&
+      Number.isFinite(pickupLongitude)
+
+    if (!mapReady || !map) {
+      return
+    }
+
+    if (!hasPickupLocation) {
+      pickupMarkerRef.current?.remove()
+      pickupMarkerRef.current = null
+      return
+    }
+
+    if (!pickupMarkerRef.current) {
+      const markerElement = document.createElement('div')
+      markerElement.setAttribute('aria-label', 'Pickup location')
+      markerElement.style.width = '18px'
+      markerElement.style.height = '18px'
+      markerElement.style.borderRadius = '50%'
+      markerElement.style.backgroundColor = '#d97706'
+      markerElement.style.border = '3px solid #ffffff'
+      markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
+
+      pickupMarkerRef.current = new maplibregl.Marker({ element: markerElement }).setLngLat([
+        pickupLongitude,
+        pickupLatitude,
+      ]).addTo(map)
+      return
+    }
+
+    pickupMarkerRef.current.setLngLat([pickupLongitude, pickupLatitude])
+  }, [pickupLatitude, pickupLongitude, mapReady])
 
   return (
     <div

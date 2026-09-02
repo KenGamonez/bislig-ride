@@ -98,6 +98,8 @@ export function CustomerExperience() {
   const [showProfile, setShowProfile] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [pickupLocation, setPickupLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [pickupLocationError, setPickupLocationError] = useState('')
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
 
@@ -140,6 +142,8 @@ export function CustomerExperience() {
     setFormData(initialFormState)
     setValidationErrors({})
     setSubmitError('')
+    setPickupLocation(null)
+    setPickupLocationError('')
     setIsSubmitting(false)
   }
 
@@ -156,7 +160,7 @@ export function CustomerExperience() {
   const validateForm = () => {
     const nextErrors: CustomerValidation = {}
 
-    if (!formValues.pickup) {
+    if (!formValues.pickup && !pickupLocation) {
       nextErrors.pickup = 'Pickup location is required.'
     }
 
@@ -174,6 +178,29 @@ export function CustomerExperience() {
 
     setValidationErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
+  }
+
+  const handleUseCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setPickupLocationError('Your device does not support location access. You can enter a pickup landmark instead.')
+      return
+    }
+
+    setPickupLocationError('')
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        setPickupLocation({
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        })
+        setValidationErrors((current) => ({ ...current, pickup: undefined }))
+      },
+      (error) => {
+        console.error('Unable to get customer pickup location:', error)
+        setPickupLocationError('Unable to access your location. You can enter a pickup landmark instead.')
+      },
+      { enableHighAccuracy: true },
+    )
   }
 
   useEffect(() => {
@@ -236,8 +263,8 @@ export function CustomerExperience() {
         customer_name: formValues.name,
         customer_phone: formValues.phone,
         pickup_address: formValues.pickup,
-        pickup_lat: null,
-        pickup_lng: null,
+        pickup_lat: pickupLocation?.latitude ?? null,
+        pickup_lng: pickupLocation?.longitude ?? null,
         destination_address: formValues.destination,
         destination_lat: null,
         destination_lng: null,
@@ -295,6 +322,11 @@ export function CustomerExperience() {
           error={validationErrors.pickup}
           onChange={(value) => handleInput('pickup', value)}
         />
+
+        <button type="button" className="secondary-action" onClick={handleUseCurrentLocation}>
+          Use My Current Location
+        </button>
+        {pickupLocationError ? <p className="form-error-message">{pickupLocationError}</p> : null}
 
         <LocationInput
           label="Destination"
@@ -681,7 +713,12 @@ export function CustomerExperience() {
         </section>
 
         <aside className="map-panel" aria-label="Bislig City map preview">
-          <MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} />
+          <MapView
+            driverLatitude={driverLocation?.latitude}
+            driverLongitude={driverLocation?.longitude}
+            pickupLatitude={pickupLocation?.latitude}
+            pickupLongitude={pickupLocation?.longitude}
+          />
         </aside>
       </main>
     </div>
