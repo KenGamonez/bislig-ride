@@ -6,12 +6,17 @@ import { MapView } from '../components/MapView'
 import { demoDriver, passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import type { Ride } from '../types/ride'
 
+type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
+
+const passengerCountOptions: PassengerCountOption[] = ['1 passenger', '2 passengers', '3 passengers', '4 passengers', '5+ passengers']
+
 type CustomerFormState = {
   pickup: string
   destination: string
   name: string
   phone: string
   passengerType: DemoPassengerType
+  passengerCount: PassengerCountOption
 }
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
@@ -26,6 +31,7 @@ const initialFormState: CustomerFormState = {
   name: '',
   phone: '',
   passengerType: 'Regular',
+  passengerCount: '1 passenger',
 }
 
 const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
@@ -47,6 +53,7 @@ const initialRide: Ride = {
   destination_lat: null,
   destination_lng: null,
   driver_id: demoDriver.id,
+  passenger_count: '1 passenger',
   status: 'requested',
   created_at: new Date().toISOString(),
 }
@@ -68,6 +75,7 @@ export function CustomerExperience() {
       name: formData.name.trim(),
       phone: formData.phone.trim(),
       passengerType: formData.passengerType,
+      passengerCount: formData.passengerCount,
     }),
     [formData],
   )
@@ -145,6 +153,7 @@ export function CustomerExperience() {
       customer_phone: formValues.phone,
       pickup_address: formValues.pickup,
       destination_address: formValues.destination,
+      passenger_count: formValues.passengerCount,
       status: 'requested',
       created_at: new Date().toISOString(),
     }
@@ -204,6 +213,21 @@ export function CustomerExperience() {
       </div>
 
       <div className="field-block">
+        <span className="field-label">Number of passengers</span>
+        <select
+          className="input-field"
+          value={formData.passengerCount}
+          onChange={(event) => handleInput('passengerCount', event.target.value)}
+        >
+          {passengerCountOptions.map((count) => (
+            <option key={count} value={count}>
+              {count}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      <div className="field-block">
         <span className="field-label">Passenger Type</span>
         <select
           className="input-field"
@@ -245,6 +269,10 @@ export function CustomerExperience() {
         <div>
           <dt>Destination</dt>
           <dd>{ride.destination_address}</dd>
+        </div>
+        <div>
+          <dt>Passengers</dt>
+          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
         </div>
         <div>
           <dt>Passenger Type</dt>
@@ -369,6 +397,10 @@ export function CustomerExperience() {
           <dd>{ride.destination_address}</dd>
         </div>
         <div>
+          <dt>Passengers</dt>
+          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
+        </div>
+        <div>
           <dt>Driver</dt>
           <dd>{demoDriver.name}</dd>
         </div>
@@ -401,6 +433,10 @@ export function CustomerExperience() {
         <div>
           <dt>Route</dt>
           <dd>{ride.pickup_address} → {ride.destination_address}</dd>
+        </div>
+        <div>
+          <dt>Passengers</dt>
+          <dd>{ride.passenger_count || formValues.passengerCount}</dd>
         </div>
         <div>
           <dt>Passenger Type</dt>
