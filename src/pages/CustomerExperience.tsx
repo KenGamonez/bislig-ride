@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { createRide } from '../lib/rides'
@@ -26,6 +27,7 @@ export function CustomerExperience() {
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [requestedRide, setRequestedRide] = useState<Ride | null>(null)
+  const [showProfile, setShowProfile] = useState(false)
 
   const hasRequestedRide = Boolean(requestedRide)
 
@@ -126,8 +128,12 @@ export function CustomerExperience() {
         </div>
 
         <nav className="top-nav" aria-label="Main navigation">
-          <a href="#">Help</a>
-          <a href="#">Profile</a>
+          <button type="button" className="nav-button" onClick={() => setShowProfile(false)}>
+            Help
+          </button>
+          <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
+            {showProfile ? 'Back to ride' : 'Profile'}
+          </button>
         </nav>
       </header>
 
@@ -139,7 +145,9 @@ export function CustomerExperience() {
             <p className="subtitle">Request a ride anywhere in Bislig City.</p>
           </div>
 
-          {!hasRequestedRide ? (
+          {showProfile ? (
+            <CustomerProfile />
+          ) : !hasRequestedRide ? (
             <form className="ride-form" onSubmit={handleSubmit} noValidate>
               <div className="form-stack">
                 <LocationInput
@@ -185,7 +193,7 @@ export function CustomerExperience() {
             </form>
           ) : null}
 
-          {hasRequestedRide && requestedRide ? (
+          {hasRequestedRide && requestedRide && !showProfile ? (
             <div className="request-confirmation">
               <div className="confirmation-heading">
                 <span className="status-dot success-dot" aria-hidden="true" />

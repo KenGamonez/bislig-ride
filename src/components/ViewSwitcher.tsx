@@ -1,6 +1,6 @@
 type ViewSwitcherProps = {
-  currentView: 'customer' | 'driver'
-  onSwitch: (view: 'customer' | 'driver') => void
+  currentView: 'customer' | 'driver' | 'admin'
+  onSwitch: (view: 'customer' | 'driver' | 'admin') => void
 }
 
 export function ViewSwitcher({ currentView, onSwitch }: ViewSwitcherProps) {
@@ -21,6 +21,13 @@ export function ViewSwitcher({ currentView, onSwitch }: ViewSwitcherProps) {
           onClick={() => onSwitch('driver')}
         >
           Driver
+        </button>
+        <button
+          type="button"
+          className={currentView === 'admin' ? 'switch-button active' : 'switch-button'}
+          onClick={() => onSwitch('admin')}
+        >
+          Admin
         </button>
       </div>
     </div>
