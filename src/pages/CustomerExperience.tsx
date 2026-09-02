@@ -316,9 +316,9 @@ export function CustomerExperience() {
     <form className="ride-form" onSubmit={handleSubmit} noValidate>
       <div className="form-stack">
         <LocationInput
-          label="Pickup"
+          label={pickupLocation ? 'Pickup landmark (optional)' : 'Pickup'}
           value={formData.pickup}
-          placeholder="Enter pickup location"
+          placeholder={pickupLocation ? 'Add a nearby landmark (optional)' : 'Enter pickup location'}
           error={validationErrors.pickup}
           onChange={(value) => handleInput('pickup', value)}
         />
@@ -326,6 +326,12 @@ export function CustomerExperience() {
         <button type="button" className="secondary-action" onClick={handleUseCurrentLocation}>
           Use My Current Location
         </button>
+        {pickupLocation ? (
+          <div className="field-note">
+            <strong>Pickup location detected</strong>
+            <span>You don't need to enter an address.</span>
+          </div>
+        ) : null}
         {pickupLocationError ? <p className="form-error-message">{pickupLocationError}</p> : null}
 
         <LocationInput

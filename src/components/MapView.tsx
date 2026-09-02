@@ -19,6 +19,7 @@ export function MapView({
   const mapRef = useRef<maplibregl.Map | null>(null)
   const driverMarkerRef = useRef<maplibregl.Marker | null>(null)
   const pickupMarkerRef = useRef<maplibregl.Marker | null>(null)
+  const pickupCameraLocationRef = useRef<string | null>(null)
   const [mapReady, setMapReady] = useState(false)
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export function MapView({
       driverMarkerRef.current = null
       pickupMarkerRef.current?.remove()
       pickupMarkerRef.current = null
+      pickupCameraLocationRef.current = null
       setMapReady(false)
       map.remove()
       mapRef.current = null
@@ -110,8 +112,12 @@ export function MapView({
     if (!hasPickupLocation) {
       pickupMarkerRef.current?.remove()
       pickupMarkerRef.current = null
+      pickupCameraLocationRef.current = null
       return
     }
+
+    const pickupLocationKey = `${pickupLatitude}:${pickupLongitude}`
+    const isNewPickupLocation = pickupCameraLocationRef.current !== pickupLocationKey
 
     if (!pickupMarkerRef.current) {
       const markerElement = document.createElement('div')
@@ -127,10 +133,14 @@ export function MapView({
         pickupLongitude,
         pickupLatitude,
       ]).addTo(map)
-      return
+    } else {
+      pickupMarkerRef.current.setLngLat([pickupLongitude, pickupLatitude])
     }
 
-    pickupMarkerRef.current.setLngLat([pickupLongitude, pickupLatitude])
+    if (isNewPickupLocation) {
+      map.flyTo({ center: [pickupLongitude, pickupLatitude], essential: false })
+      pickupCameraLocationRef.current = pickupLocationKey
+    }
   }, [pickupLatitude, pickupLongitude, mapReady])
 
   return (
