@@ -17,13 +17,17 @@ export function MapView({ className = '' }: MapViewProps) {
 
     const map = new maplibregl.Map({
       container: containerRef.current,
-      style: 'https://tiles.openfreemap.org/styles/liberty/style.json',
+      style: 'https://tiles.openfreemap.org/styles/liberty',
       center: [126.327, 8.188],
       zoom: 12,
       attributionControl: { compact: true },
     })
 
     mapRef.current = map
+
+    map.on('error', (event) => {
+      console.error('MapLibre failed to load:', event.error)
+    })
 
     map.addControl(new maplibregl.NavigationControl(), 'top-right')
     map.addControl(new maplibregl.ScaleControl({ maxWidth: 120, unit: 'metric' }), 'bottom-left')
