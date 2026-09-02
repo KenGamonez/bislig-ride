@@ -7,15 +7,23 @@ export default defineConfig({
   plugins: [
     react(),
     {
-      name: 'copy-maplibre-worker',
+      name: 'copy-maplibre-runtime',
       closeBundle() {
-        const workerSrc = path.resolve(__dirname, 'node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')
-        const workerDest = path.resolve(__dirname, 'dist/assets/maplibre-gl-worker.mjs')
+        const runtimeFiles = [
+          'maplibre-gl.mjs',
+          'maplibre-gl-shared.mjs',
+          'maplibre-gl-worker.mjs',
+        ]
 
-        if (fs.existsSync(workerSrc)) {
-          fs.mkdirSync(path.dirname(workerDest), { recursive: true })
-          fs.copyFileSync(workerSrc, workerDest)
-        }
+        runtimeFiles.forEach((file) => {
+          const src = path.resolve(__dirname, 'node_modules/maplibre-gl/dist', file)
+          const dest = path.resolve(__dirname, 'dist/assets', file)
+
+          if (fs.existsSync(src)) {
+            fs.mkdirSync(path.dirname(dest), { recursive: true })
+            fs.copyFileSync(src, dest)
+          }
+        })
       },
     },
   ],
