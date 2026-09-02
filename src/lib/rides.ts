@@ -117,7 +117,6 @@ export async function fetchAssignedRidesForDriver(driverId: string): Promise<Rid
     .select('*')
     .eq('driver_id', driverId)
     .in('status', ['accepted', 'arrived', 'in_progress', 'completed'])
-    .order('updated_at', { ascending: false })
 
   if (error) {
     throw error
