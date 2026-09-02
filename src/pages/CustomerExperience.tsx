@@ -4,6 +4,7 @@ import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { demoDriver, passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
+import { createRide, fetchRideById } from '../lib/rides'
 import type { Ride } from '../types/ride'
 
 type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
@@ -52,7 +53,7 @@ const initialRide: Ride = {
   destination_address: '',
   destination_lat: null,
   destination_lng: null,
-  driver_id: demoDriver.id,
+  driver_id: null,
   passenger_count: '1 passenger',
   status: 'requested',
   created_at: new Date().toISOString(),
@@ -121,22 +122,41 @@ export function CustomerExperience() {
   }
 
   useEffect(() => {
-    if (phase !== 'searching') {
+    if (phase !== 'searching' || !ride.id || ride.id === 1) {
       return
     }
 
-    const timer = window.setTimeout(() => {
-      setPhase('accepted')
-      setRide((current) => ({
-        ...current,
-        status: 'accepted',
-      }))
-    }, 2200)
+    let isMounted = true
 
-    return () => window.clearTimeout(timer)
-  }, [phase])
+    const syncRideStatus = async () => {
+      try {
+        const latestRide = await fetchRideById(ride.id)
+        if (!isMounted || !latestRide) {
+          return
+        }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        setRide(latestRide)
+
+        if (latestRide.status === 'accepted') {
+          setPhase('accepted')
+        }
+      } catch (error) {
+        console.error('Unable to refresh ride status:', error)
+      }
+    }
+
+    void syncRideStatus()
+    const timer = window.setInterval(() => {
+      void syncRideStatus()
+    }, 5000)
+
+    return () => {
+      isMounted = false
+      window.clearInterval(timer)
+    }
+  }, [phase, ride.id])
+
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!validateForm()) {
@@ -146,21 +166,29 @@ export function CustomerExperience() {
     setSubmitError('')
     setIsSubmitting(true)
 
-    const nextRide: Ride = {
-      ...initialRide,
-      id: Date.now(),
-      customer_name: formValues.name,
-      customer_phone: formValues.phone,
-      pickup_address: formValues.pickup,
-      destination_address: formValues.destination,
-      passenger_count: formValues.passengerCount,
-      status: 'requested',
-      created_at: new Date().toISOString(),
-    }
+    try {
+      const createdRide = await createRide({
+        customer_name: formValues.name,
+        customer_phone: formValues.phone,
+        pickup_address: formValues.pickup,
+        pickup_lat: null,
+        pickup_lng: null,
+        destination_address: formValues.destination,
+        destination_lat: null,
+        destination_lng: null,
+        driver_id: null,
+        passenger_count: formValues.passengerCount,
+        status: 'requested',
+      })
 
-    setRide(nextRide)
-    setPhase('searching')
-    setIsSubmitting(false)
+      setRide(createdRide)
+      setPhase('searching')
+    } catch (error) {
+      console.error('Unable to create ride:', error)
+      setSubmitError('Unable to request a ride right now. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   const handleBackToHome = () => {

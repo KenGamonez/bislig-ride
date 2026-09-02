@@ -1,52 +1,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapView } from '../components/MapView'
-import { demoDriver, type DemoPassengerType } from '../lib/demoDriver'
+import { demoDriver } from '../lib/demoDriver'
+import { acceptRide, fetchPendingRides } from '../lib/rides'
+import type { Ride } from '../types/ride'
+
+const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
 type DriverPhase = 'offline' | 'online' | 'incoming_request' | 'heading_to_pickup' | 'arrived' | 'in_progress' | 'completed'
-
-type DemoRideRequest = {
-  id: number
-  passengerName: string
-  passengerPhone: string
-  pickup: string
-  destination: string
-  passengerType: DemoPassengerType
-  createdAt: string
-  demoFare: string
-}
-
-const rideRequests: DemoRideRequest[] = [
-  {
-    id: 1,
-    passengerName: 'Maria Santos',
-    passengerPhone: '09171234567',
-    pickup: 'Bislig City Public Market',
-    destination: 'Mangagoy Terminal',
-    passengerType: 'Regular',
-    createdAt: '9:14 AM',
-    demoFare: '₱120 • DEMO',
-  },
-  {
-    id: 2,
-    passengerName: 'Renzo Dela Cruz',
-    passengerPhone: '09981234567',
-    pickup: 'St. Joseph Street',
-    destination: 'Barangay San Vicente',
-    passengerType: 'Student',
-    createdAt: '9:26 AM',
-    demoFare: '₱95 • DEMO',
-  },
-  {
-    id: 3,
-    passengerName: 'Lola Valdez',
-    passengerPhone: '09234567890',
-    pickup: 'Bislig City Gym',
-    destination: 'Barangay Mahanub',
-    passengerType: 'Senior Citizen',
-    createdAt: '9:42 AM',
-    demoFare: '₱110 • DEMO',
-  },
-]
 
 const recentRides = [
   {
@@ -78,35 +38,37 @@ const recentRides = [
   },
 ]
 
-const generateRequest = (): DemoRideRequest => {
-  const queue = [...rideRequests]
-  const next = queue[Math.floor(Math.random() * queue.length)]
-
-  return {
-    ...next,
-    id: Date.now(),
-  }
-}
-
 export function DriverExperience() {
   const [driverOnline, setDriverOnline] = useState(false)
   const [phase, setPhase] = useState<DriverPhase>('offline')
-  const [request, setRequest] = useState<DemoRideRequest | null>(null)
-  const [activeRide, setActiveRide] = useState<DemoRideRequest | null>(null)
+  const [request, setRequest] = useState<Ride | null>(null)
+  const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [transitioning, setTransitioning] = useState(false)
 
   useEffect(() => {
-    if (!driverOnline || phase === 'incoming_request' || phase === 'heading_to_pickup' || phase === 'arrived' || phase === 'in_progress' || phase === 'completed') {
+    if (!driverOnline) {
       return
     }
 
-    const timer = window.setTimeout(() => {
-      setRequest(generateRequest())
-      setPhase('incoming_request')
-    }, 2200)
+    const refreshPendingRides = async () => {
+      try {
+        const pendingRides = await fetchPendingRides()
+        const nextRequest = pendingRides[0] ?? null
 
-    return () => window.clearTimeout(timer)
-  }, [driverOnline, phase])
+        setRequest(nextRequest)
+        setPhase(nextRequest ? 'incoming_request' : 'online')
+      } catch (error) {
+        console.error('Unable to load pending rides:', error)
+      }
+    }
+
+    void refreshPendingRides()
+    const timer = window.setInterval(() => {
+      void refreshPendingRides()
+    }, 5000)
+
+    return () => window.clearInterval(timer)
+  }, [driverOnline])
 
   const todayEarnings = useMemo(
     () => recentRides.reduce((sum, ride) => sum + Number(ride.fare.replace(/[^\d.]/g, '')), 0),
@@ -143,24 +105,28 @@ export function DriverExperience() {
     setTransitioning(true)
     setRequest(null)
     setPhase('online')
-
-    window.setTimeout(() => {
-      setRequest(generateRequest())
-      setPhase('incoming_request')
-      setTransitioning(false)
-    }, 1200)
+    window.setTimeout(() => setTransitioning(false), 200)
   }
 
-  const handleAcceptRide = () => {
+  const handleAcceptRide = async () => {
     if (!request || transitioning) {
       return
     }
 
     setTransitioning(true)
-    setActiveRide(request)
-    setRequest(null)
-    setPhase('heading_to_pickup')
-    window.setTimeout(() => setTransitioning(false), 200)
+
+    try {
+      const acceptedRide = await acceptRide(request.id, TEST_DRIVER_ID)
+      setActiveRide(acceptedRide)
+      setRequest(null)
+      setPhase('heading_to_pickup')
+    } catch (error) {
+      console.error('Unable to accept ride:', error)
+      setPhase('online')
+      setRequest(request)
+    } finally {
+      window.setTimeout(() => setTransitioning(false), 200)
+    }
   }
 
   const handleArrived = () => {
@@ -303,31 +269,27 @@ export function DriverExperience() {
       <div className="ride-meta">
         <div>
           <dt>Passenger</dt>
-          <dd>{request?.passengerName}</dd>
+          <dd>{request?.customer_name}</dd>
         </div>
         <div>
           <dt>Phone</dt>
-          <dd>{request?.passengerPhone}</dd>
+          <dd>{request?.customer_phone}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
-          <dd>{request?.pickup}</dd>
+          <dd>{request?.pickup_address}</dd>
         </div>
         <div>
           <dt>Destination</dt>
-          <dd>{request?.destination}</dd>
+          <dd>{request?.destination_address}</dd>
         </div>
         <div>
-          <dt>Passenger Type</dt>
-          <dd>{request?.passengerType}</dd>
-        </div>
-        <div>
-          <dt>Demo fare</dt>
-          <dd>{request?.demoFare}</dd>
+          <dt>Passengers</dt>
+          <dd>{request?.passenger_count}</dd>
         </div>
         <div>
           <dt>Requested</dt>
-          <dd>{request?.createdAt}</dd>
+          <dd>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</dd>
         </div>
       </div>
 
@@ -355,23 +317,23 @@ export function DriverExperience() {
       <div className="ride-meta">
         <div>
           <dt>Passenger</dt>
-          <dd>{activeRide?.passengerName}</dd>
+          <dd>{activeRide?.customer_name}</dd>
         </div>
         <div>
           <dt>Phone</dt>
-          <dd>{activeRide?.passengerPhone}</dd>
+          <dd>{activeRide?.customer_phone}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
-          <dd>{activeRide?.pickup}</dd>
+          <dd>{activeRide?.pickup_address}</dd>
         </div>
         <div>
           <dt>Destination</dt>
-          <dd>{activeRide?.destination}</dd>
+          <dd>{activeRide?.destination_address}</dd>
         </div>
         <div>
-          <dt>Passenger Type</dt>
-          <dd>{activeRide?.passengerType}</dd>
+          <dt>Passengers</dt>
+          <dd>{activeRide?.passenger_count}</dd>
         </div>
       </div>
 
@@ -398,19 +360,19 @@ export function DriverExperience() {
       <div className="ride-meta">
         <div>
           <dt>Passenger</dt>
-          <dd>{activeRide?.passengerName}</dd>
+          <dd>{activeRide?.customer_name}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
-          <dd>{activeRide?.pickup}</dd>
+          <dd>{activeRide?.pickup_address}</dd>
         </div>
         <div>
           <dt>Destination</dt>
-          <dd>{activeRide?.destination}</dd>
+          <dd>{activeRide?.destination_address}</dd>
         </div>
         <div>
-          <dt>Passenger Type</dt>
-          <dd>{activeRide?.passengerType}</dd>
+          <dt>Passengers</dt>
+          <dd>{activeRide?.passenger_count}</dd>
         </div>
       </div>
 
@@ -443,15 +405,15 @@ export function DriverExperience() {
       <div className="ride-meta">
         <div>
           <dt>Passenger</dt>
-          <dd>{activeRide?.passengerName}</dd>
+          <dd>{activeRide?.customer_name}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
-          <dd>{activeRide?.pickup}</dd>
+          <dd>{activeRide?.pickup_address}</dd>
         </div>
         <div>
           <dt>Destination</dt>
-          <dd>{activeRide?.destination}</dd>
+          <dd>{activeRide?.destination_address}</dd>
         </div>
         <div>
           <dt>Vehicle</dt>
@@ -482,27 +444,23 @@ export function DriverExperience() {
       <div className="ride-meta">
         <div>
           <dt>Passenger</dt>
-          <dd>{activeRide?.passengerName}</dd>
+          <dd>{activeRide?.customer_name}</dd>
         </div>
         <div>
           <dt>Pickup</dt>
-          <dd>{activeRide?.pickup}</dd>
+          <dd>{activeRide?.pickup_address}</dd>
         </div>
         <div>
           <dt>Destination</dt>
-          <dd>{activeRide?.destination}</dd>
+          <dd>{activeRide?.destination_address}</dd>
         </div>
         <div>
-          <dt>Demo fare</dt>
-          <dd>{activeRide?.demoFare}</dd>
+          <dt>Passengers</dt>
+          <dd>{activeRide?.passenger_count}</dd>
         </div>
         <div>
           <dt>Payment</dt>
           <dd>Cash or GCash</dd>
-        </div>
-        <div>
-          <dt>Duration</dt>
-          <dd>18 minutes • DEMO</dd>
         </div>
       </div>
 

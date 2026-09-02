@@ -11,6 +11,7 @@ export type CreateRideInput = {
   destination_lat?: number | null
   destination_lng?: number | null
   driver_id?: string | null
+  passenger_count: string
   status?: RideStatus
 }
 
@@ -27,8 +28,58 @@ export async function createRide(input: CreateRideInput): Promise<Ride> {
       destination_lat: input.destination_lat ?? null,
       destination_lng: input.destination_lng ?? null,
       driver_id: input.driver_id ?? null,
+      passenger_count: input.passenger_count,
       status: input.status ?? 'requested',
     })
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as Ride
+}
+
+export async function fetchPendingRides(): Promise<Ride[]> {
+  const { data, error } = await supabase
+    .from('rides')
+    .select('*')
+    .eq('status', 'requested')
+    .is('driver_id', null)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as Ride[]
+}
+
+export async function fetchRideById(rideId: number): Promise<Ride | null> {
+  const { data, error } = await supabase
+    .from('rides')
+    .select('*')
+    .eq('id', rideId)
+    .maybeSingle()
+
+  if (error) {
+    throw error
+  }
+
+  return (data as Ride | null) ?? null
+}
+
+export async function acceptRide(rideId: number, driverId: string): Promise<Ride> {
+  const { data, error } = await supabase
+    .from('rides')
+    .update({
+      driver_id: driverId,
+      status: 'accepted',
+    })
+    .eq('id', rideId)
+    .eq('status', 'requested')
+    .is('driver_id', null)
     .select()
     .single()
 
