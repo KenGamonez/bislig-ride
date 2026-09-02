@@ -59,6 +59,25 @@ const initialRide: Ride = {
   created_at: new Date().toISOString(),
 }
 
+const rideIdStorageKey = 'bislig-ride-last-ride-id'
+
+const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
+  switch (status) {
+    case 'requested':
+      return 'searching'
+    case 'accepted':
+      return 'accepted'
+    case 'arrived':
+      return 'arrived'
+    case 'in_progress':
+      return 'in_progress'
+    case 'completed':
+      return 'completed'
+    default:
+      return 'request'
+  }
+}
+
 export function CustomerExperience() {
   const [formData, setFormData] = useState<CustomerFormState>(initialFormState)
   const [validationErrors, setValidationErrors] = useState<CustomerValidation>({})
@@ -68,6 +87,35 @@ export function CustomerExperience() {
   const [ride, setRide] = useState<Ride>(initialRide)
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
+
+  useEffect(() => {
+    const persistedRideId = window.localStorage.getItem(rideIdStorageKey)
+    if (!persistedRideId) {
+      return
+    }
+
+    const restoredRideId = Number(persistedRideId)
+
+    if (!Number.isFinite(restoredRideId) || restoredRideId <= 0) {
+      return
+    }
+
+    const restoreRide = async () => {
+      try {
+        const latestRide = await fetchRideById(restoredRideId)
+        if (!latestRide) {
+          return
+        }
+
+        setRide(latestRide)
+        setPhase(mapRideStatusToPhase(latestRide.status))
+      } catch (error) {
+        console.error('Unable to restore ride state:', error)
+      }
+    }
+
+    void restoreRide()
+  }, [])
 
   const formValues = useMemo(
     () => ({
@@ -122,7 +170,7 @@ export function CustomerExperience() {
   }
 
   useEffect(() => {
-    if (phase !== 'searching' || !ride.id || ride.id === 1) {
+    if (!ride.id || ride.id === 1) {
       return
     }
 
@@ -136,10 +184,7 @@ export function CustomerExperience() {
         }
 
         setRide(latestRide)
-
-        if (latestRide.status === 'accepted') {
-          setPhase('accepted')
-        }
+        setPhase(mapRideStatusToPhase(latestRide.status))
       } catch (error) {
         console.error('Unable to refresh ride status:', error)
       }
@@ -154,7 +199,7 @@ export function CustomerExperience() {
       isMounted = false
       window.clearInterval(timer)
     }
-  }, [phase, ride.id])
+  }, [ride.id])
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -182,6 +227,7 @@ export function CustomerExperience() {
       })
 
       setRide(createdRide)
+      window.localStorage.setItem(rideIdStorageKey, String(createdRide.id))
       setPhase('searching')
     } catch (error) {
       console.error('Unable to create ride:', error)
@@ -192,6 +238,7 @@ export function CustomerExperience() {
   }
 
   const handleBackToHome = () => {
+    window.localStorage.removeItem(rideIdStorageKey)
     setRide(initialRide)
     setPhase('request')
     setPaymentMethod('Cash')
@@ -201,6 +248,14 @@ export function CustomerExperience() {
   const isRequesting = phase === 'request'
   const showCustomerForm = isRequesting && !showProfile
   const showDemoRideState = phase !== 'request' && !showProfile
+
+  const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
+    searching: 'Finding a driver',
+    accepted: 'Driver accepted',
+    arrived: 'Your driver has arrived',
+    in_progress: 'Ride in progress',
+    completed: 'Ride completed',
+  }
 
   const renderRequestScreen = () => (
     <form className="ride-form" onSubmit={handleSubmit} noValidate>
@@ -286,7 +341,7 @@ export function CustomerExperience() {
         <div className="search-loader" aria-label="Finding your driver" />
       </div>
 
-      <h2>Finding your driver</h2>
+      <h2>{statusCopy.searching}</h2>
       <p>Looking for an available Bislig Ride driver nearby...</p>
 
       <div className="ride-summary compact">
@@ -336,7 +391,7 @@ export function CustomerExperience() {
         </div>
       </div>
 
-      <p className="lead-paragraph">Your driver has accepted the ride.</p>
+      <p className="lead-paragraph">{statusCopy.accepted}</p>
       <p className="lead-paragraph">Your driver is on the way.</p>
 
       <div className="ride-summary compact">
@@ -380,7 +435,7 @@ export function CustomerExperience() {
         </div>
       </div>
 
-      <p className="lead-paragraph">Your driver has arrived.</p>
+      <p className="lead-paragraph">{statusCopy.arrived}</p>
 
       <div className="ride-summary compact">
         <div>
@@ -450,7 +505,7 @@ export function CustomerExperience() {
         <span className="demo-status-badge success">RIDE COMPLETED</span>
       </div>
 
-      <h2>Ride completed</h2>
+      <h2>{statusCopy.completed}</h2>
       <p>Thanks for riding with Bislig Ride.</p>
 
       <div className="ride-summary compact">

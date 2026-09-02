@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { MapView } from '../components/MapView'
 import { demoDriver } from '../lib/demoDriver'
-import { acceptRide, fetchPendingRides } from '../lib/rides'
+import { acceptRide, fetchAssignedRidesForDriver, fetchPendingRides, updateRideStatus } from '../lib/rides'
 import type { Ride } from '../types/ride'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
@@ -50,11 +50,31 @@ export function DriverExperience() {
       return
     }
 
-    const refreshPendingRides = async () => {
+    const refreshRides = async () => {
       try {
-        const pendingRides = await fetchPendingRides()
-        const nextRequest = pendingRides[0] ?? null
+        const [pendingRides, assignedRides] = await Promise.all([
+          fetchPendingRides(),
+          fetchAssignedRidesForDriver(TEST_DRIVER_ID),
+        ])
 
+        const activeAssignedRide = assignedRides[0] ?? null
+        if (activeAssignedRide) {
+          setActiveRide(activeAssignedRide)
+          setRequest(null)
+
+          if (activeAssignedRide.status === 'accepted') {
+            setPhase('heading_to_pickup')
+          } else if (activeAssignedRide.status === 'arrived') {
+            setPhase('arrived')
+          } else if (activeAssignedRide.status === 'in_progress') {
+            setPhase('in_progress')
+          } else if (activeAssignedRide.status === 'completed') {
+            setPhase('completed')
+          }
+          return
+        }
+
+        const nextRequest = pendingRides[0] ?? null
         setRequest(nextRequest)
         setPhase(nextRequest ? 'incoming_request' : 'online')
       } catch (error) {
@@ -62,9 +82,9 @@ export function DriverExperience() {
       }
     }
 
-    void refreshPendingRides()
+    void refreshRides()
     const timer = window.setInterval(() => {
-      void refreshPendingRides()
+      void refreshRides()
     }, 5000)
 
     return () => window.clearInterval(timer)
@@ -129,34 +149,58 @@ export function DriverExperience() {
     }
   }
 
-  const handleArrived = () => {
+  const handleArrived = async () => {
     if (!activeRide || transitioning) {
       return
     }
 
     setTransitioning(true)
-    setPhase('arrived')
-    window.setTimeout(() => setTransitioning(false), 200)
+
+    try {
+      const updatedRide = await updateRideStatus(activeRide.id, 'arrived', TEST_DRIVER_ID)
+      setActiveRide(updatedRide)
+      setPhase('arrived')
+    } catch (error) {
+      console.error('Unable to update ride to arrived:', error)
+    } finally {
+      setTransitioning(false)
+    }
   }
 
-  const handleStartRide = () => {
+  const handleStartRide = async () => {
     if (!activeRide || transitioning) {
       return
     }
 
     setTransitioning(true)
-    setPhase('in_progress')
-    window.setTimeout(() => setTransitioning(false), 200)
+
+    try {
+      const updatedRide = await updateRideStatus(activeRide.id, 'in_progress', TEST_DRIVER_ID)
+      setActiveRide(updatedRide)
+      setPhase('in_progress')
+    } catch (error) {
+      console.error('Unable to update ride to in_progress:', error)
+    } finally {
+      setTransitioning(false)
+    }
   }
 
-  const handleCompleteRide = () => {
+  const handleCompleteRide = async () => {
     if (!activeRide || transitioning) {
       return
     }
 
     setTransitioning(true)
-    setPhase('completed')
-    window.setTimeout(() => setTransitioning(false), 200)
+
+    try {
+      const updatedRide = await updateRideStatus(activeRide.id, 'completed', TEST_DRIVER_ID)
+      setActiveRide(updatedRide)
+      setPhase('completed')
+    } catch (error) {
+      console.error('Unable to update ride to completed:', error)
+    } finally {
+      setTransitioning(false)
+    }
   }
 
   const handleBackToDashboard = () => {
@@ -261,7 +305,7 @@ export function DriverExperience() {
       <div className="request-header-row compact-row">
         <div>
           <p className="section-label">New Ride Request</p>
-          <h3>{request?.passengerName}</h3>
+          <h3>{request?.customer_name}</h3>
         </div>
         <span className="mini-tag urgent">Live</span>
       </div>

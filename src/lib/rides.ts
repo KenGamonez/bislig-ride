@@ -89,3 +89,37 @@ export async function acceptRide(rideId: number, driverId: string): Promise<Ride
 
   return data as Ride
 }
+
+export async function updateRideStatus(rideId: number, status: RideStatus, driverId?: string): Promise<Ride> {
+  let query = supabase
+    .from('rides')
+    .update({ status })
+    .eq('id', rideId)
+
+  if (driverId) {
+    query = query.eq('driver_id', driverId)
+  }
+
+  const { data, error } = await query.select().single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as Ride
+}
+
+export async function fetchAssignedRidesForDriver(driverId: string): Promise<Ride[]> {
+  const { data, error } = await supabase
+    .from('rides')
+    .select('*')
+    .eq('driver_id', driverId)
+    .in('status', ['accepted', 'arrived', 'in_progress', 'completed'])
+    .order('updated_at', { ascending: false })
+
+  if (error) {
+    throw error
+  }
+
+  return (data ?? []) as Ride[]
+}
