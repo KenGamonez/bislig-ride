@@ -55,7 +55,7 @@ const formatPassengerCount = (value: string | number | null | undefined) => {
 }
 
 const initialRide: Ride = {
-  id: 1,
+  id: '',
   customer_name: '',
   customer_phone: '',
   pickup_address: '',
@@ -105,15 +105,9 @@ export function CustomerExperience() {
       return
     }
 
-    const restoredRideId = Number(persistedRideId)
-
-    if (!Number.isFinite(restoredRideId) || restoredRideId <= 0) {
-      return
-    }
-
     const restoreRide = async () => {
       try {
-        const latestRide = await fetchRideById(restoredRideId)
+        const latestRide = await fetchRideById(persistedRideId)
         if (!latestRide) {
           return
         }
@@ -181,7 +175,7 @@ export function CustomerExperience() {
   }
 
   useEffect(() => {
-    if (!ride.id || ride.id === 1) {
+    if (!ride.id) {
       return
     }
 
