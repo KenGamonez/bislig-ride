@@ -3,6 +3,7 @@ import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
+import { WeatherWidget } from '../components/WeatherWidget'
 import { demoDriver, passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
 import { createRide, fetchRideById } from '../lib/rides'
@@ -314,7 +315,12 @@ export function CustomerExperience() {
 
   const renderRequestScreen = () => (
     <form className="ride-form" onSubmit={handleSubmit} noValidate>
-      <div className="form-stack">
+      <section className="booking-section route-section">
+        <div className="booking-section-heading">
+          <span className="booking-section-number">01</span>
+          <div><strong>Trip details</strong><span>Choose your pickup and destination</span></div>
+        </div>
+        <div className="form-stack">
         <LocationInput
           label={pickupLocation ? 'Pickup landmark (optional)' : 'Pickup'}
           value={formData.pickup}
@@ -341,9 +347,15 @@ export function CustomerExperience() {
           error={validationErrors.destination}
           onChange={(value) => handleInput('destination', value)}
         />
-      </div>
+        </div>
+      </section>
 
-      <div className="customer-details">
+      <section className="booking-section">
+        <div className="booking-section-heading">
+          <span className="booking-section-number">02</span>
+          <div><strong>Passenger details</strong><span>So your driver knows who to meet</span></div>
+        </div>
+        <div className="customer-details">
         <LocationInput
           label="Full Name"
           value={formData.name}
@@ -359,8 +371,15 @@ export function CustomerExperience() {
           error={validationErrors.phone}
           onChange={(value) => handleInput('phone', value)}
         />
-      </div>
+        </div>
+      </section>
 
+      <section className="booking-section">
+        <div className="booking-section-heading">
+          <span className="booking-section-number">03</span>
+          <div><strong>Ride preferences</strong><span>Set up your trip before requesting</span></div>
+        </div>
+        <div className="ride-options-grid">
       <div className="field-block">
         <span className="field-label">Number of passengers</span>
         <select
@@ -391,6 +410,8 @@ export function CustomerExperience() {
         </select>
         <small className="field-note">Fare is calculated based on the official Bislig City fare matrix.</small>
       </div>
+        </div>
+      </section>
 
       {submitError ? <p className="form-error-message">{submitError}</p> : null}
 
@@ -726,6 +747,7 @@ export function CustomerExperience() {
             pickupLatitude={pickupLocation?.latitude}
             pickupLongitude={pickupLocation?.longitude}
           />
+          <WeatherWidget />
         </aside>
       </main>
     </div>
