@@ -748,10 +748,6 @@ export function CustomerExperience() {
               Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
-              <div className="explore-dropdown-heading">
-                <span className="explore-kicker">Local discovery</span>
-                <strong>Explore Bislig</strong>
-              </div>
               <div className="discovery-list">
                 {discoveryCategories.map((category) => (
                   <button key={category} type="button" className="discovery-item" role="menuitem" onClick={() => setIsExploreOpen(false)}>
