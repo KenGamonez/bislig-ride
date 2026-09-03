@@ -684,6 +684,7 @@ export function CustomerExperience() {
           <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
             {showProfile ? 'Back to ride' : 'Profile'}
           </button>
+          <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
         </nav>
       </header>
 

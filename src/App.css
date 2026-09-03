@@ -204,6 +204,11 @@ h4 {
   transition: color var(--transition);
 }
 
+.nav-cta {
+  color: var(--brand-red) !important;
+  font-weight: 800 !important;
+}
+
 .top-nav a:hover,
 .top-nav a:focus-visible,
 .nav-button:hover,
@@ -505,6 +510,139 @@ h4 {
 .form-grid {
   display: grid;
   gap: 16px;
+}
+
+.application-shell {
+  width: min(100%, 980px);
+  margin: 0 auto;
+  padding: 28px 20px 72px;
+}
+
+.application-card {
+  background: rgba(255, 255, 255, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 14px 32px rgba(28, 31, 35, 0.07);
+  padding: 34px 38px 40px;
+}
+
+.application-card h1 {
+  font-size: clamp(2.35rem, 5vw, 3.45rem);
+  line-height: 1.06;
+}
+
+.back-link {
+  border: 0;
+  padding: 0;
+  margin-bottom: 26px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+}
+
+.application-note {
+  margin-top: 12px;
+  color: var(--text-secondary);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.application-form {
+  display: grid;
+  gap: 0;
+  margin-top: 34px;
+}
+
+.application-section {
+  display: grid;
+  gap: 20px;
+  padding: 26px 0 30px;
+  border-top: 1px solid var(--border);
+}
+
+.application-section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.application-section-heading h2 {
+  font-size: 1.25rem;
+  letter-spacing: -0.025em;
+}
+
+.application-section-number {
+  color: var(--brand-red);
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.field-wide {
+  grid-column: 1 / -1;
+}
+
+.textarea-field {
+  min-height: 120px;
+  padding-top: 14px;
+  resize: vertical;
+}
+
+.choice-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.choice-option {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.choice-option:has(input:checked) {
+  border-color: var(--brand-red);
+  background: #fff5f5;
+}
+
+.choice-option input {
+  accent-color: var(--brand-red);
+}
+
+.form-error-message {
+  color: var(--danger);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.submit-error {
+  padding: 12px;
+  border-radius: 10px;
+  background: #fef2f2;
+}
+
+.application-form > .primary-action {
+  margin-top: 8px;
+}
+
+.success-state {
+  display: grid;
+  gap: 18px;
+  max-width: 680px;
+  margin: 8vh auto 0;
+}
+
+.success-state > p:not(.section-label) {
+  color: var(--text-secondary);
+  line-height: 1.65;
 }
 
 .full-width {
@@ -1780,6 +1918,20 @@ h4 {
   .top-nav {
     width: 100%;
     justify-content: space-between;
+  }
+
+  .nav-cta {
+    align-self: flex-start;
+  }
+
+  .application-shell {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .application-card {
+    padding-left: 14px;
+    padding-right: 14px;
   }
 
   .compact-actions,

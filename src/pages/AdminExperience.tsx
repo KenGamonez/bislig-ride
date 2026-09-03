@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { demoDriver } from '../lib/demoDriver'
@@ -13,8 +13,12 @@ import {
   type DriverAvailability,
   type DriverStatus,
 } from '../lib/adminDemoData'
+import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
+import { driverApplicationStatuses, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
+import { supabase } from '../lib/supabase'
+import type { Session } from '@supabase/supabase-js'
 
-type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments'
+type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications'
 
 type DriverDraft = {
   name: string
@@ -45,6 +49,7 @@ const adminTabs: { key: AdminTab; label: string }[] = [
   { key: 'active-rides', label: 'Active Rides' },
   { key: 'ride-history', label: 'Ride History' },
   { key: 'payments', label: 'Payments' },
+  { key: 'driver-applications', label: 'Driver Applications' },
 ]
 
 const rideStatusLabels: Record<AdminRide['status'], string> = {
@@ -68,6 +73,54 @@ export function AdminExperience() {
   const [selectedRideId, setSelectedRideId] = useState(activeRides[0].id)
   const [showAddDriver, setShowAddDriver] = useState(false)
   const [driverDraft, setDriverDraft] = useState<DriverDraft>(emptyDriverDraft)
+  const [applications, setApplications] = useState<DriverApplication[]>([])
+  const [selectedApplicationId, setSelectedApplicationId] = useState('')
+  const [applicationError, setApplicationError] = useState('')
+  const [isLoadingApplications, setIsLoadingApplications] = useState(false)
+  const [isAuthReady, setIsAuthReady] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const applySession = (session: Session | null) => {
+      if (!isMounted) return
+      const appMetadata = session?.user?.app_metadata as { role?: unknown } | undefined
+      setIsLoggedIn(appMetadata?.role === 'admin')
+      setIsAuthReady(true)
+    }
+
+    void supabase.auth.getSession().then(({ data, error }) => {
+      if (error) {
+        console.error('Unable to restore admin session:', error)
+        applySession(null)
+        return
+      }
+      applySession(data.session)
+    })
+
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      applySession(session)
+    })
+
+    return () => {
+      isMounted = false
+      authListener.subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'driver-applications') return
+    setIsLoadingApplications(true)
+    setApplicationError('')
+    fetchDriverApplications()
+      .then((items) => {
+        setApplications(items)
+        setSelectedApplicationId((current) => current || items[0]?.id || '')
+      })
+      .catch(() => setApplicationError('Unable to load driver applications. Check admin access and try again.'))
+      .finally(() => setIsLoadingApplications(false))
+  }, [activeTab, isLoggedIn])
 
   const filteredDrivers = useMemo(() => {
     return drivers.filter((driver) => {
@@ -112,6 +165,26 @@ export function AdminExperience() {
 
   const selectedDriver = drivers.find((driver) => driver.id === selectedDriverId) ?? drivers[0]
   const selectedRide = activeRides.find((ride) => ride.id === selectedRideId) ?? activeRides[0]
+  const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
+
+  const handleApplicationStatusChange = async (id: string, status: DriverApplicationStatus) => {
+    try {
+      const updated = await updateDriverApplicationStatus(id, status)
+      setApplications((current) => current.map((application) => application.id === id ? updated : application))
+    } catch {
+      setApplicationError('Unable to update this application. Please try again.')
+    }
+  }
+
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    setIsLoggedIn(false)
+    const { error } = await supabase.auth.signOut()
+    if (error) {
+      console.error('Unable to sign out admin:', error)
+    }
+    setIsLoggingOut(false)
+  }
 
   const overviewStats = [
     { label: 'Total Drivers', value: String(drivers.length), accent: true },
@@ -168,6 +241,10 @@ export function AdminExperience() {
     )
   }
 
+  if (!isAuthReady) {
+    return <div className="auth-shell"><div className="auth-card"><p className="muted-copy">Checking admin session...</p></div></div>
+  }
+
   if (!isLoggedIn) {
     return <AdminLogin onLogin={() => setIsLoggedIn(true)} />
   }
@@ -179,8 +256,8 @@ export function AdminExperience() {
           <p className="section-label">Admin</p>
           <h2>Operations Center</h2>
         </div>
-        <button type="button" className="secondary-action compact-button" onClick={() => setIsLoggedIn(false)}>
-          Logout
+        <button type="button" className="secondary-action compact-button" onClick={() => void handleLogout()} disabled={isLoggingOut}>
+          {isLoggingOut ? 'Signing out...' : 'Logout'}
         </button>
       </header>
 
@@ -688,6 +765,26 @@ export function AdminExperience() {
               </table>
             </div>
           )}
+        </section>
+      ) : null}
+
+      {activeTab === 'driver-applications' ? (
+        <section className="admin-layout admin-grid-two">
+          <div className="admin-panel">
+            <div className="panel-header-row"><h3>Driver Applications</h3></div>
+            {applicationError ? <p className="form-error-message submit-error">{applicationError}</p> : null}
+            {isLoadingApplications ? <p className="muted-copy">Loading applications...</p> : applications.length === 0 ? <div className="empty-state-box"><p>No driver applications found.</p></div> : (
+              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Applicant</th><th>Mobile</th><th>Barangay</th><th>Vehicle</th><th>Operating area</th><th>Status</th><th>Submitted</th></tr></thead><tbody>
+                {applications.map((application) => <tr key={application.id} onClick={() => setSelectedApplicationId(application.id)} className={selectedApplicationId === application.id ? 'selected-row' : ''}>
+                  <td>{application.full_name}</td><td>{application.mobile_number}</td><td>{application.barangay}</td><td>{application.vehicle_number}</td><td>{application.operating_area}</td>
+                  <td><span className="status-pill online">{application.status}</span></td><td>{new Date(application.created_at).toLocaleDateString()}</td>
+                </tr>)}
+              </tbody></table></div>
+            )}
+          </div>
+          <aside className="admin-panel detail-panel">{selectedApplication ? <><div className="panel-header-row"><h3>Application Details</h3></div><div className="detail-grid">
+            <div><span>Full name</span><strong>{selectedApplication.full_name}</strong></div><div><span>Mobile</span><strong>{selectedApplication.mobile_number}</strong></div><div><span>Email</span><strong>{selectedApplication.email || 'Not provided'}</strong></div><div><span>Barangay</span><strong>{selectedApplication.barangay}</strong></div><div><span>Vehicle / body number</span><strong>{selectedApplication.vehicle_number}</strong></div><div><span>Plate number</span><strong>{selectedApplication.plate_number || 'Not provided'}</strong></div><div><span>Driving experience</span><strong>{selectedApplication.driving_experience} years</strong></div><div><span>Operating area</span><strong>{selectedApplication.operating_area}</strong></div><div><span>Schedule</span><strong>{selectedApplication.preferred_schedule}</strong></div><div><span>Contact preference</span><strong>{selectedApplication.contact_preference}</strong></div><div><span>Reason</span><strong>{selectedApplication.reason || 'Not provided'}</strong></div>
+          </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>
