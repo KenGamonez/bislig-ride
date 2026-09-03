@@ -24,7 +24,7 @@ type CustomerFormState = {
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
 
-type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'payment' | 'payment_confirmed'
+type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'rating' | 'payment' | 'payment_confirmed'
 
 type PaymentMethod = 'Cash' | 'GCash'
 
@@ -37,7 +37,7 @@ const initialFormState: CustomerFormState = {
   passengerCount: '1 passenger',
 }
 
-const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
+const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'rating' | 'payment' | 'payment_confirmed'>, string> = {
   searching: 'SEARCHING',
   accepted: 'DRIVER ON THE WAY',
   arrived: 'ARRIVED',
@@ -106,7 +106,7 @@ export function CustomerExperience() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showProfile] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
-  const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+          const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocation, setPickupLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocationError, setPickupLocationError] = useState('')
   const [phase, setPhase] = useState<RidePhase>('request')
@@ -343,6 +343,7 @@ export function CustomerExperience() {
     arrived: 'Your driver has arrived',
     in_progress: 'Ride in progress',
     completed: 'Ride completed',
+    rating: 'Rate your ride',
   }
 
   const renderRequestScreen = () => (
@@ -805,3 +806,4 @@ export function CustomerExperience() {
     </div>
   )
 }
+
