@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { LocationInput } from '../components/LocationInput'
@@ -74,6 +74,14 @@ const initialRide: Ride = {
 
 const rideIdStorageKey = 'bislig-ride-last-ride-id'
 
+const discoveryCategories = [
+  'Restaurants',
+  'Hotels & Resorts',
+  'Tourist Destinations',
+  'Upcoming Events',
+  'Local Businesses',
+]
+
 const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
   switch (status) {
     case 'requested':
@@ -96,13 +104,37 @@ export function CustomerExperience() {
   const [validationErrors, setValidationErrors] = useState<CustomerValidation>({})
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showProfile, setShowProfile] = useState(false)
+  const [showProfile] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocation, setPickupLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocationError, setPickupLocationError] = useState('')
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
+  const [isExploreOpen, setIsExploreOpen] = useState(false)
+  const exploreMenuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!exploreMenuRef.current?.contains(event.target as Node)) {
+        setIsExploreOpen(false)
+      }
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsExploreOpen(false)
+      }
+    }
+
+    document.addEventListener('pointerdown', handlePointerDown)
+    document.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown)
+      document.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [])
 
   useEffect(() => {
     const persistedRideId = window.localStorage.getItem(rideIdStorageKey)
@@ -700,9 +732,35 @@ export function CustomerExperience() {
 
         <nav className="top-nav" aria-label="Main navigation">
           <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
-          <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
-            {showProfile ? 'Back to ride' : 'Profile'}
-          </button>
+          <div
+            className="explore-menu"
+            ref={exploreMenuRef}
+            onMouseEnter={() => setIsExploreOpen(true)}
+            onMouseLeave={() => setIsExploreOpen(false)}
+          >
+            <button
+              type="button"
+              className="nav-button explore-trigger"
+              aria-expanded={isExploreOpen}
+              aria-haspopup="true"
+              onClick={() => setIsExploreOpen((current) => !current)}
+            >
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
+            </button>
+            <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
+              <div className="explore-dropdown-heading">
+                <span className="explore-kicker">Local discovery</span>
+                <strong>Explore Bislig</strong>
+              </div>
+              <div className="discovery-list">
+                {discoveryCategories.map((category) => (
+                  <button key={category} type="button" className="discovery-item" role="menuitem" onClick={() => setIsExploreOpen(false)}>
+                    {category}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
           <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
         </nav>
       </header>
