@@ -40,6 +40,7 @@ export async function createDriver(input: DriverInput): Promise<DriverRecord> {
     profile_photo_url: input.profile_photo_url ?? null,
     vehicle_type: input.vehicle_type ?? null,
     vehicle_model: input.vehicle_model ?? null,
+    vehicle_color: input.vehicle_color ?? null,
     plate_number: input.plate_number ?? null,
     status: input.status ?? 'active',
     availability: input.availability ?? 'offline',
@@ -53,6 +54,21 @@ export async function createDriver(input: DriverInput): Promise<DriverRecord> {
   }
 
   return data as DriverRecord
+}
+
+export async function fetchDriverById(driverId: string | number): Promise<DriverRecord | null> {
+  const { data, error } = await supabase
+    .from('drivers')
+    .select('*')
+    .eq('id', driverId)
+    .maybeSingle()
+
+  if (error) {
+    console.error('Unable to fetch driver by id:', error)
+    return null
+  }
+
+  return (data as DriverRecord | null) ?? null
 }
 
 export async function updateDriver(id: number | string, updates: Partial<DriverInput>): Promise<DriverRecord> {

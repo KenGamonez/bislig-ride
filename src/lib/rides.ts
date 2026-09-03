@@ -1,7 +1,8 @@
 import type { Ride, RideStatus } from '../types/ride'
-import { supabase } from './supabase'
+import { getCustomerAuthId, supabase } from './supabase'
 
 export type CreateRideInput = {
+  customer_auth_id: string
   customer_name: string
   customer_phone: string
   pickup_address: string
@@ -21,6 +22,7 @@ export async function createRide(input: CreateRideInput): Promise<Ride> {
   const { data, error } = await supabase
     .from('rides')
     .insert({
+      customer_auth_id: input.customer_auth_id,
       customer_name: input.customer_name,
       customer_phone: input.customer_phone,
       pickup_address: input.pickup_address,
@@ -123,4 +125,51 @@ export async function fetchAssignedRidesForDriver(driverId: string): Promise<Rid
   }
 
   return (data ?? []) as Ride[]
+}
+
+export async function submitRideRating(rideId: string, rating: number, comment?: string): Promise<Ride | null> {
+  try {
+    const { data, error } = await supabase
+      .from('rides')
+      .update({
+        rating,
+        rating_comment: comment?.trim() || null,
+      })
+      .eq('id', rideId)
+      .select()
+      .single()
+
+    if (error) {
+      console.warn('Unable to persist ride rating to database (column may not exist yet):', error.message)
+      return null
+    }
+
+    return data as Ride
+  } catch (err) {
+    console.warn('Error submitting ride rating:', err)
+    return null
+  }
+}
+
+export async function fetchCustomerRideHistory(): Promise<Ride[]> {
+  const customerAuthId = await getCustomerAuthId()
+
+  try {
+    const { data, error } = await supabase
+      .from('rides')
+      .select('*')
+      .eq('customer_auth_id', customerAuthId)
+      .order('created_at', { ascending: false })
+      .limit(20)
+
+    if (error) {
+      console.warn('Unable to fetch customer ride history:', error.message)
+      return []
+    }
+
+    return (data ?? []) as Ride[]
+  } catch (err) {
+    console.warn('Error in fetchCustomerRideHistory:', err)
+    return []
+  }
 }

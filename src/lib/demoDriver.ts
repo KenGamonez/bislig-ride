@@ -6,8 +6,10 @@ export type DemoDriver = {
   rating: number
   vehicleType: string
   vehicleModel: string
+  vehicleColor?: string
   plateNumber: string
   profilePhoto: string
+  phone?: string
 }
 
 export const demoDriver: DemoDriver = {
@@ -16,7 +18,9 @@ export const demoDriver: DemoDriver = {
   rating: 4.9,
   vehicleType: 'Tricycle',
   vehicleModel: 'Honda TMX / Tricycle',
+  vehicleColor: 'Red',
   plateNumber: 'ABC 123',
+  phone: '09123456789',
   profilePhoto:
     'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
 }

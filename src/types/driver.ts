@@ -9,7 +9,10 @@ export type DriverProfile = {
   profile_photo_url: string | null
   vehicle_type: string | null
   vehicle_model: string | null
+  vehicle_color?: string | null
   plate_number: string | null
+  rating_average?: number | null
+  total_ratings?: number | null
   status: DriverStatus
   availability: DriverAvailability
   auth_user_id: string | null
@@ -24,6 +27,7 @@ export type DriverProfileInput = {
   profile_photo_url?: string | null
   vehicle_type?: string | null
   vehicle_model?: string | null
+  vehicle_color?: string | null
   plate_number?: string | null
   status?: DriverStatus
   availability?: DriverAvailability

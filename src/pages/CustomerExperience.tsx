@@ -1,12 +1,16 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+﻿import { useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
+import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { WeatherWidget } from '../components/WeatherWidget'
-import { demoDriver, passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
+import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
+import { fetchDriverById } from '../lib/drivers'
+import type { DriverProfile } from '../types/driver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
-import { createRide, fetchRideById } from '../lib/rides'
+import { createRide, fetchRideById, submitRideRating } from '../lib/rides'
+import { getCustomerAuthId } from '../lib/supabase'
 import type { Ride } from '../types/ride'
 
 type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
@@ -66,6 +70,7 @@ const initialRide: Ride = {
   destination_address: '',
   destination_lat: null,
   destination_lng: null,
+  customer_auth_id: null,
   driver_id: null,
   passenger_count: 1,
   status: 'requested',
@@ -104,15 +109,28 @@ export function CustomerExperience() {
   const [validationErrors, setValidationErrors] = useState<CustomerValidation>({})
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [showProfile] = useState(false)
+  const [showProfile, setShowProfile] = useState(false)
+  const [customerAuthId, setCustomerAuthId] = useState<string | null>(null)
+  const [assignedDriver, setAssignedDriver] = useState<DriverProfile | null>(null)
+  const [showChat, setShowChat] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
           const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocation, setPickupLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pickupLocationError, setPickupLocationError] = useState('')
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
+  const [rating, setRating] = useState(0)
+  const [ratingComment, setRatingComment] = useState('')
+  const [ratingSubmitted, setRatingSubmitted] = useState(false)
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [isExploreOpen, setIsExploreOpen] = useState(false)
   const exploreMenuRef = useRef<HTMLDivElement | null>(null)
+
+  useEffect(() => {
+    void getCustomerAuthId()
+      .then(setCustomerAuthId)
+      .catch((error) => console.error('Unable to establish customer session:', error))
+  }, [])
 
   useEffect(() => {
     const handlePointerDown = (event: PointerEvent) => {
@@ -237,7 +255,7 @@ export function CustomerExperience() {
   }
 
   useEffect(() => {
-    if (!ride.id || phase === 'payment' || phase === 'payment_confirmed') {
+    if (!ride.id || phase === 'rating' || phase === 'payment' || phase === 'payment_confirmed') {
       return
     }
 
@@ -269,6 +287,29 @@ export function CustomerExperience() {
   }, [ride.id, phase])
 
   useEffect(() => {
+    if (!ride.driver_id) {
+      setAssignedDriver(null)
+      return
+    }
+
+    let cancelled = false
+
+    const loadAssignedDriver = async () => {
+      const driver = await fetchDriverById(ride.driver_id as string)
+
+      if (!cancelled) {
+        setAssignedDriver(driver as DriverProfile | null)
+      }
+    }
+
+    void loadAssignedDriver()
+
+    return () => {
+      cancelled = true
+    }
+  }, [ride.driver_id])
+
+  useEffect(() => {
     const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
 
     if (!ride.driver_id || !activeStatuses.includes(ride.status)) {
@@ -293,6 +334,7 @@ export function CustomerExperience() {
 
     try {
       const createdRide = await createRide({
+        customer_auth_id: customerAuthId ?? await getCustomerAuthId(),
         customer_name: formValues.name,
         customer_phone: formValues.phone,
         pickup_address: formValues.pickup,
@@ -325,11 +367,33 @@ export function CustomerExperience() {
     }
   }
 
+  const handleSubmitRating = async () => {
+    if (!ride.id || rating < 1 || rating > 5 || isSubmittingRating) {
+      return
+    }
+
+    setIsSubmittingRating(true)
+
+    try {
+      const savedRide = await submitRideRating(ride.id, rating, ratingComment)
+
+      if (savedRide) {
+        setRide(savedRide)
+      }
+
+      setRatingSubmitted(true)
+    } finally {
+      setIsSubmittingRating(false)
+    }
+  }
   const handleBackToHome = () => {
     window.localStorage.removeItem(rideIdStorageKey)
     setRide(initialRide)
     setPhase('request')
     setPaymentMethod('Cash')
+    setRating(0)
+    setRatingComment('')
+    setRatingSubmitted(false)
     resetForm()
   }
 
@@ -492,22 +556,22 @@ export function CustomerExperience() {
       </div>
 
       <div className="driver-identity-row">
-        <img src={demoDriver.profilePhoto} alt={demoDriver.name} className="driver-photo" />
+        <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
-          <h3>{demoDriver.name}</h3>
-          <p className="driver-rating">★★★★★ {demoDriver.rating}</p>
-          <p className="driver-vehicle">{demoDriver.vehicleType}</p>
+          <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
+          <p className="driver-rating">â˜…â˜…â˜…â˜…â˜… {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+          <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>
 
       <div className="driver-badge-row">
         <div>
           <span>Vehicle</span>
-          <strong>{demoDriver.vehicleModel}</strong>
+          <strong>{assignedDriver?.vehicle_model ?? 'Demo Tricycle'}</strong>
         </div>
         <div>
           <span>Plate</span>
-          <strong>{demoDriver.plateNumber}</strong>
+          <strong>{assignedDriver?.plate_number ?? 'TEST-0001'}</strong>
         </div>
       </div>
 
@@ -526,17 +590,9 @@ export function CustomerExperience() {
       </div>
 
       <div className="action-row compact-actions">
-        <button type="button" className="secondary-action" disabled>
-          Call Driver
-        </button>
-        <button type="button" className="secondary-action" disabled>
-          Message
-        </button>
+        <a href={"tel:" + (assignedDriver?.phone?.replace(/[^\d+]/g, ''))} className="secondary-action">Call Driver</a><button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
-
-      <button type="button" className="primary-action" onClick={() => setPhase('arrived')}>
-        Driver Arrived
-      </button>
+      <p className="lead-paragraph">Your driver will update the ride status when they arrive.</p>
     </div>
   )
 
@@ -547,11 +603,11 @@ export function CustomerExperience() {
       </div>
 
       <div className="driver-identity-row">
-        <img src={demoDriver.profilePhoto} alt={demoDriver.name} className="driver-photo" />
+        <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
-          <h3>{demoDriver.name}</h3>
-          <p className="driver-rating">{demoDriver.vehicleType}</p>
-          <p className="driver-vehicle">Plate: {demoDriver.plateNumber}</p>
+          <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
+          <p className="driver-rating">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
+          <p className="driver-vehicle">Plate: {assignedDriver?.plate_number ?? 'TEST-0001'}</p>
         </div>
       </div>
 
@@ -567,10 +623,7 @@ export function CustomerExperience() {
           <dd>{ride.destination_address}</dd>
         </div>
       </div>
-
-      <button type="button" className="primary-action" onClick={() => setPhase('in_progress')}>
-        Start Ride
-      </button>
+      <p className="lead-paragraph">Your driver has arrived. The trip will begin when your driver starts the ride.</p>
     </div>
   )
 
@@ -582,11 +635,11 @@ export function CustomerExperience() {
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -605,17 +658,14 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Driver</dt>
-          <dd>{demoDriver.name}</dd>
+          <dd>{assignedDriver?.full_name ?? 'John Doe'}</dd>
         </div>
         <div>
           <dt>Vehicle</dt>
-          <dd>{demoDriver.vehicleModel}</dd>
+          <dd>{assignedDriver?.vehicle_model ?? 'Demo Tricycle'}</dd>
         </div>
       </div>
-
-      <button type="button" className="primary-action accent" onClick={() => setPhase('completed')}>
-        Complete Ride
-      </button>
+      <p className="lead-paragraph">Your ride is in progress. Your driver will complete the trip when you reach your destination.</p>
     </div>
   )
 
@@ -631,11 +681,11 @@ export function CustomerExperience() {
       <div className="ride-summary compact">
         <div>
           <dt>Driver</dt>
-          <dd>{demoDriver.name}</dd>
+          <dd>{assignedDriver?.full_name ?? 'John Doe'}</dd>
         </div>
         <div>
           <dt>Route</dt>
-          <dd>{ride.pickup_address} → {ride.destination_address}</dd>
+          <dd>{ride.pickup_address} â†’ {ride.destination_address}</dd>
         </div>
         <div>
           <dt>Passengers</dt>
@@ -653,6 +703,91 @@ export function CustomerExperience() {
     </div>
   )
 
+  const renderRatingScreen = () => (
+    <div className="demo-state-card payment-card">
+      <div className="status-stack">
+        <span className="demo-status-badge success">RIDE COMPLETED</span>
+      </div>
+
+      {!ratingSubmitted ? (
+        <>
+          <h2>How was your ride?</h2>
+          <p className="lead-paragraph">
+            Rate your experience with {assignedDriver?.full_name ?? 'your driver'}.
+          </p>
+
+          <div
+            className="rating-stars"
+            role="radiogroup"
+            aria-label="Rate your ride from 1 to 5 stars"
+          >
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                className={star <= rating ? 'rating-star selected' : 'rating-star'}
+                onClick={() => setRating(star)}
+                aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                aria-checked={star === rating}
+                role="radio"
+              >
+                ★
+              </button>
+            ))}
+          </div>
+
+          <label className="field-label" htmlFor="rating-comment">
+            Comment <span>(optional)</span>
+          </label>
+
+          <textarea
+            id="rating-comment"
+            className="text-input"
+            value={ratingComment}
+            onChange={(event) => setRatingComment(event.target.value)}
+            placeholder="Tell us about your experience..."
+            rows={4}
+            maxLength={500}
+          />
+
+          <button
+            type="button"
+            className="primary-action"
+            onClick={() => void handleSubmitRating()}
+            disabled={rating === 0 || isSubmittingRating}
+          >
+            {isSubmittingRating ? 'Submitting...' : 'Submit Rating'}
+          </button>
+        </>
+      ) : (
+        <>
+          <h2>Thank you!</h2>
+          <p className="lead-paragraph">
+            Your feedback helps us improve Bislig Ride.
+          </p>
+
+          <div className="ride-summary compact">
+            <div>
+              <dt>Your rating</dt>
+              <dd>{'★'.repeat(rating)}</dd>
+            </div>
+            <div>
+              <dt>Driver</dt>
+              <dd>{assignedDriver?.full_name ?? 'Your driver'}</dd>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            className="primary-action"
+            onClick={handleBackToHome}
+          >
+            Back to Home
+          </button>
+        </>
+      )}
+    </div>
+  )
   const renderPaymentScreen = () => (
     <div className="demo-state-card payment-card">
       <div className="status-stack">
@@ -689,7 +824,7 @@ export function CustomerExperience() {
         <small>Ordinance No. 2023-21</small>
       </div>
 
-      <button type="button" className="primary-action" onClick={() => setPhase('payment_confirmed')}>
+      <button type="button" className="primary-action" onClick={() => setPhase('rating')}>
         Confirm Payment
       </button>
     </div>
@@ -714,7 +849,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Driver</dt>
-          <dd>{demoDriver.name}</dd>
+          <dd>{assignedDriver?.full_name ?? 'John Doe'}</dd>
         </div>
       </div>
 
@@ -733,6 +868,9 @@ export function CustomerExperience() {
 
         <nav className="top-nav" aria-label="Main navigation">
           <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
+          <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
+            {showProfile ? 'Book a Ride' : 'My Rides'}
+          </button>
           <div
             className="explore-menu"
             ref={exploreMenuRef}
@@ -746,7 +884,7 @@ export function CustomerExperience() {
               aria-haspopup="true"
               onClick={() => setIsExploreOpen((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">âŒ„</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
               <div className="discovery-list">
@@ -767,7 +905,7 @@ export function CustomerExperience() {
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
             <h1>Where are you going?</h1>
-            <p className="subtitle">Get a reliable ride around Bislig City — simple, convenient, and made for your everyday trips.</p>
+            <p className="subtitle">Get a reliable ride around Bislig City â€” simple, convenient, and made for your everyday trips.</p>
           </div>
 
           {showProfile ? (
@@ -785,14 +923,22 @@ export function CustomerExperience() {
               renderInProgressScreen()
             ) : phase === 'completed' ? (
               renderCompletedScreen()
+            ) : phase === 'rating' ? (
+              renderRatingScreen()
             ) : phase === 'payment' ? (
               renderPaymentScreen()
             ) : (
               renderPaymentConfirmedScreen()
             )
           ) : null}
-        </section>
-
+        </section>        {showChat && ride.id && assignedDriver && (
+          <RideChat
+            rideId={ride.id}
+            otherPartyName={assignedDriver.full_name ?? 'John Doe'}
+            currentRole="customer"
+            onClose={() => setShowChat(false)}
+          />
+        )}
         <aside className="map-panel" aria-label="Bislig City map preview">
           <MapView
             driverLatitude={driverLocation?.latitude}
@@ -806,4 +952,19 @@ export function CustomerExperience() {
     </div>
   )
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 

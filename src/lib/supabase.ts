@@ -8,3 +8,23 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
+
+export async function getCustomerAuthId(): Promise<string> {
+  const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
+
+  if (sessionError) {
+    throw sessionError
+  }
+
+  if (sessionData.session?.user.id) {
+    return sessionData.session.user.id
+  }
+
+  const { data, error } = await supabase.auth.signInAnonymously()
+
+  if (error || !data.user) {
+    throw error ?? new Error('Unable to establish a customer session.')
+  }
+
+  return data.user.id
+}

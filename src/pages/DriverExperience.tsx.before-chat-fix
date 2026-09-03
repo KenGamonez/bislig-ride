@@ -105,7 +105,7 @@ export function DriverExperience() {
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
-        void updateDriverLocation(driverId, position.coords.latitude, position.coords.longitude).catch((error) => {
+        void updateDriverLocation(TEST_DRIVER_ID, position.coords.latitude, position.coords.longitude).catch((error) => {
           console.error('Unable to update driver location:', error)
         })
       },
@@ -118,7 +118,7 @@ export function DriverExperience() {
     return () => {
       navigator.geolocation.clearWatch(watchId)
     }
-  }, [driverOnline, driverId])
+  }, [driverOnline])
 
   useEffect(() => {
     const refreshRides = async () => {
@@ -166,44 +166,8 @@ export function DriverExperience() {
     }, 5000)
 
     return () => window.clearInterval(timer)
-  }, [driverOnline, driverId])
+  }, [driverOnline])
 
-  useEffect(() => {
-    if (!activeRide?.id || !driverAuthId) {
-      return
-    }
-
-    const channel = supabase
-      .channel(`driver-ride-chat-${activeRide.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'ride_messages',
-          filter: `ride_id=eq.${activeRide.id}`,
-        },
-        (payload) => {
-          const incoming = payload.new as {
-            id?: string
-            ride_id?: string
-            sender_role?: string
-          }
-
-          if (
-            incoming.ride_id === activeRide.id &&
-            incoming.sender_role === 'customer'
-          ) {
-            setShowChat(true)
-          }
-        },
-      )
-      .subscribe()
-
-    return () => {
-      void supabase.removeChannel(channel)
-    }
-  }, [activeRide?.id, driverAuthId])
   const todayEarnings = useMemo(
     () => recentRides.reduce((sum, ride) => sum + Number(ride.fare.replace(/[^\d.]/g, '')), 0),
     [],
@@ -724,7 +688,6 @@ export function DriverExperience() {
     </div>
   )
 }
-
 
 
 
