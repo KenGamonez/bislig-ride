@@ -699,9 +699,7 @@ export function CustomerExperience() {
         </div>
 
         <nav className="top-nav" aria-label="Main navigation">
-          <button type="button" className="nav-button" onClick={() => setShowProfile(false)}>
-            Help
-          </button>
+          <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
           <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
             {showProfile ? 'Back to ride' : 'Profile'}
           </button>

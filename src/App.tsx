@@ -5,15 +5,21 @@ import { CustomerExperience } from './pages/CustomerExperience'
 import { DriverExperience } from './pages/DriverExperience'
 import { AdminExperience } from './pages/AdminExperience'
 import { BecomeDriverExperience } from './pages/BecomeDriverExperience'
+import { PakyawanExperience } from './pages/PakyawanExperience'
 
 type ViewMode = 'customer' | 'driver' | 'admin'
 
 function App() {
   const [view, setView] = useState<ViewMode>('customer')
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
+  const isPakyawanPage = window.location.pathname === '/pakyawan'
 
   if (isBecomeDriverPage) {
     return <BecomeDriverExperience onHome={() => { window.history.pushState({}, '', '/'); window.location.reload() }} />
+  }
+
+  if (isPakyawanPage) {
+    return <PakyawanExperience onBack={() => { window.history.pushState({}, '', '/'); window.location.reload() }} />
   }
 
   return (
