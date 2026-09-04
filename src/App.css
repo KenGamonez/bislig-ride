@@ -3703,3 +3703,672 @@ a.secondary-action {
   }
 }
 
+
+/* =========================================================
+   BISLIG RIDE — CUSTOMER WIDE LAYOUT POLISH
+   Desktop: wide two-column booking + map experience
+   Mobile: compact single-column flow
+   ========================================================= */
+
+.customer-layout {
+  width: 100%;
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(360px, 0.9fr);
+  gap: 18px;
+  align-items: stretch;
+}
+
+.customer-layout .primary-panel {
+  min-width: 0;
+  padding: 24px 26px 26px;
+}
+
+.customer-layout .section-header {
+  margin-bottom: 16px;
+}
+
+.customer-layout .section-header h1 {
+  font-size: clamp(2rem, 3vw, 2.75rem);
+  line-height: 1;
+}
+
+.customer-layout .subtitle {
+  max-width: 620px;
+  margin-top: 7px;
+  font-size: 0.86rem;
+  line-height: 1.45;
+}
+
+.customer-layout .coming-soon-notice {
+  margin-bottom: 12px;
+  padding: 9px 12px;
+}
+
+.customer-layout .booking-section {
+  gap: 11px;
+  padding: 13px 0 14px;
+}
+
+.customer-layout .booking-section-heading {
+  gap: 9px;
+}
+
+.customer-layout .booking-section-heading strong {
+  font-size: 0.84rem;
+}
+
+.customer-layout .booking-section-heading span:last-child {
+  font-size: 0.68rem;
+}
+
+.customer-layout .form-stack,
+.customer-layout .Rider-details,
+.customer-layout .ride-options-grid {
+  gap: 10px;
+}
+
+.customer-layout .input-field {
+  min-height: 48px;
+  height: 48px;
+  border-radius: 11px;
+  padding: 0 13px;
+  font-size: 0.82rem;
+}
+
+.customer-layout .field-label {
+  font-size: 0.66rem;
+}
+
+.customer-layout .field-block {
+  gap: 5px;
+}
+
+.customer-layout .primary-action {
+  min-height: 50px;
+  border-radius: 11px;
+  font-size: 0.76rem;
+}
+
+.customer-layout .map-panel {
+  min-width: 0;
+  padding: 12px;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+  gap: 10px;
+  align-content: stretch;
+}
+
+.customer-layout .map-stage {
+  position: relative;
+  min-height: 470px;
+  overflow: hidden;
+  border-radius: 15px;
+}
+
+.customer-layout .map-stage .map-view {
+  min-height: 470px;
+  height: 100%;
+  border-radius: 15px;
+}
+
+.customer-layout .map-stage .map-view .maplibregl-map {
+  min-height: 470px;
+}
+
+.map-location-action {
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  z-index: 5;
+  width: auto;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 1px solid rgba(215, 25, 32, 0.18);
+  border-radius: 10px;
+  background: #ffffff;
+  color: #222222;
+  box-shadow: 0 8px 20px rgba(20, 24, 30, 0.16);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.map-location-action:hover,
+.map-location-action:focus-visible {
+  border-color: rgba(215, 25, 32, 0.38);
+  color: #d71920;
+  outline: none;
+}
+
+.map-location-status {
+  min-height: 34px;
+  padding: 0 3px;
+  color: var(--text-secondary);
+  font-size: 0.7rem;
+  line-height: 1.4;
+}
+
+.map-location-confirmed {
+  color: #16804d;
+  font-weight: 800;
+}
+
+.map-location-status .form-error-message {
+  margin-top: 3px;
+}
+
+.customer-layout .weather-widget {
+  min-height: 104px;
+  padding: 13px 15px;
+  gap: 8px;
+  border-radius: 15px;
+}
+
+.customer-layout .weather-main strong {
+  font-size: 1.75rem;
+}
+
+.customer-layout .weather-details {
+  font-size: 0.68rem;
+}
+
+.explore-chevron {
+  width: 7px;
+  height: 7px;
+  display: inline-block;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg) translateY(-2px);
+}
+
+/* Keep desktop customer experience within one comfortable viewport. */
+@media (min-width: 1100px) {
+  .customer-layout {
+    min-height: 610px;
+  }
+
+  .customer-layout .primary-panel {
+    height: 100%;
+  }
+
+  .customer-layout .map-panel {
+    height: 100%;
+  }
+}
+
+/* Tablet */
+@media (min-width: 720px) and (max-width: 1099px) {
+  .customer-layout {
+    grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr);
+  }
+
+  .customer-layout .map-stage,
+  .customer-layout .map-stage .map-view,
+  .customer-layout .map-stage .map-view .maplibregl-map {
+    min-height: 410px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 719px) {
+  .customer-layout {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .customer-layout .primary-panel {
+    padding: 18px 14px 20px;
+  }
+
+  .customer-layout .section-header {
+    margin-bottom: 10px;
+  }
+
+  .customer-layout .section-header h1 {
+    font-size: clamp(1.8rem, 9vw, 2.25rem);
+  }
+
+  .customer-layout .subtitle {
+    font-size: 0.78rem;
+    line-height: 1.45;
+  }
+
+  .customer-layout .booking-section {
+    padding: 11px 0 12px;
+    gap: 9px;
+  }
+
+  .customer-layout .booking-section-heading strong {
+    font-size: 0.8rem;
+  }
+
+  .customer-layout .booking-section-heading span:last-child {
+    font-size: 0.64rem;
+  }
+
+  .customer-layout .input-field {
+    min-height: 46px;
+    height: 46px;
+  }
+
+  .customer-layout .map-panel {
+    padding: 10px;
+    gap: 8px;
+  }
+
+  .customer-layout .map-stage {
+    min-height: 330px;
+  }
+
+  .customer-layout .map-stage .map-view,
+  .customer-layout .map-stage .map-view .maplibregl-map {
+    min-height: 330px;
+  }
+
+  .map-location-action {
+    right: 9px;
+    bottom: 9px;
+    min-height: 42px;
+    padding: 0 11px;
+    font-size: 0.65rem;
+  }
+
+  .map-location-status {
+    min-height: 28px;
+    font-size: 0.66rem;
+  }
+
+  .customer-layout .weather-widget {
+    min-height: 92px;
+  }
+
+  .customer-layout .weather-main strong {
+    font-size: 1.55rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .customer-layout .primary-panel {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .customer-layout .form-stack,
+  .customer-layout .Rider-details,
+  .customer-layout .ride-options-grid {
+    gap: 8px;
+  }
+
+  .customer-layout .booking-section-heading span:last-child {
+    display: none;
+  }
+
+  .customer-layout .map-stage,
+  .customer-layout .map-stage .map-view,
+  .customer-layout .map-stage .map-view .maplibregl-map {
+    min-height: 300px;
+  }
+
+  .map-location-action {
+    left: 9px;
+    right: 9px;
+    width: calc(100% - 18px);
+  }
+}
+
+/* =========================================================
+   BISLIG RIDE - RESPONSIVE UI FINAL
+
+   Desktop:
+   Booking left / Map right / Weather below map
+
+   Mobile:
+   Pickup / Location / Map / Destination / Details /
+   Preferences / Request
+   ========================================================= */
+
+@media (min-width: 720px) {
+
+  .customer-layout {
+    width: 100%;
+    display: grid;
+    grid-template-columns: minmax(0, 1.45fr) minmax(390px, 0.95fr);
+    gap: 18px;
+    align-items: stretch;
+  }
+
+  .customer-layout .primary-panel {
+    min-width: 0;
+    padding: 22px 24px 24px;
+  }
+
+  .customer-layout .map-panel {
+    min-width: 0;
+    padding: 12px;
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto auto;
+    gap: 10px;
+  }
+
+  .customer-layout .map-stage {
+    position: relative;
+    min-height: 470px;
+    overflow: hidden;
+    border-radius: 15px;
+  }
+
+  .customer-layout .map-stage .map-view {
+    width: 100%;
+    height: 100%;
+    min-height: 470px;
+    border-radius: 15px;
+  }
+
+  .customer-layout .map-stage .map-view .maplibregl-map {
+    width: 100%;
+    height: 100%;
+    min-height: 470px;
+  }
+
+  .map-location-action {
+    position: absolute;
+    right: 12px;
+    bottom: 12px;
+    z-index: 20;
+
+    min-height: 44px;
+    padding: 0 14px;
+
+    border: 1px solid rgba(215, 25, 32, 0.18);
+    border-radius: 10px;
+
+    background: #ffffff;
+    color: #222222;
+
+    box-shadow: 0 8px 20px rgba(20, 24, 30, 0.18);
+
+    font-size: 0.72rem;
+    font-weight: 800;
+    white-space: nowrap;
+    cursor: pointer;
+  }
+
+  .map-location-action:hover,
+  .map-location-action:focus-visible {
+    border-color: rgba(215, 25, 32, 0.4);
+    color: #d71920;
+    outline: none;
+  }
+
+  .customer-layout .map-location-status {
+    min-height: 30px;
+    padding: 0 3px;
+    font-size: 0.68rem;
+    line-height: 1.35;
+  }
+
+  .customer-layout .map-location-confirmed {
+    color: #16804d;
+    font-weight: 800;
+  }
+}
+
+/* =========================================================
+   MOBILE
+   ========================================================= */
+
+@media (max-width: 719px) {
+
+  .customer-layout {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    gap: 0;
+    overflow: hidden;
+  }
+
+  /*
+   * Flatten the containers so the map can participate
+   * in the same visual sequence as the booking fields.
+   */
+  .customer-layout .primary-panel,
+  .customer-layout .map-panel,
+  .customer-layout .ride-form,
+  .customer-layout .route-section,
+  .customer-layout .booking-section {
+    display: contents;
+  }
+
+  /* INTRO */
+  .customer-layout .section-header {
+    order: 1;
+    padding: 18px 14px 10px;
+    margin: 0;
+  }
+
+  .customer-layout .section-header h1 {
+    font-size: clamp(1.9rem, 9vw, 2.3rem);
+    line-height: 0.98;
+  }
+
+  .customer-layout .subtitle {
+    max-width: 100%;
+    margin-top: 7px;
+    font-size: 0.76rem;
+    line-height: 1.45;
+  }
+
+  .customer-layout .coming-soon-notice {
+    margin-bottom: 10px;
+  }
+
+  /* TRIP HEADING */
+  .customer-layout .route-section .booking-section-heading {
+    order: 2;
+    padding: 12px 14px 8px;
+    margin: 0;
+    border-top: 1px solid var(--border);
+  }
+
+  /* PICKUP */
+  .customer-layout .route-section .form-stack > .field-block:first-child {
+    order: 3;
+    margin: 0 14px;
+  }
+
+  /*
+   * LOCATION BUTTON
+   * Immediately before the map.
+   */
+  .customer-layout .map-stage {
+    display: contents;
+  }
+
+  .customer-layout .map-location-action {
+    order: 4;
+
+    position: static;
+
+    width: calc(100% - 28px);
+    min-height: 46px;
+
+    margin: 8px 14px 9px;
+
+    border: 1px solid rgba(215, 25, 32, 0.2);
+    border-radius: 11px;
+
+    background: #ffffff;
+    color: #d71920;
+
+    box-shadow: 0 5px 14px rgba(28, 31, 35, 0.08);
+
+    font-size: 0.7rem;
+    font-weight: 800;
+  }
+
+  /*
+   * MAP
+   * Immediately beneath location button.
+   */
+  .customer-layout .map-view {
+    order: 5;
+
+    width: calc(100% - 28px);
+    height: 320px !important;
+    min-height: 320px !important;
+
+    margin: 0 14px 10px;
+
+    border-radius: 15px;
+    overflow: hidden;
+  }
+
+  .customer-layout .map-view .maplibregl-map {
+    width: 100%;
+    height: 320px !important;
+    min-height: 320px !important;
+  }
+
+  /* MAP STATUS */
+  .customer-layout .map-location-status {
+    order: 6;
+
+    min-height: 0;
+    margin: 0 14px 5px;
+    padding: 0;
+
+    font-size: 0.64rem;
+    line-height: 1.35;
+  }
+
+  /* DESTINATION AFTER MAP */
+  .customer-layout .route-section .form-stack > .field-block:last-child {
+    order: 7;
+    margin: 0 14px 3px;
+  }
+
+  /* WEATHER */
+  .customer-layout .weather-widget {
+    order: 8;
+
+    min-height: 88px;
+
+    margin: 7px 14px 8px;
+    padding: 12px 13px;
+
+    border-radius: 14px;
+  }
+
+  /* PASSENGER DETAILS */
+  .customer-layout .booking-section:nth-of-type(2) .booking-section-heading {
+    order: 9;
+
+    padding: 13px 14px 8px;
+    margin: 0;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .customer-layout .Rider-details {
+    order: 10;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+
+    margin: 0 14px;
+  }
+
+  /* RIDE PREFERENCES */
+  .customer-layout .booking-section:nth-of-type(3) .booking-section-heading {
+    order: 11;
+
+    padding: 13px 14px 8px;
+    margin: 0;
+
+    border-top: 1px solid var(--border);
+  }
+
+  .customer-layout .ride-options-grid {
+    order: 12;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+
+    margin: 0 14px;
+  }
+
+  /* SUBMIT */
+  .customer-layout form > .form-error-message {
+    order: 13;
+    margin: 8px 14px 0;
+  }
+
+  .customer-layout form > .primary-action {
+    order: 14;
+
+    width: calc(100% - 28px);
+    min-height: 50px;
+
+    margin: 9px 14px 16px;
+
+    border-radius: 11px;
+  }
+}
+
+/* SMALL PHONES */
+
+@media (max-width: 420px) {
+
+  .customer-layout .section-header {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .customer-layout .route-section .booking-section-heading,
+  .customer-layout .booking-section:nth-of-type(2) .booking-section-heading,
+  .customer-layout .booking-section:nth-of-type(3) .booking-section-heading {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  .customer-layout .route-section .form-stack > .field-block:first-child,
+  .customer-layout .route-section .form-stack > .field-block:last-child,
+  .customer-layout .Rider-details,
+  .customer-layout .ride-options-grid {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .customer-layout .map-location-action {
+    width: calc(100% - 24px);
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .customer-layout .map-view {
+    width: calc(100% - 24px);
+    height: 300px !important;
+    min-height: 300px !important;
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .customer-layout .map-view .maplibregl-map {
+    height: 300px !important;
+    min-height: 300px !important;
+  }
+
+  .customer-layout .map-location-status,
+  .customer-layout .weather-widget {
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+
+  .customer-layout form > .primary-action {
+    width: calc(100% - 24px);
+    margin-left: 12px;
+    margin-right: 12px;
+  }
+}
