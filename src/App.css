@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --brand-red: #D71920;
   --brand-red-dark: #b71318;
   --brand-orange: #E85D04;
@@ -961,7 +961,7 @@ a.secondary-action {
 
 .admin-tab.active {
   background: var(--surface);
-  color: #fff;
+  color: var(--text-primary);
   box-shadow: 0 10px 18px rgba(15, 23, 42, 0.12);
 }
 
@@ -1797,7 +1797,7 @@ a.secondary-action {
 
 .status-toggle {
   min-width: 112px;
-  color: #fff;
+  color: var(--text-primary);
   font-size: 0.75rem;
 }
 
@@ -2406,7 +2406,7 @@ a.secondary-action {
 
 .ride-chat-message.mine .ride-chat-bubble {
   background: #d71920;
-  color: #fff;
+  color: var(--text-primary);
   border-bottom-right-radius: 5px;
 }
 
@@ -2546,7 +2546,7 @@ a.secondary-action {
 
 
 /* =========================================================
-   BISLIG RIDE — PREMIUM DRIVER DASHBOARD
+   BISLIG RIDE � PREMIUM DRIVER DASHBOARD
    UI POLISH PASS
    ========================================================= */
 
@@ -3657,3 +3657,4 @@ a.secondary-action {
 }
 
 .contact-business-note h3 { color: #ffffff; }
+

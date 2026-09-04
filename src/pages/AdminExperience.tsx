@@ -1,23 +1,23 @@
-import { useEffect, useMemo, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
-import { demoDriver } from '../lib/demoDriver'
-import {
-  activeRides,
-  adminCustomers,
-  adminDrivers,
-  completedRides,
-  paymentRecords,
-  type AdminDriver,
-  type AdminRide,
-  type DriverAvailability,
-  type DriverStatus,
-} from '../lib/adminDemoData'
+import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
+import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
+import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
 import { driverApplicationStatuses, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
+
+type AdminPayment = {
+  rideId: string
+  dateTime: string
+  customer: string
+  amount: string
+  paymentMethod: string
+  status: string
+}
 type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications'
 
 type DriverDraft = {
@@ -63,14 +63,18 @@ const rideStatusLabels: Record<AdminRide['status'], string> = {
 export function AdminExperience() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
-  const [drivers, setDrivers] = useState<AdminDriver[]>(adminDrivers)
+  const [drivers, setDrivers] = useState<AdminDriver[]>([])
+  const [liveRides, setLiveRides] = useState<any[]>([])
+  const [liveCustomers, setLiveCustomers] = useState<any[]>([])
+      const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
+  const [driverError, setDriverError] = useState('')
   const [driverSearch, setDriverSearch] = useState('')
   const [driverFilter, setDriverFilter] = useState<'all' | DriverStatus>('all')
   const [customerSearch, setCustomerSearch] = useState('')
   const [rideSearch, setRideSearch] = useState('')
   const [paymentSearch, setPaymentSearch] = useState('')
-  const [selectedDriverId, setSelectedDriverId] = useState(demoDriver.name)
-  const [selectedRideId, setSelectedRideId] = useState(activeRides[0].id)
+  const [selectedDriverId, setSelectedDriverId] = useState('')
+  const [selectedRideId, setSelectedRideId] = useState('')
   const [showAddDriver, setShowAddDriver] = useState(false)
   const [driverDraft, setDriverDraft] = useState<DriverDraft>(emptyDriverDraft)
   const [applications, setApplications] = useState<DriverApplication[]>([])
@@ -80,6 +84,70 @@ export function AdminExperience() {
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
+  const mapDriverRecord = (driver: DriverRecord): AdminDriver => ({
+    id: driver.id,
+    name: driver.full_name,
+    phone: driver.phone,
+    email: driver.email ?? '',
+    profilePhoto: driver.profile_photo_url ?? '',
+    vehicleType: driver.vehicle_type,
+    vehicleModel: driver.vehicle_model,
+    plateNumber: driver.plate_number,
+    status: driver.status === 'active' ? 'Active' : 'Inactive',
+    availability:
+      driver.availability === 'online'
+        ? 'Online'
+        : driver.availability === 'busy'
+          ? 'Busy'
+          : 'Offline',
+    rating: Number(driver.rating_average ?? 5),
+    recentRides: [],
+  })
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+
+    Promise.all([
+      fetchAdminLiveRides(),
+      fetchAdminLiveCustomers(),
+    ])
+      .then(([rides, customers]) => {
+        setLiveRides(rides)
+        setLiveCustomers(customers)
+
+        setSelectedRideId(current =>
+          current ||
+          rides.find((ride: any) =>
+            ['accepted', 'arrived', 'in_progress'].includes(ride.status)
+          )?.id ||
+          ''
+        )
+      })
+      .catch((error) => {
+        console.error('Unable to load live admin data:', error)
+      })
+      .finally(() => {
+      })
+  }, [isLoggedIn])
+useEffect(() => {
+    if (!isLoggedIn) return
+
+    setIsLoadingDrivers(true)
+    setDriverError('')
+
+    fetchDrivers()
+      .then((items) => {
+        const mappedDrivers = items.map(mapDriverRecord)
+        setDrivers(mappedDrivers)
+        setSelectedDriverId((current) => current || mappedDrivers[0]?.id || '')
+      })
+      .catch((error) => {
+        console.error('Unable to load drivers:', error)
+        setDriverError('Unable to load drivers. Please try again.')
+      })
+      .finally(() => setIsLoadingDrivers(false))
+  }, [isLoggedIn])
   useEffect(() => {
     let isMounted = true
 
@@ -135,7 +203,7 @@ export function AdminExperience() {
   }, [drivers, driverFilter, driverSearch])
 
   const filteredCustomers = useMemo(() => {
-    return adminCustomers.filter((customer) => {
+    return liveCustomers.filter((customer) => {
       return (
         customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
         customer.phone.toLowerCase().includes(customerSearch.toLowerCase())
@@ -144,7 +212,7 @@ export function AdminExperience() {
   }, [customerSearch])
 
   const filteredRides = useMemo(() => {
-    return activeRides.filter((ride) => {
+    return liveRides.filter((ride) => {
       return (
         ride.id.toLowerCase().includes(rideSearch.toLowerCase()) ||
         ride.customer.toLowerCase().includes(rideSearch.toLowerCase()) ||
@@ -153,18 +221,12 @@ export function AdminExperience() {
     })
   }, [rideSearch])
 
-  const filteredPayments = useMemo(() => {
-    return paymentRecords.filter((payment) => {
-      return (
-        payment.rideId.toLowerCase().includes(paymentSearch.toLowerCase()) ||
-        payment.customer.toLowerCase().includes(paymentSearch.toLowerCase()) ||
-        payment.paymentMethod.toLowerCase().includes(paymentSearch.toLowerCase())
-      )
-    })
+  const filteredPayments = useMemo<AdminPayment[]>(() => {
+    return []
   }, [paymentSearch])
 
   const selectedDriver = drivers.find((driver) => driver.id === selectedDriverId) ?? drivers[0]
-  const selectedRide = activeRides.find((ride) => ride.id === selectedRideId) ?? activeRides[0]
+  const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
 
   const handleApplicationStatusChange = async (id: string, status: DriverApplicationStatus) => {
@@ -189,64 +251,95 @@ export function AdminExperience() {
   const overviewStats = [
     { label: 'Total Drivers', value: String(drivers.length), accent: true },
     { label: 'Online Drivers', value: String(drivers.filter((driver) => driver.availability === 'Online').length) },
-    { label: 'Active Rides', value: String(activeRides.length) },
-    { label: 'Completed Rides', value: String(completedRides.length) },
-    { label: 'Total Customers', value: String(adminCustomers.length) },
-    { label: "Today's Revenue", value: '₱2,540 DEMO' },
+    { label: 'Active Rides', value: String(liveRides.filter((ride: any) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)).length) },
+    { label: 'Completed Rides', value: String(liveRides.filter((ride: any) => ride.status === 'completed').length) },
+    { label: 'Total Customers', value: String(liveCustomers.length) },
+    { label: "Today's Revenue", value: 'Not connected' },
   ]
 
-  const handleDriverSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleDriverSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
     if (!driverDraft.name || !driverDraft.phone || !driverDraft.vehicleModel || !driverDraft.plateNumber) {
       return
     }
 
-    const nextDriver: AdminDriver = {
-      id: `driver-${Date.now()}`,
-      name: driverDraft.name,
-      phone: driverDraft.phone,
-      email: driverDraft.email || `${driverDraft.name.toLowerCase().replace(/\s+/g, '.')}@bisligride.com`,
-      profilePhoto:
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=600&q=80',
-      vehicleType: driverDraft.vehicleType,
-      vehicleModel: driverDraft.vehicleModel,
-      plateNumber: driverDraft.plateNumber,
-      status: driverDraft.status,
-      availability: driverDraft.availability,
-      rating: 4.7,
-      recentRides: [{ rideId: 'BR-2050', destination: 'New Route', status: 'requested', fare: '₱150 DEMO' }],
+    try {
+      setDriverError('')
+
+      const created = await createDriver({
+        full_name: driverDraft.name.trim(),
+        phone: driverDraft.phone.trim(),
+        email: driverDraft.email.trim() || null,
+        vehicle_type: driverDraft.vehicleType,
+        vehicle_model: driverDraft.vehicleModel.trim(),
+        plate_number: driverDraft.plateNumber.trim(),
+        status: driverDraft.status === 'Active' ? 'active' : 'inactive',
+        availability:
+          driverDraft.availability === 'Online'
+            ? 'online'
+            : driverDraft.availability === 'Busy'
+              ? 'busy'
+              : 'offline',
+      })
+
+      const mappedDriver = mapDriverRecord(created)
+
+      setDrivers((current) => [mappedDriver, ...current])
+      setSelectedDriverId(mappedDriver.id)
+      setShowAddDriver(false)
+      setDriverDraft(emptyDriverDraft)
+      setDriverFilter('all')
+    } catch (error) {
+      console.error('Unable to create driver:', error)
+      setDriverError('Unable to add driver. Please check the information and try again.')
     }
-
-    setDrivers((current) => [nextDriver, ...current])
-    setSelectedDriverId(nextDriver.id)
-    setShowAddDriver(false)
-    setDriverDraft(emptyDriverDraft)
-    setDriverFilter('all')
   }
 
-  const handleAvailabilityChange = (driverId: string, availability: DriverAvailability) => {
-    setDrivers((current) =>
-      current.map((driver) =>
-        driver.id === driverId ? { ...driver, availability } : driver,
-      ),
-    )
+  const handleAvailabilityChange = async (driverId: string, availability: DriverAvailability) => {
+    const dbAvailability =
+      availability === 'Online'
+        ? 'online'
+        : availability === 'Busy'
+          ? 'busy'
+          : 'offline'
+
+    try {
+      setDriverError('')
+      const updated = await updateDriver(driverId, { availability: dbAvailability })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((driver) => driver.id === driverId ? mappedDriver : driver),
+      )
+    } catch (error) {
+      console.error('Unable to update driver availability:', error)
+      setDriverError('Unable to update driver availability. Please try again.')
+    }
   }
 
-  const handleStatusChange = (driverId: string, status: DriverStatus) => {
-    setDrivers((current) =>
-      current.map((driver) =>
-        driver.id === driverId ? { ...driver, status } : driver,
-      ),
-    )
-  }
+  const handleStatusChange = async (driverId: string, status: DriverStatus) => {
+    const dbStatus = status === 'Active' ? 'active' : 'inactive'
 
+    try {
+      setDriverError('')
+      const updated = await updateDriver(driverId, { status: dbStatus })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((driver) => driver.id === driverId ? mappedDriver : driver),
+      )
+    } catch (error) {
+      console.error('Unable to update driver status:', error)
+      setDriverError('Unable to update driver status. Please try again.')
+    }
+  }
   if (!isAuthReady) {
     return <div className="auth-shell"><div className="auth-card"><p className="muted-copy">Checking admin session...</p></div></div>
   }
 
   if (!isLoggedIn) {
-    return <AdminLogin onLogin={() => setIsLoggedIn(true)} />
+    return <AdminLogin />
   }
 
   return (
@@ -339,6 +432,9 @@ export function AdminExperience() {
                 <option value="Inactive">Inactive</option>
               </select>
             </div>
+
+            {isLoadingDrivers ? <p className="muted-copy">Loading drivers...</p> : null}
+            {driverError ? <p className="error-copy">{driverError}</p> : null}
 
             {showAddDriver ? (
               <form className="driver-form panel-form" onSubmit={handleDriverSubmit}>
@@ -507,7 +603,7 @@ export function AdminExperience() {
                   <img src={selectedDriver.profilePhoto} alt={selectedDriver.name} className="detail-avatar" />
                   <div>
                     <h4>{selectedDriver.name}</h4>
-                    <p>★★★★★ {selectedDriver.rating}</p>
+                    <p>â˜…â˜…â˜…â˜…â˜… {selectedDriver.rating}</p>
                   </div>
                 </div>
                 <div className="detail-grid">
@@ -530,7 +626,7 @@ export function AdminExperience() {
                           <strong>{ride.rideId}</strong>
                           <span>{ride.destination}</span>
                         </div>
-                        <span className="status-pill online">{rideStatusLabels[ride.status]}</span>
+                        <span className="status-pill online">{rideStatusLabels[ride.status as keyof typeof rideStatusLabels]}</span>
                       </li>
                     ))}
                   </ul>
@@ -626,9 +722,9 @@ export function AdminExperience() {
                         <strong>{ride.id}</strong>
                         <span>{ride.customer}</span>
                       </div>
-                      <span className="status-pill online">{rideStatusLabels[ride.status]}</span>
+                      <span className="status-pill online">{rideStatusLabels[ride.status as keyof typeof rideStatusLabels]}</span>
                     </div>
-                    <p>{ride.pickup} → {ride.destination}</p>
+                    <p>{ride.pickup} â†’ {ride.destination}</p>
                     <div className="ride-meta-row">
                       <span>{ride.driver}</span>
                       <span>{ride.requestedAt}</span>
@@ -660,7 +756,7 @@ export function AdminExperience() {
                   <div><span>Passenger</span><strong>{selectedRide.passengerType}</strong></div>
                   <div><span>Pickup</span><strong>{selectedRide.pickup}</strong></div>
                   <div><span>Destination</span><strong>{selectedRide.destination}</strong></div>
-                  <div><span>Status</span><strong>{rideStatusLabels[selectedRide.status]}</strong></div>
+                  <div><span>Status</span><strong>{rideStatusLabels[selectedRide.status as keyof typeof rideStatusLabels]}</strong></div>
                   <div><span>Payment</span><strong>{selectedRide.paymentMethod}</strong></div>
                   <div><span>Requested</span><strong>{selectedRide.requestedAt}</strong></div>
                   <div><span>Fare</span><strong>{selectedRide.fare}</strong></div>
@@ -696,7 +792,7 @@ export function AdminExperience() {
                 </tr>
               </thead>
               <tbody>
-                {completedRides.map((ride) => (
+                {liveRides.filter((ride) => ride.status === 'completed').map((ride) => (
                   <tr key={ride.id}>
                     <td>{ride.id}</td>
                     <td>{ride.customer}</td>
@@ -790,3 +886,11 @@ export function AdminExperience() {
     </div>
   )
 }
+
+
+
+
+
+
+
+

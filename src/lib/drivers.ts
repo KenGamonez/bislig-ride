@@ -1,91 +1,90 @@
 import { supabase } from './supabase'
-import type { DriverAvailability, DriverProfile, DriverProfileInput, DriverStatus } from '../types/driver'
 
-export type DriverRecord = DriverProfile
-export type DriverInput = DriverProfileInput
-export type { DriverAvailability, DriverStatus }
+export type DriverRecord = {
+  id: string
+  full_name: string
+  phone: string
+  email: string | null
+  profile_photo_url: string | null
+  vehicle_type: string
+  vehicle_model: string
+  plate_number: string
+  status: 'active' | 'inactive'
+  availability: 'offline' | 'online' | 'busy'
+  created_at: string
+  auth_user_id: string | null
+  vehicle_color: string | null
+  rating_average: number | null
+  total_ratings: number | null
+}
 
-export async function fetchDrivers(): Promise<DriverRecord[]> {
+export async function fetchDrivers() {
   const { data, error } = await supabase
     .from('drivers')
     .select('*')
     .order('created_at', { ascending: false })
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
   return (data ?? []) as DriverRecord[]
 }
 
-export async function fetchDriverByAuthUserId(authUserId: string): Promise<DriverRecord | null> {
+export async function createDriver(driver: {
+  full_name: string
+  phone: string
+  email?: string | null
+  vehicle_type: string
+  vehicle_model: string
+  plate_number: string
+  status?: 'active' | 'inactive'
+  availability?: 'offline' | 'online' | 'busy'
+  vehicle_color?: string | null
+}) {
   const { data, error } = await supabase
     .from('drivers')
+    .insert(driver)
     .select('*')
-    .eq('auth_user_id', authUserId)
-    .maybeSingle()
+    .single<DriverRecord>()
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
-  return (data as DriverRecord | null) ?? null
+  return data
 }
 
-export async function createDriver(input: DriverInput): Promise<DriverRecord> {
-  const payload = {
-    full_name: input.full_name,
-    phone: input.phone,
-    email: input.email ?? null,
-    profile_photo_url: input.profile_photo_url ?? null,
-    vehicle_type: input.vehicle_type ?? null,
-    vehicle_model: input.vehicle_model ?? null,
-    vehicle_color: input.vehicle_color ?? null,
-    plate_number: input.plate_number ?? null,
-    status: input.status ?? 'active',
-    availability: input.availability ?? 'offline',
-    auth_user_id: input.auth_user_id ?? null,
-  }
-
-  const { data, error } = await supabase.from('drivers').insert(payload).select().single()
-
-  if (error) {
-    throw error
-  }
-
-  return data as DriverRecord
-}
-
-export async function fetchDriverById(driverId: string | number): Promise<DriverRecord | null> {
-  const { data, error } = await supabase
-    .from('drivers')
-    .select('*')
-    .eq('id', driverId)
-    .maybeSingle()
-
-  if (error) {
-    console.error('Unable to fetch driver by id:', error)
-    return null
-  }
-
-  return (data as DriverRecord | null) ?? null
-}
-
-export async function updateDriver(id: number | string, updates: Partial<DriverInput>): Promise<DriverRecord> {
+export async function updateDriver(
+  id: string,
+  updates: Partial<Pick<
+    DriverRecord,
+    | 'full_name'
+    | 'phone'
+    | 'email'
+    | 'vehicle_type'
+    | 'vehicle_model'
+    | 'plate_number'
+    | 'status'
+    | 'availability'
+    | 'vehicle_color'
+  >>
+) {
   const { data, error } = await supabase
     .from('drivers')
     .update(updates)
     .eq('id', id)
-    .select()
-    .single()
+    .select('*')
+    .single<DriverRecord>()
 
-  if (error) {
-    throw error
-  }
+  if (error) throw error
 
-  return data as DriverRecord
+  return data
 }
+export async function fetchDriverById(driverId: string) {
+  const { data, error } = await supabase
+    .from('drivers')
+    .select('*')
+    .eq('id', driverId)
+    .single<DriverRecord>()
 
-export async function updateDriverAvailability(id: number | string, availability: DriverAvailability): Promise<DriverRecord> {
-  return updateDriver(id, { availability })
+  if (error) throw error
+
+  return data
 }
