@@ -31,7 +31,7 @@ export type AdminCustomer = {
 
 export type AdminRide = {
   id: string
-  customer: string
+  Rider: string
   customerPhone: string
   driver: string
   pickup: string
@@ -46,7 +46,7 @@ export type AdminRide = {
 
 export type CompletedRide = {
   id: string
-  customer: string
+  Rider: string
   driver: string
   pickup: string
   destination: string
@@ -58,7 +58,7 @@ export type CompletedRide = {
 
 export type PaymentRecord = {
   rideId: string
-  customer: string
+  Rider: string
   amount: string
   paymentMethod: 'Cash' | 'GCash'
   status: PaymentStatus
@@ -79,8 +79,8 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Online',
     rating: demoDriver.rating,
     recentRides: [
-      { rideId: 'BR-2048', destination: 'Barangay Mangagoy', status: 'completed', fare: '₱180 DEMO' },
-      { rideId: 'BR-2017', destination: 'City Plaza', status: 'in_progress', fare: '₱120 DEMO' },
+      { rideId: 'BR-2048', destination: 'Barangay Mangagoy', status: 'completed', fare: 'â‚±180 DEMO' },
+      { rideId: 'BR-2017', destination: 'City Plaza', status: 'in_progress', fare: 'â‚±120 DEMO' },
     ],
   },
   {
@@ -97,8 +97,8 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Busy',
     rating: 4.8,
     recentRides: [
-      { rideId: 'BR-2039', destination: 'Purok 3', status: 'arrived', fare: '₱110 DEMO' },
-      { rideId: 'BR-2012', destination: 'Talisay', status: 'completed', fare: '₱170 DEMO' },
+      { rideId: 'BR-2039', destination: 'Purok 3', status: 'arrived', fare: 'â‚±110 DEMO' },
+      { rideId: 'BR-2012', destination: 'Talisay', status: 'completed', fare: 'â‚±170 DEMO' },
     ],
   },
   {
@@ -115,8 +115,8 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Offline',
     rating: 4.7,
     recentRides: [
-      { rideId: 'BR-1988', destination: 'Luna Street', status: 'completed', fare: '₱260 DEMO' },
-      { rideId: 'BR-1964', destination: 'Bislig Airport', status: 'completed', fare: '₱320 DEMO' },
+      { rideId: 'BR-1988', destination: 'Luna Street', status: 'completed', fare: 'â‚±260 DEMO' },
+      { rideId: 'BR-1964', destination: 'Bislig Airport', status: 'completed', fare: 'â‚±320 DEMO' },
     ],
   },
   {
@@ -133,24 +133,24 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Offline',
     rating: 4.5,
     recentRides: [
-      { rideId: 'BR-1935', destination: 'Barangay Tabon', status: 'completed', fare: '₱105 DEMO' },
-      { rideId: 'BR-1902', destination: 'Market Center', status: 'completed', fare: '₱140 DEMO' },
+      { rideId: 'BR-1935', destination: 'Barangay Tabon', status: 'completed', fare: 'â‚±105 DEMO' },
+      { rideId: 'BR-1902', destination: 'Market Center', status: 'completed', fare: 'â‚±140 DEMO' },
     ],
   },
 ]
 
 export const adminCustomers: AdminCustomer[] = [
-  { id: 'customer-01', name: 'Alyssa Reyes', phone: '0917-555-1212', rides: 26, lastRide: 'Today, 09:45 AM', status: 'VIP' },
-  { id: 'customer-02', name: 'Joel Mariano', phone: '0922-981-4024', rides: 14, lastRide: 'Yesterday, 06:10 PM', status: 'Verified' },
-  { id: 'customer-03', name: 'Tina Baldo', phone: '0947-440-5516', rides: 9, lastRide: 'Today, 07:20 AM', status: 'New' },
-  { id: 'customer-04', name: 'Mark Villanueva', phone: '0995-019-4431', rides: 33, lastRide: 'Mon, 11:30 AM', status: 'VIP' },
-  { id: 'customer-05', name: 'Rosa Mae', phone: '0936-221-7604', rides: 8, lastRide: 'Sun, 02:05 PM', status: 'Verified' },
+  { id: 'Rider-01', name: 'Alyssa Reyes', phone: '0917-555-1212', rides: 26, lastRide: 'Today, 09:45 AM', status: 'VIP' },
+  { id: 'Rider-02', name: 'Joel Mariano', phone: '0922-981-4024', rides: 14, lastRide: 'Yesterday, 06:10 PM', status: 'Verified' },
+  { id: 'Rider-03', name: 'Tina Baldo', phone: '0947-440-5516', rides: 9, lastRide: 'Today, 07:20 AM', status: 'New' },
+  { id: 'Rider-04', name: 'Mark Villanueva', phone: '0995-019-4431', rides: 33, lastRide: 'Mon, 11:30 AM', status: 'VIP' },
+  { id: 'Rider-05', name: 'Rosa Mae', phone: '0936-221-7604', rides: 8, lastRide: 'Sun, 02:05 PM', status: 'Verified' },
 ]
 
 export const activeRides: AdminRide[] = [
   {
     id: 'BR-2047',
-    customer: 'Alyssa Reyes',
+    Rider: 'Alyssa Reyes',
     customerPhone: '0917-555-1212',
     driver: demoDriver.name,
     pickup: 'Barangay Sta. Cruz',
@@ -159,11 +159,11 @@ export const activeRides: AdminRide[] = [
     requestedAt: 'Today, 09:42 AM',
     passengerType: 'Regular',
     paymentMethod: 'GCash',
-    fare: '₱180 DEMO',
+    fare: 'â‚±180 DEMO',
   },
   {
     id: 'BR-2048',
-    customer: 'Tina Baldo',
+    Rider: 'Tina Baldo',
     customerPhone: '0947-440-5516',
     driver: 'Maria Santos',
     pickup: 'Purok 6',
@@ -172,11 +172,11 @@ export const activeRides: AdminRide[] = [
     requestedAt: 'Today, 09:15 AM',
     passengerType: 'Student',
     paymentMethod: 'Cash',
-    fare: '₱120 DEMO',
+    fare: 'â‚±120 DEMO',
   },
   {
     id: 'BR-2049',
-    customer: 'Joel Mariano',
+    Rider: 'Joel Mariano',
     customerPhone: '0922-981-4024',
     driver: 'Rafael Gomez',
     pickup: 'City Plaza',
@@ -185,60 +185,60 @@ export const activeRides: AdminRide[] = [
     requestedAt: 'Today, 08:52 AM',
     passengerType: 'Senior Citizen',
     paymentMethod: 'Cash',
-    fare: '₱220 DEMO',
+    fare: 'â‚±220 DEMO',
   },
 ]
 
 export const completedRides: CompletedRide[] = [
   {
     id: 'BR-2041',
-    customer: 'Alyssa Reyes',
+    Rider: 'Alyssa Reyes',
     driver: demoDriver.name,
     pickup: 'Barangay San Jose',
     destination: 'Bislig Public Market',
     happenedAt: 'Today, 08:10 AM',
-    fare: '₱160 DEMO',
+    fare: 'â‚±160 DEMO',
     paymentMethod: 'GCash',
     status: 'completed',
   },
   {
     id: 'BR-2039',
-    customer: 'Mark Villanueva',
+    Rider: 'Mark Villanueva',
     driver: 'Maria Santos',
     pickup: 'Barangay Mangagoy',
     destination: 'BSP Terminal',
     happenedAt: 'Yesterday, 06:44 PM',
-    fare: '₱170 DEMO',
+    fare: 'â‚±170 DEMO',
     paymentMethod: 'Cash',
     status: 'completed',
   },
   {
     id: 'BR-2034',
-    customer: 'Rosa Mae',
+    Rider: 'Rosa Mae',
     driver: 'Rafael Gomez',
     pickup: 'City Hall',
     destination: 'Luna Avenue',
     happenedAt: 'Yesterday, 03:18 PM',
-    fare: '₱240 DEMO',
+    fare: 'â‚±240 DEMO',
     paymentMethod: 'GCash',
     status: 'completed',
   },
   {
     id: 'BR-2028',
-    customer: 'Joel Mariano',
+    Rider: 'Joel Mariano',
     driver: 'Liza Duran',
     pickup: 'Purok 2',
     destination: 'Barangay San Miguel',
     happenedAt: 'Tue, 10:52 AM',
-    fare: '₱155 DEMO',
+    fare: 'â‚±155 DEMO',
     paymentMethod: 'Cash',
     status: 'completed',
   },
 ]
 
 export const paymentRecords: PaymentRecord[] = [
-  { rideId: 'BR-2041', customer: 'Alyssa Reyes', amount: '₱160 DEMO', paymentMethod: 'GCash', status: 'Paid', dateTime: 'Today, 08:15 AM' },
-  { rideId: 'BR-2047', customer: 'Alyssa Reyes', amount: '₱180 DEMO', paymentMethod: 'GCash', status: 'Pending', dateTime: 'Today, 09:44 AM' },
-  { rideId: 'BR-2039', customer: 'Mark Villanueva', amount: '₱170 DEMO', paymentMethod: 'Cash', status: 'Paid', dateTime: 'Yesterday, 06:47 PM' },
-  { rideId: 'BR-2048', customer: 'Tina Baldo', amount: '₱120 DEMO', paymentMethod: 'Cash', status: 'Pending', dateTime: 'Today, 09:18 AM' },
+  { rideId: 'BR-2041', Rider: 'Alyssa Reyes', amount: 'â‚±160 DEMO', paymentMethod: 'GCash', status: 'Paid', dateTime: 'Today, 08:15 AM' },
+  { rideId: 'BR-2047', Rider: 'Alyssa Reyes', amount: 'â‚±180 DEMO', paymentMethod: 'GCash', status: 'Pending', dateTime: 'Today, 09:44 AM' },
+  { rideId: 'BR-2039', Rider: 'Mark Villanueva', amount: 'â‚±170 DEMO', paymentMethod: 'Cash', status: 'Paid', dateTime: 'Yesterday, 06:47 PM' },
+  { rideId: 'BR-2048', Rider: 'Tina Baldo', amount: 'â‚±120 DEMO', paymentMethod: 'Cash', status: 'Pending', dateTime: 'Today, 09:18 AM' },
 ]

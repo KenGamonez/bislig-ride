@@ -10,10 +10,10 @@ import { PakyawanExperience } from './pages/PakyawanExperience'
 import { ContactExperience } from './pages/ContactExperience'
 import { supabase } from './lib/supabase'
 
-type ViewMode = 'customer' | 'driver' | 'admin'
+type ViewMode = 'Rider' | 'driver' | 'admin'
 
 function App() {
-  const [view, setView] = useState<ViewMode>('customer')
+  const [view, setView] = useState<ViewMode>('Rider')
   const [driverAuthenticated, setDriverAuthenticated] = useState(false)
 
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
@@ -85,7 +85,7 @@ function App() {
         className="header-role-switcher"
       />
 
-      {view === 'customer' ? (
+      {view === 'Rider' ? (
         <CustomerExperience />
       ) : view === 'driver' ? (
         driverAuthenticated ? (

@@ -114,7 +114,7 @@ export function ContactExperience() {
                   <span>What can we help you with? <b>*</b></span>
                   <select name="inquiry_type" required defaultValue="General Inquiry">
                     <option>General Inquiry</option>
-                    <option>Ride / Customer Support</option>
+                    <option>Ride / Rider Support</option>
                     <option>Driver Inquiry</option>
                     <option>Business Partnership</option>
                     <option>Feature My Business</option>

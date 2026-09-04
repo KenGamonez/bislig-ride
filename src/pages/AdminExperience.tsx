@@ -14,7 +14,7 @@ import type { Session } from '@supabase/supabase-js'
 type AdminPayment = {
   rideId: string
   dateTime: string
-  customer: string
+  Rider: string
   amount: string
   paymentMethod: string
   status: string
@@ -204,10 +204,10 @@ useEffect(() => {
   }, [drivers, driverFilter, driverSearch])
 
   const filteredCustomers = useMemo(() => {
-    return liveCustomers.filter((customer) => {
+    return liveCustomers.filter((Rider) => {
       return (
-        customer.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
-        customer.phone.toLowerCase().includes(customerSearch.toLowerCase())
+        Rider.name.toLowerCase().includes(customerSearch.toLowerCase()) ||
+        Rider.phone.toLowerCase().includes(customerSearch.toLowerCase())
       )
     })
   }, [customerSearch])
@@ -216,7 +216,7 @@ useEffect(() => {
     return liveRides.filter((ride) => {
       return (
         ride.id.toLowerCase().includes(rideSearch.toLowerCase()) ||
-        ride.customer.toLowerCase().includes(rideSearch.toLowerCase()) ||
+        ride.Rider.toLowerCase().includes(rideSearch.toLowerCase()) ||
         ride.driver.toLowerCase().includes(rideSearch.toLowerCase())
       )
     })
@@ -608,7 +608,7 @@ useEffect(() => {
                   <img src={selectedDriver.profilePhoto} alt={selectedDriver.name} className="detail-avatar" />
                   <div>
                     <h4>{selectedDriver.name}</h4>
-                    <p>â˜…â˜…â˜…â˜…â˜… {selectedDriver.rating}</p>
+                    <p>Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦ {selectedDriver.rating}</p>
                   </div>
                 </div>
                 <div className="detail-grid">
@@ -670,7 +670,7 @@ useEffect(() => {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Customer</th>
+                    <th>Rider</th>
                     <th>Phone</th>
                     <th>Rides</th>
                     <th>Last ride</th>
@@ -678,15 +678,15 @@ useEffect(() => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredCustomers.map((customer) => (
-                    <tr key={customer.id}>
-                      <td>{customer.name}</td>
-                      <td>{customer.phone}</td>
-                      <td>{customer.rides}</td>
-                      <td>{customer.lastRide}</td>
+                  {filteredCustomers.map((Rider) => (
+                    <tr key={Rider.id}>
+                      <td>{Rider.name}</td>
+                      <td>{Rider.phone}</td>
+                      <td>{Rider.rides}</td>
+                      <td>{Rider.lastRide}</td>
                       <td>
                         <span className="status-pill online">
-                          {customer.status}
+                          {Rider.status}
                         </span>
                       </td>
                     </tr>
@@ -725,11 +725,11 @@ useEffect(() => {
                     <div className="ride-summary-row">
                       <div>
                         <strong>{ride.id}</strong>
-                        <span>{ride.customer}</span>
+                        <span>{ride.Rider}</span>
                       </div>
                       <span className="status-pill online">{rideStatusLabels[ride.status as keyof typeof rideStatusLabels]}</span>
                     </div>
-                    <p>{ride.pickup} → {ride.destination}</p>
+                    <p>{ride.pickup} â†’ {ride.destination}</p>
                     <div className="ride-meta-row">
                       <span>{ride.driver}</span>
                       <span>{ride.requestedAt}</span>
@@ -755,7 +755,7 @@ useEffect(() => {
                 </div>
 
                 <div className="detail-grid">
-                  <div><span>Customer</span><strong>{selectedRide.customer}</strong></div>
+                  <div><span>Rider</span><strong>{selectedRide.Rider}</strong></div>
                   <div><span>Phone</span><strong>{selectedRide.customerPhone}</strong></div>
                   <div><span>Driver</span><strong>{selectedRide.driver}</strong></div>
                   <div><span>Passenger</span><strong>{selectedRide.passengerType}</strong></div>
@@ -787,7 +787,7 @@ useEffect(() => {
               <thead>
                 <tr>
                   <th>Ride ID</th>
-                  <th>Customer</th>
+                  <th>Rider</th>
                   <th>Driver</th>
                   <th>Pickup</th>
                   <th>Destination</th>
@@ -800,7 +800,7 @@ useEffect(() => {
                 {liveRides.filter((ride) => ride.status === 'completed').map((ride) => (
                   <tr key={ride.id}>
                     <td>{ride.id}</td>
-                    <td>{ride.customer}</td>
+                    <td>{ride.Rider}</td>
                     <td>{ride.driver}</td>
                     <td>{ride.pickup}</td>
                     <td>{ride.destination}</td>
@@ -840,7 +840,7 @@ useEffect(() => {
                 <thead>
                   <tr>
                     <th>Ride ID</th>
-                    <th>Customer</th>
+                    <th>Rider</th>
                     <th>Amount</th>
                     <th>Method</th>
                     <th>Status</th>
@@ -851,7 +851,7 @@ useEffect(() => {
                   {filteredPayments.map((payment) => (
                     <tr key={`${payment.rideId}-${payment.dateTime}`}>
                       <td>{payment.rideId}</td>
-                      <td>{payment.customer}</td>
+                      <td>{payment.Rider}</td>
                       <td>{payment.amount}</td>
                       <td>{payment.paymentMethod}</td>
                       <td>

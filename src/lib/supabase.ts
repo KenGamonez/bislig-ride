@@ -23,7 +23,7 @@ export async function getCustomerAuthId(): Promise<string> {
   const { data, error } = await supabase.auth.signInAnonymously()
 
   if (error || !data.user) {
-    throw error ?? new Error('Unable to establish a customer session.')
+    throw error ?? new Error('Unable to establish a Rider session.')
   }
 
   return data.user.id

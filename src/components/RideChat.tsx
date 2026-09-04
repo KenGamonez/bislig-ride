@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
 
@@ -6,7 +6,7 @@ type ChatMessage = {
   id: string
   ride_id: string
   sender_id: string
-  sender_role: 'customer' | 'driver'
+  sender_role: 'Rider' | 'driver'
   message: string
   created_at: string
 }
@@ -14,7 +14,7 @@ type ChatMessage = {
 type RideChatProps = {
   rideId: string
   otherPartyName: string
-  currentRole: 'customer' | 'driver'
+  currentRole: 'Rider' | 'driver'
   currentDriverId?: string | null
   driverAuthId?: string | null
   onClose: () => void
@@ -105,7 +105,7 @@ export function RideChat({
 
     let senderId = currentRole === 'driver' ? (driverAuthId ?? '') : (currentDriverId ?? '')
 
-    if (currentRole === 'customer') {
+    if (currentRole === 'Rider') {
       senderId = await getCustomerAuthId()
     }
 
@@ -167,7 +167,7 @@ export function RideChat({
             <p className="ride-chat-empty">Loading messages...</p>
           ) : messages.length === 0 ? (
             <p className="ride-chat-empty">
-              No messages yet. Send a message to your {currentRole === 'customer' ? 'driver' : 'passenger'}.
+              No messages yet. Send a message to your {currentRole === 'Rider' ? 'driver' : 'passenger'}.
             </p>
           ) : (
             messages.map((item) => {

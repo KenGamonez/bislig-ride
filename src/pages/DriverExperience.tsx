@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { supabase } from '../lib/supabase'
@@ -194,7 +194,7 @@ export function DriverExperience() {
 
           if (
             incoming.ride_id === activeRide.id &&
-            incoming.sender_role === 'customer'
+            incoming.sender_role === 'Rider'
           ) {
             setShowChat(true)
           }

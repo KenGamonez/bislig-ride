@@ -163,7 +163,7 @@ export async function fetchCustomerRideHistory(): Promise<Ride[]> {
       .limit(20)
 
     if (error) {
-      console.warn('Unable to fetch customer ride history:', error.message)
+      console.warn('Unable to fetch Rider ride history:', error.message)
       return []
     }
 

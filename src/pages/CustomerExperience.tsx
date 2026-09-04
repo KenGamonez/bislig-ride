@@ -129,7 +129,7 @@ export function CustomerExperience() {
   useEffect(() => {
     void getCustomerAuthId()
       .then(setCustomerAuthId)
-      .catch((error) => console.error('Unable to establish customer session:', error))
+      .catch((error) => console.error('Unable to establish Rider session:', error))
   }, [])
 
   useEffect(() => {
@@ -247,7 +247,7 @@ export function CustomerExperience() {
         setValidationErrors((current) => ({ ...current, pickup: undefined }))
       },
       (error) => {
-        console.error('Unable to get customer pickup location:', error)
+        console.error('Unable to get Rider pickup location:', error)
         setPickupLocationError('Unable to access your location. You can enter a pickup landmark instead.')
       },
       { enableHighAccuracy: true },
@@ -328,7 +328,7 @@ export function CustomerExperience() {
     }
 
     const channel = supabase
-      .channel(`customer-ride-chat-${ride.id}`)
+      .channel(`Rider-ride-chat-${ride.id}`)
       .on(
         'postgres_changes',
         {
@@ -488,7 +488,7 @@ export function CustomerExperience() {
           <span className="booking-section-number">02</span>
           <div><strong>Passenger details</strong><span>So your driver knows who to meet</span></div>
         </div>
-        <div className="customer-details">
+        <div className="Rider-details">
         <LocationInput
           label="Full Name"
           value={formData.name}
@@ -595,7 +595,7 @@ export function CustomerExperience() {
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
           <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
-          <p className="driver-rating">â˜…â˜…â˜…â˜…â˜… {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+          <p className="driver-rating">Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦ {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
           <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>
@@ -671,11 +671,11 @@ export function CustomerExperience() {
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">Ã¢â€ â€œ</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">Ã¢â€ â€œ</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">Ã¢â€ â€œ</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -721,7 +721,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Route</dt>
-          <dd>{ride.pickup_address} → {ride.destination_address}</dd>
+          <dd>{ride.pickup_address} â†’ {ride.destination_address}</dd>
         </div>
         <div>
           <dt>Passengers</dt>
@@ -920,7 +920,7 @@ export function CustomerExperience() {
               aria-haspopup="true"
               onClick={() => setIsExploreOpen((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">âŒ„</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
               <div className="discovery-list">
@@ -937,16 +937,16 @@ export function CustomerExperience() {
         </nav>
       </header>
 
-      <main className="customer-layout">
+      <main className="Rider-layout">
         <section className="primary-panel">
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
             <div className="coming-soon-notice" role="status" aria-live="polite">
-  <div className="coming-soon-kicker">BISLIG RIDE · COMING SOON</div>
+  <div className="coming-soon-kicker">BISLIG RIDE Â· COMING SOON</div>
   <div className="coming-soon-copy">We're onboarding our founding drivers.</div>
 </div>
 <h1>Where are you going?</h1>
-            <p className="subtitle">Get a reliable ride around Bislig City — simple, convenient, and made for your everyday trips.</p>
+            <p className="subtitle">Get a reliable ride around Bislig City â€” simple, convenient, and made for your everyday trips.</p>
           </div>
 
           {showProfile ? (
@@ -976,7 +976,7 @@ export function CustomerExperience() {
           <RideChat
             rideId={ride.id}
             otherPartyName={assignedDriver.full_name ?? 'John Doe'}
-            currentRole="customer"
+            currentRole="Rider"
             onClose={() => setShowChat(false)}
           />
         )}

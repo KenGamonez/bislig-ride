@@ -1,6 +1,6 @@
 type ViewSwitcherProps = {
-  currentView: 'customer' | 'driver' | 'admin'
-  onSwitch: (view: 'customer' | 'driver' | 'admin') => void
+  currentView: 'Rider' | 'driver' | 'admin'
+  onSwitch: (view: 'Rider' | 'driver' | 'admin') => void
   className?: string
 }
 
@@ -10,10 +10,10 @@ export function ViewSwitcher({ currentView, onSwitch, className = '' }: ViewSwit
       <div className="switcher-buttons">
         <button
           type="button"
-          className={currentView === 'customer' ? 'switch-button active' : 'switch-button'}
-          onClick={() => onSwitch('customer')}
+          className={currentView === 'Rider' ? 'switch-button active' : 'switch-button'}
+          onClick={() => onSwitch('Rider')}
         >
-          Customer
+          Rider
         </button>
         <button
           type="button"

@@ -1,8 +1,8 @@
-﻿import { supabase } from './supabase'
+import { supabase } from './supabase'
 
 export type LiveAdminRide = {
   id: string
-  customer: string
+  Rider: string
   customerPhone: string
   driver: string
   passengerType: string
@@ -56,7 +56,7 @@ export async function fetchAdminLiveRides(): Promise<LiveAdminRide[]> {
 
   return (rides ?? []).map((ride) => ({
     id: ride.id,
-    customer: ride.customer_name,
+    Rider: ride.customer_name,
     customerPhone: ride.customer_phone,
     driver: ride.driver_id
       ? driverMap.get(ride.driver_id) ?? 'Assigned driver'
@@ -100,7 +100,7 @@ export async function fetchAdminLiveCustomers(): Promise<LiveAdminCustomer[]> {
       phone: ride.customer_phone,
       rides: 1,
       lastRide: new Date(ride.created_at).toLocaleString(),
-      status: 'Customer',
+      status: 'Rider',
     })
   }
 

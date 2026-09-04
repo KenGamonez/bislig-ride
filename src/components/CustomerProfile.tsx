@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { fetchDriverById } from '../lib/drivers'
 import { fetchCustomerRideHistory } from '../lib/rides'
 import type { Ride } from '../types/ride'
@@ -75,7 +75,7 @@ export function CustomerProfile() {
           setDriverDetails(Object.fromEntries(results))
         }
       } catch (error) {
-        console.error('Failed to load customer rides:', error)
+        console.error('Failed to load Rider rides:', error)
 
         if (isMounted) {
           setRides([])
@@ -106,7 +106,7 @@ export function CustomerProfile() {
     return (
       <article
         key={ride.id}
-        className="customer-profile-history-item"
+        className="Rider-profile-history-item"
       >
         <div>
           <strong>
@@ -167,23 +167,23 @@ export function CustomerProfile() {
   }
 
   return (
-    <section className="customer-profile">
-      <div className="customer-profile-header">
+    <section className="Rider-profile">
+      <div className="Rider-profile-header">
         <h2>My Rides</h2>
         <p>Your current and previous Bislig Ride trips.</p>
       </div>
 
       {isLoading ? (
-        <div className="customer-profile-empty">
+        <div className="Rider-profile-empty">
           Loading your rides...
         </div>
       ) : rides.length === 0 ? (
-        <div className="customer-profile-empty">
+        <div className="Rider-profile-empty">
           <strong>No rides yet.</strong>
           <p>Your completed and active rides will appear here automatically.</p>
         </div>
       ) : (
-        <div className="customer-profile-history">
+        <div className="Rider-profile-history">
           {activeRide ? (
             <>
               <h3>Active Ride</h3>
