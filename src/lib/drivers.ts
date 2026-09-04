@@ -1,4 +1,4 @@
-import { supabase } from './supabase'
+﻿import { supabase } from './supabase'
 
 export type DriverRecord = {
   id: string
@@ -39,6 +39,7 @@ export async function createDriver(driver: {
   status?: 'active' | 'inactive'
   availability?: 'offline' | 'online' | 'busy'
   vehicle_color?: string | null
+  profile_photo_url?: string | null
 }) {
   const { data, error } = await supabase
     .from('drivers')
@@ -88,3 +89,4 @@ export async function fetchDriverById(driverId: string) {
 
   return data
 }
+

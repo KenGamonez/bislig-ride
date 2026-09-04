@@ -920,7 +920,7 @@ export function CustomerExperience() {
               aria-haspopup="true"
               onClick={() => setIsExploreOpen((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true">âŒ„</span>
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
               <div className="discovery-list">
