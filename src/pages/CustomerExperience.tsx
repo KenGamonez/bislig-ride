@@ -595,7 +595,7 @@ export function CustomerExperience() {
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
           <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
-          <p className="driver-rating">★★★★★ {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+          <p className="driver-rating">â˜…â˜…â˜…â˜…â˜… {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
           <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>
@@ -671,11 +671,11 @@ export function CustomerExperience() {
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">↓</span>
+        <span className="progress-arrow">â†“</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -920,7 +920,7 @@ export function CustomerExperience() {
               aria-haspopup="true"
               onClick={() => setIsExploreOpen((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">âŒ„</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
               <div className="discovery-list">
@@ -941,7 +941,11 @@ export function CustomerExperience() {
         <section className="primary-panel">
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
-            <h1>Where are you going?</h1>
+            <div className="coming-soon-notice" role="status" aria-live="polite">
+  <div className="coming-soon-kicker">BISLIG RIDE · COMING SOON</div>
+  <div className="coming-soon-copy">We're onboarding our founding drivers.</div>
+</div>
+<h1>Where are you going?</h1>
             <p className="subtitle">Get a reliable ride around Bislig City — simple, convenient, and made for your everyday trips.</p>
           </div>
 
@@ -989,6 +993,7 @@ export function CustomerExperience() {
     </div>
   )
 }
+
 
 
 

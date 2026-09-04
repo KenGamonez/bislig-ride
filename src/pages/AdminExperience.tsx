@@ -1,4 +1,5 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+import sanjayPhoto from '../assets/Sanjay Monteroso.jpg'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
@@ -274,6 +275,10 @@ useEffect(() => {
         vehicle_type: driverDraft.vehicleType,
         vehicle_model: driverDraft.vehicleModel.trim(),
         plate_number: driverDraft.plateNumber.trim(),
+        profile_photo_url:
+          driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
+            ? sanjayPhoto
+            : null,
         status: driverDraft.status === 'Active' ? 'active' : 'inactive',
         availability:
           driverDraft.availability === 'Online'
@@ -724,7 +729,7 @@ useEffect(() => {
                       </div>
                       <span className="status-pill online">{rideStatusLabels[ride.status as keyof typeof rideStatusLabels]}</span>
                     </div>
-                    <p>{ride.pickup} â†’ {ride.destination}</p>
+                    <p>{ride.pickup} → {ride.destination}</p>
                     <div className="ride-meta-row">
                       <span>{ride.driver}</span>
                       <span>{ride.requestedAt}</span>
@@ -886,6 +891,8 @@ useEffect(() => {
     </div>
   )
 }
+
+
 
 
 

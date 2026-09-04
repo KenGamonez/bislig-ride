@@ -3658,3 +3658,48 @@ a.secondary-action {
 
 .contact-business-note h3 { color: #ffffff; }
 
+
+/* =========================================
+   Bislig Ride � Temporary Coming Soon Notice
+   ========================================= */
+
+.coming-soon-notice {
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(215, 25, 32, 0.16);
+  border-radius: 12px;
+  background: rgba(215, 25, 32, 0.035);
+}
+
+.coming-soon-kicker {
+  margin-bottom: 4px;
+  color: #D71920;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.2;
+}
+
+.coming-soon-copy {
+  margin: 0;
+  color: #343434;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+@media (max-width: 640px) {
+  .coming-soon-notice {
+    margin-bottom: 14px;
+    padding: 11px 12px;
+  }
+
+  .coming-soon-kicker {
+    font-size: 9px;
+  }
+
+  .coming-soon-copy {
+    font-size: 11px;
+  }
+}
+
