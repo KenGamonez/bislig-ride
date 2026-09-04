@@ -47,6 +47,10 @@ export function subscribeToDriverLocation(
   driverId: string,
   callback: (location: DriverLocation) => void,
 ): () => void {
+  void getDriverLocation(driverId).then((location) => {
+    if (location) callback(location)
+  })
+
   const channel = supabase
     .channel(`driver-location:${driverId}`)
     .on(
@@ -71,3 +75,4 @@ export function subscribeToDriverLocation(
     void supabase.removeChannel(channel)
   }
 }
+
