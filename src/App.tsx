@@ -7,6 +7,7 @@ import { DriverExperience } from './pages/DriverExperience'
 import { AdminExperience } from './pages/AdminExperience'
 import { BecomeDriverExperience } from './pages/BecomeDriverExperience'
 import { PakyawanExperience } from './pages/PakyawanExperience'
+import { ContactExperience } from './pages/ContactExperience'
 import { supabase } from './lib/supabase'
 
 type ViewMode = 'customer' | 'driver' | 'admin'
@@ -17,6 +18,7 @@ function App() {
 
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
   const isPakyawanPage = window.location.pathname === '/pakyawan'
+  const isContactPage = window.location.pathname === '/contact'
 
   useEffect(() => {
     const checkDriverSession = async () => {
@@ -58,6 +60,10 @@ function App() {
         }}
       />
     )
+  }
+
+  if (isContactPage) {
+    return <ContactExperience />
   }
 
   if (isPakyawanPage) {

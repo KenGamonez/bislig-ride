@@ -933,6 +933,7 @@ export function CustomerExperience() {
             </div>
           </div>
           <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
+          <a className="nav-link" href="/contact">Contact</a>
         </nav>
       </header>
 
@@ -988,6 +989,8 @@ export function CustomerExperience() {
     </div>
   )
 }
+
+
 
 
 
