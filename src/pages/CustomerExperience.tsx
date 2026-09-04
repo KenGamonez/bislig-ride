@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { RideChat } from '../components/RideChat'
@@ -10,7 +10,7 @@ import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
 import { createRide, fetchRideById, submitRideRating } from '../lib/rides'
-import { getCustomerAuthId } from '../lib/supabase'
+import { getCustomerAuthId, supabase } from '../lib/supabase'
 import type { Ride } from '../types/ride'
 
 type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
@@ -322,6 +322,42 @@ export function CustomerExperience() {
     })
   }, [ride.driver_id, ride.status])
 
+  useEffect(() => {
+    if (!ride.id || !customerAuthId) {
+      return
+    }
+
+    const channel = supabase
+      .channel(`customer-ride-chat-${ride.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'ride_messages',
+          filter: `ride_id=eq.${ride.id}`,
+        },
+        (payload) => {
+          const incoming = payload.new as {
+            id?: string
+            ride_id?: string
+            sender_role?: string
+          }
+
+          if (
+            incoming.ride_id === ride.id &&
+            incoming.sender_role === 'driver'
+          ) {
+            setShowChat(true)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [ride.id, customerAuthId])
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -559,7 +595,7 @@ export function CustomerExperience() {
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
           <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
-          <p className="driver-rating">â˜…â˜…â˜…â˜…â˜… {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+          <p className="driver-rating">★★★★★ {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
           <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>
@@ -635,11 +671,11 @@ export function CustomerExperience() {
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">↓</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">↓</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">â†“</span>
+        <span className="progress-arrow">↓</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -685,7 +721,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Route</dt>
-          <dd>{ride.pickup_address} â†’ {ride.destination_address}</dd>
+          <dd>{ride.pickup_address} → {ride.destination_address}</dd>
         </div>
         <div>
           <dt>Passengers</dt>
@@ -731,7 +767,7 @@ export function CustomerExperience() {
                 aria-checked={star === rating}
                 role="radio"
               >
-                ★
+                ?
               </button>
             ))}
           </div>
@@ -769,7 +805,7 @@ export function CustomerExperience() {
           <div className="ride-summary compact">
             <div>
               <dt>Your rating</dt>
-              <dd>{'★'.repeat(rating)}</dd>
+              <dd>{'?'.repeat(rating)}</dd>
             </div>
             <div>
               <dt>Driver</dt>
@@ -884,7 +920,7 @@ export function CustomerExperience() {
               aria-haspopup="true"
               onClick={() => setIsExploreOpen((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true">âŒ„</span>
+              Explore Bislig <span className="explore-chevron" aria-hidden="true">⌄</span>
             </button>
             <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
               <div className="discovery-list">
@@ -905,7 +941,7 @@ export function CustomerExperience() {
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
             <h1>Where are you going?</h1>
-            <p className="subtitle">Get a reliable ride around Bislig City â€” simple, convenient, and made for your everyday trips.</p>
+            <p className="subtitle">Get a reliable ride around Bislig City — simple, convenient, and made for your everyday trips.</p>
           </div>
 
           {showProfile ? (
@@ -952,6 +988,7 @@ export function CustomerExperience() {
     </div>
   )
 }
+
 
 
 
