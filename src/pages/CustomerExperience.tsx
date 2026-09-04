@@ -124,6 +124,7 @@ export function CustomerExperience() {
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [isExploreOpen, setIsExploreOpen] = useState(false)
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const exploreMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -153,6 +154,31 @@ export function CustomerExperience() {
       document.removeEventListener('keydown', handleKeyDown)
     }
   }, [])
+  useEffect(() => {
+    if (!isMobileNavOpen) return
+
+    const handleMobileNavEscape = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMobileNavOpen(false)
+      }
+    }
+
+    const handleMobileNavOutsidePointer = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null
+
+      if (!target?.closest('.app-header')) {
+        setIsMobileNavOpen(false)
+      }
+    }
+
+    document.addEventListener('keydown', handleMobileNavEscape)
+    document.addEventListener('pointerdown', handleMobileNavOutsidePointer)
+
+    return () => {
+      document.removeEventListener('keydown', handleMobileNavEscape)
+      document.removeEventListener('pointerdown', handleMobileNavOutsidePointer)
+    }
+  }, [isMobileNavOpen])
 
   useEffect(() => {
     const persistedRideId = window.localStorage.getItem(rideIdStorageKey)
@@ -925,16 +951,22 @@ export function CustomerExperience() {
 
   return (
     <div className="shell-container">
-      <header className="app-header">
+      <header className={isMobileNavOpen ? 'app-header mobile-nav-active' : 'app-header'}>
         <div className="brand-block">
           <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
         </div>
 
-        <nav className="top-nav" aria-label="Main navigation">
+        <nav className="top-nav desktop-nav" aria-label="Main navigation">
           <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
-          <button type="button" className="nav-button" onClick={() => setShowProfile((current) => !current)}>
+
+          <button
+            type="button"
+            className="nav-button"
+            onClick={() => setShowProfile((current) => !current)}
+          >
             {showProfile ? 'Book a Ride' : 'My Rides'}
           </button>
+
           <div
             className="explore-menu"
             ref={exploreMenuRef}
@@ -950,19 +982,136 @@ export function CustomerExperience() {
             >
               Explore Bislig <span className="explore-chevron" aria-hidden="true"></span>
             </button>
-            <div className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'} role="menu" aria-label="Explore Bislig categories">
+
+            <div
+              className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'}
+              role="menu"
+              aria-label="Explore Bislig categories"
+            >
               <div className="discovery-list">
                 {discoveryCategories.map((category) => (
-                  <button key={category} type="button" className="discovery-item" role="menuitem" onClick={() => setIsExploreOpen(false)}>
+                  <button
+                    key={category}
+                    type="button"
+                    className="discovery-item"
+                    role="menuitem"
+                    onClick={() => setIsExploreOpen(false)}
+                  >
                     {category}
                   </button>
                 ))}
               </div>
             </div>
           </div>
+
           <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
           <a className="nav-link" href="/contact">Contact</a>
         </nav>
+
+        <button
+          type="button"
+          className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
+          aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+          aria-expanded={isMobileNavOpen}
+          aria-controls="mobile-main-navigation"
+          onClick={() => setIsMobileNavOpen((current) => !current)}
+        >
+          <span className="mobile-menu-icon" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+
+        <div
+          id="mobile-main-navigation"
+          className={isMobileNavOpen ? 'mobile-nav-panel is-open' : 'mobile-nav-panel'}
+          aria-hidden={!isMobileNavOpen}
+        >
+          <div className="mobile-nav-inner">
+
+            <a
+              className="mobile-nav-item"
+              href="/pakyawan"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Book Pakyawan</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+            </a>
+
+            <button
+              type="button"
+              className="mobile-nav-item"
+              onClick={() => {
+                setShowProfile((current) => !current)
+                setIsMobileNavOpen(false)
+              }}
+            >
+              <span className="mobile-nav-label">
+                {showProfile ? 'Book a Ride' : 'My Rides'}
+              </span>
+              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+            </button>
+
+            <div className={isExploreOpen ? 'mobile-explore-group is-open' : 'mobile-explore-group'}>
+              <button
+                type="button"
+                className="mobile-nav-item mobile-explore-trigger"
+                aria-expanded={isExploreOpen}
+                aria-controls="mobile-explore-list"
+                onClick={() => setIsExploreOpen((current) => !current)}
+              >
+                <span className="mobile-nav-label">Explore Bislig</span>
+                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">→</span>
+              </button>
+
+              <div
+                id="mobile-explore-list"
+                className="mobile-explore-list"
+                aria-hidden={!isExploreOpen}
+              >
+                {discoveryCategories.map((category) => (
+                  <button
+                    key={category}
+                    type="button"
+                    className="mobile-explore-item"
+                    onClick={() => {
+                      setIsExploreOpen(false)
+                      setIsMobileNavOpen(false)
+                    }}
+                  >
+                    <span>{category}</span>
+                    <span aria-hidden="true">↗</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <a
+              className="mobile-nav-item mobile-nav-driver"
+              href="/become-a-driver"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Become a Driver</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+            </a>
+
+            <a
+              className="mobile-nav-item"
+              href="/contact"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Contact</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+            </a>
+
+          </div>
+
+          <div className="mobile-nav-footer">
+            <span>Bislig City</span>
+            <span>Ride local. Move freely.</span>
+          </div>
+        </div>
       </header>
 
       <main className="customer-layout">
@@ -1047,6 +1196,7 @@ export function CustomerExperience() {
     </div>
   )
 }
+
 
 
 
