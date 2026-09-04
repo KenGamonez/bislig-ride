@@ -4449,3 +4449,320 @@ a.secondary-action {
     order: 14;
   }
 }
+
+/* =========================================================
+   BISLIG RIDE - FINAL RESPONSIVE RIDER LAYOUT
+   ========================================================= */
+
+.customer-layout {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.45fr) minmax(360px, 0.95fr) !important;
+  gap: 20px !important;
+  align-items: stretch !important;
+}
+
+.map-panel {
+  min-width: 0 !important;
+  display: grid !important;
+  grid-template-rows: minmax(480px, 1fr) auto auto !important;
+  gap: 14px !important;
+  overflow: hidden !important;
+}
+
+.map-stage {
+  position: relative !important;
+  min-height: 480px !important;
+  overflow: hidden !important;
+  border-radius: 16px !important;
+}
+
+.map-location-action {
+  position: absolute !important;
+  left: 16px !important;
+  bottom: 16px !important;
+  z-index: 50 !important;
+  min-height: 44px !important;
+  width: auto !important;
+  padding: 0 16px !important;
+  border-radius: 10px !important;
+  border: 1px solid rgba(215, 25, 32, 0.18) !important;
+  background: #ffffff !important;
+  color: #1f2933 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.12) !important;
+}
+
+.map-location-status {
+  min-height: 0 !important;
+}
+
+.map-location-status:empty {
+  display: none !important;
+}
+
+@media (max-width: 767px) {
+
+  html,
+  body {
+    overflow-x: hidden !important;
+  }
+
+  .shell-container {
+    width: 100% !important;
+    max-width: none !important;
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+    box-sizing: border-box !important;
+  }
+
+  .app-header {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+  }
+
+  .brand-block {
+    justify-content: center !important;
+    width: 100% !important;
+  }
+
+  .top-nav {
+    display: grid !important;
+    grid-template-columns: repeat(5, minmax(0, 1fr)) !important;
+    width: 100% !important;
+    gap: 3px !important;
+  }
+
+  .top-nav a,
+  .top-nav .nav-button {
+    min-width: 0 !important;
+    min-height: 34px !important;
+    padding: 4px 1px !important;
+    font-size: 0.56rem !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    white-space: normal !important;
+  }
+
+  .explore-trigger {
+    justify-content: center !important;
+  }
+
+  .explore-chevron {
+    width: 6px !important;
+    height: 6px !important;
+    flex: 0 0 6px !important;
+    overflow: hidden !important;
+  }
+
+  .customer-layout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  /*
+    Flatten containers so the mobile flex order controls
+    the complete booking experience.
+  */
+
+  .primary-panel,
+  .map-panel,
+  .ride-form,
+  .route-section,
+  .route-fields,
+  .passenger-section,
+  .preferences-section {
+    display: contents !important;
+  }
+
+  /* 1. Header / intro */
+
+  .section-header {
+    display: block !important;
+    order: 1 !important;
+    width: 100% !important;
+    margin-bottom: 4px !important;
+  }
+
+  .section-header h1 {
+    margin-bottom: 6px !important;
+    font-size: clamp(1.75rem, 8vw, 2.35rem) !important;
+    line-height: 1.05 !important;
+  }
+
+  .section-header .subtitle {
+    font-size: 0.84rem !important;
+    line-height: 1.4 !important;
+    margin-bottom: 0 !important;
+  }
+
+  /* 2. Trip details */
+
+  .route-heading {
+    display: grid !important;
+    order: 2 !important;
+    width: 100% !important;
+  }
+
+  /* 3. Pickup */
+
+  .route-fields > .location-field:first-child {
+    order: 3 !important;
+    width: 100% !important;
+  }
+
+  /* Optional GPS note */
+
+  .pickup-detected-note {
+    order: 3.5 !important;
+    width: 100% !important;
+  }
+
+  .pickup-location-error {
+    order: 3.6 !important;
+    width: 100% !important;
+  }
+
+  /* 4. Current location */
+
+  .map-panel > .map-stage {
+    display: contents !important;
+  }
+
+  .map-panel .map-location-action {
+    position: relative !important;
+    left: auto !important;
+    bottom: auto !important;
+    order: 4 !important;
+    width: 100% !important;
+    min-height: 46px !important;
+    margin: 0 !important;
+    padding: 0 14px !important;
+    box-shadow: none !important;
+  }
+
+  /* 5. Map */
+
+  .map-panel .map-stage > *:not(.map-location-action) {
+    order: 5 !important;
+    width: 100% !important;
+  }
+
+  .map-panel .map-stage > div,
+  .map-panel .map-stage > section,
+  .map-panel .map-stage > iframe,
+  .map-panel .map-stage > canvas {
+    order: 5 !important;
+  }
+
+  .map-panel .map-view,
+  .map-panel .map-container,
+  .map-panel .map-wrapper {
+    order: 5 !important;
+    width: 100% !important;
+  }
+
+  /* 6. Map status */
+
+  .map-location-status {
+    display: block !important;
+    order: 6 !important;
+    width: 100% !important;
+  }
+
+  /* 7. Destination */
+
+  .route-fields > .location-field:last-child {
+    order: 7 !important;
+    width: 100% !important;
+  }
+
+  /* 8. Weather */
+
+  .map-panel > [class*="weather"] {
+    order: 8 !important;
+    width: 100% !important;
+  }
+
+  /* 9. Passenger heading */
+
+  .passenger-heading {
+    display: grid !important;
+    order: 9 !important;
+    width: 100% !important;
+  }
+
+  /* 10. Passenger fields */
+
+  .passenger-details {
+    display: grid !important;
+    order: 10 !important;
+    width: 100% !important;
+    gap: 12px !important;
+  }
+
+  /* 11. Ride preferences heading */
+
+  .preferences-heading {
+    display: grid !important;
+    order: 11 !important;
+    width: 100% !important;
+  }
+
+  /* 12. Ride preferences */
+
+  .ride-options-grid {
+    display: grid !important;
+    order: 12 !important;
+    width: 100% !important;
+    gap: 10px !important;
+  }
+
+  /* 13. Error */
+
+  .submit-error {
+    order: 13 !important;
+    width: 100% !important;
+  }
+
+  /* 14. Request Ride */
+
+  .request-ride-action {
+    order: 14 !important;
+    width: 100% !important;
+    min-height: 50px !important;
+  }
+
+  .location-field {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+
+  .location-field input {
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .booking-section-heading {
+    margin-top: 4px !important;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .shell-container {
+    padding-left: 7px !important;
+    padding-right: 7px !important;
+  }
+
+  .top-nav {
+    gap: 2px !important;
+  }
+
+  .top-nav a,
+  .top-nav .nav-button {
+    font-size: 0.51rem !important;
+  }
+}
