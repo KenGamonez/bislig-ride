@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
+import bisligLogo from '../assets/Bislig Ride Logo.png'
 
 export function ContactExperience() {
   const [submitted, setSubmitted] = useState(false)
@@ -15,7 +16,7 @@ export function ContactExperience() {
         <div className="brand-block">
           <a href="/" aria-label="Bislig Ride home">
             <img
-              src="/Bislig Ride Logo-DfF4KVAn.png"
+              src={bisligLogo}
               alt="Bislig Ride logo"
               className="brand-logo"
             />
@@ -197,3 +198,4 @@ export function ContactExperience() {
     </div>
   )
 }
+
