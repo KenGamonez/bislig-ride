@@ -4372,3 +4372,80 @@ a.secondary-action {
     margin-right: 12px;
   }
 }
+
+/* =========================================================
+   BISLIG RIDE - MOBILE HIERARCHY FIX
+   ========================================================= */
+
+@media (max-width: 719px) {
+
+  /* Header */
+  .customer-layout .section-header {
+    order: 1;
+  }
+
+  /* Trip details heading */
+  .customer-layout .route-section .booking-section-heading {
+    order: 2;
+  }
+
+  /* Pickup */
+  .customer-layout .route-section .form-stack > .field-block:first-child {
+    order: 3;
+  }
+
+  /* Current location */
+  .customer-layout .map-location-action {
+    order: 4;
+  }
+
+  /* Map */
+  .customer-layout .map-view {
+    order: 5;
+  }
+
+  /* Map status */
+  .customer-layout .map-location-status {
+    order: 6;
+  }
+
+  /* Destination */
+  .customer-layout .route-section .form-stack > .field-block:last-child {
+    order: 7;
+  }
+
+  /* Weather */
+  .customer-layout .weather-widget {
+    order: 8;
+  }
+
+  /* Passenger heading */
+  .customer-layout .booking-section:nth-of-type(2) .booking-section-heading {
+    order: 9;
+  }
+
+  /* Passenger fields */
+  .customer-layout .Rider-details {
+    order: 10;
+  }
+
+  /* Preferences heading */
+  .customer-layout .booking-section:nth-of-type(3) .booking-section-heading {
+    order: 11;
+  }
+
+  /* Preferences */
+  .customer-layout .ride-options-grid {
+    order: 12;
+  }
+
+  /* Form error */
+  .customer-layout form > .form-error-message {
+    order: 13;
+  }
+
+  /* Request */
+  .customer-layout form > .primary-action {
+    order: 14;
+  }
+}
