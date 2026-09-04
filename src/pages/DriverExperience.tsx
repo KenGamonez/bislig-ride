@@ -50,6 +50,7 @@ export function DriverExperience() {
   const [showChat, setShowChat] = useState(false)
   const [driverId, setDriverId] = useState(TEST_DRIVER_ID)
   const [driverAuthId, setDriverAuthId] = useState<string | null>(null)
+  const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   useEffect(() => {
     let mounted = true
 
@@ -105,6 +106,7 @@ export function DriverExperience() {
 
     const watchId = navigator.geolocation.watchPosition(
       (position) => {
+        setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude })
         void updateDriverLocation(driverId, position.coords.latitude, position.coords.longitude).catch((error) => {
           console.error('Unable to update driver location:', error)
         })
@@ -324,59 +326,62 @@ export function DriverExperience() {
   }
 
   const renderSummary = () => (
-    <section className="driver-card summary-card">
-      <div className="request-header-row">
-        <div className="driver-profile-row">
-          <img src={demoDriver.profilePhoto} alt={demoDriver.name} className="driver-photo" />
-          <div>
-            <p className="section-label">Driver Profile</p>
-            <h3>{demoDriver.name}</h3>
-            <p className="driver-rating">Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦ {demoDriver.rating}</p>
-          </div>
-        </div>
-
-        <div className="status-toggle-wrapper">
-          <span className={driverOnline ? 'status-indicator online' : 'status-indicator offline'} aria-hidden="true" />
-          <button
-            type="button"
-            className={driverOnline ? 'status-toggle online' : 'status-toggle offline'}
-            onClick={handleToggleOnline}
-            disabled={transitioning}
-          >
-            {driverOnline ? 'ONLINE' : 'OFFLINE'}
-          </button>
+    <section className="driver-card driver-overview">
+      <div className="driver-identity">
+        <img src={demoDriver.profilePhoto} alt={demoDriver.name} className="driver-photo" />
+        <div className="driver-identity-copy">
+          <p className="section-label">DRIVER ACCOUNT</p>
+          <h3>{demoDriver.name}</h3>
+          <p className="driver-rating">★★★★★ {demoDriver.rating}</p>
+          <p className="driver-vehicle">{demoDriver.vehicleType} · {demoDriver.vehicleModel} · {demoDriver.plateNumber}</p>
         </div>
       </div>
 
-      <div className="stats-grid">
-        <div className="stat-box">
-          <span>Vehicle</span>
-          <strong>{demoDriver.vehicleType}</strong>
+      <div className={driverOnline ? "driver-status-panel is-online" : "driver-status-panel is-offline"}>
+        <div>
+          <span className="status-indicator" aria-hidden="true" />
+          <div>
+            <strong>{driverOnline ? "You're Online" : "You're Offline"}</strong>
+            <span>{driverOnline ? "Ready to receive ride requests" : "You won't receive new requests"}</span>
+          </div>
         </div>
-        <div className="stat-box">
-          <span>Model</span>
-          <strong>{demoDriver.vehicleModel}</strong>
+        <button
+          type="button"
+          className="status-toggle"
+          onClick={handleToggleOnline}
+          disabled={transitioning}
+          aria-label={driverOnline ? "Go offline" : "Go online"}
+        >
+          {driverOnline ? "GO OFFLINE" : "GO ONLINE"}
+        </button>
+      </div>
+
+      <div className="driver-metrics">
+        <div className="metric-card metric-earnings">
+          <span>Today's earnings</span>
+          <strong>₱{todayEarnings.toFixed(0)}</strong>
+          <small>100% of your fares</small>
         </div>
-        <div className="stat-box">
-          <span>Plate</span>
-          <strong>{demoDriver.plateNumber}</strong>
-        </div>
-        <div className="stat-box">
-          <span>Today</span>
-          <strong>{recentRides.length} rides</strong>
-        </div>
-        <div className="stat-box accent-stat">
-          <span>TodayÃ¢â‚¬â„¢s earnings</span>
-          <strong>Ã¢â€šÂ±{todayEarnings.toFixed(0)}</strong>
+        <div className="metric-card">
+          <span>Completed rides</span>
+          <strong>{recentRides.length}</strong>
+          <small>Today's trips</small>
         </div>
       </div>
     </section>
   )
 
   const renderOfflineState = () => (
-    <section className="driver-card empty-state">
-      <h3>You're Offline</h3>
-      <p>You will not receive new ride requests while offline.</p>
+    <section className="driver-card work-state offline-state">
+      <div className="state-heading">
+        <div>
+          <p className="section-label">AVAILABILITY</p>
+          <h3>You're currently offline</h3>
+          <p>You are not receiving new ride requests.</p>
+        </div>
+        <span className="state-badge offline-badge">OFFLINE</span>
+      </div>
+
       <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
         Go Online
       </button>
@@ -384,24 +389,25 @@ export function DriverExperience() {
   )
 
   const renderOnlineState = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state waiting-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">Status</p>
-          <h3>You're Online</h3>
+          <p className="section-label">RIDE QUEUE</p>
+          <h3>Waiting for your next ride</h3>
+          <p>Your vehicle is available and ready.</p>
         </div>
-        <span className="mini-tag">Waiting</span>
+        <span className="state-badge online-badge">ONLINE</span>
       </div>
 
       <div className="waiting-box">
-        <div className="search-loader" aria-label="Waiting for ride requests" />
+        <div className="search-loader" aria-hidden="true" />
         <div>
-          <p className="lead-paragraph">Waiting for ride requests...</p>
-          <p className="soft-copy">Your vehicle is ready and available.</p>
+          <strong>Looking for nearby requests</strong>
+          <span>Keep the dashboard open while you're available.</span>
         </div>
       </div>
 
-      <div className="driver-meta-grid">
+      <div className="availability-details">
         <div>
           <span>Vehicle</span>
           <strong>{demoDriver.vehicleModel}</strong>
@@ -415,43 +421,47 @@ export function DriverExperience() {
   )
 
   const renderIncomingRequest = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state incoming-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">New Ride Request</p>
+          <p className="section-label">NEW RIDE REQUEST</p>
           <h3>{request?.customer_name}</h3>
+          <p>Review the trip details before accepting.</p>
         </div>
-        <span className="mini-tag urgent">Live</span>
+        <span className="state-badge request-badge">NEW</span>
       </div>
 
-      <div className="ride-meta">
-        <div>
-          <dt>Passenger</dt>
-          <dd>{request?.customer_name}</dd>
+      <div className="fare-highlight">
+        <span>Ride request</span>
+        <strong>Review & accept</strong>
+      </div>
+
+      <div className="ride-route">
+        <div className="route-point">
+          <span className="route-dot pickup-dot" aria-hidden="true" />
+          <div>
+            <small>PICKUP</small>
+            <strong>{request?.pickup_address}</strong>
+          </div>
         </div>
-        <div>
-          <dt>Phone</dt>
-          <dd>{request?.customer_phone}</dd>
-        </div>
-        <div>
-          <dt>Pickup</dt>
-          <dd>{request?.pickup_address}</dd>
-        </div>
-        <div>
-          <dt>Destination</dt>
-          <dd>{request?.destination_address}</dd>
-        </div>
-        <div>
-          <dt>Passengers</dt>
-          <dd>{request?.passenger_count}</dd>
-        </div>
-        <div>
-          <dt>Requested</dt>
-          <dd>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</dd>
+        <div className="route-line" aria-hidden="true" />
+        <div className="route-point">
+          <span className="route-dot destination-dot" aria-hidden="true" />
+          <div>
+            <small>DESTINATION</small>
+            <strong>{request?.destination_address}</strong>
+          </div>
         </div>
       </div>
 
-      <div className="action-row">
+      <div className="ride-info-grid">
+        <div><span>Passenger</span><strong>{request?.customer_name}</strong></div>
+        <div><span>Passengers</span><strong>{request?.passenger_count}</strong></div>
+        <div><span>Phone</span><strong>{request?.customer_phone}</strong></div>
+        <div><span>Requested</span><strong>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</strong></div>
+      </div>
+
+      <div className="action-row request-actions">
         <button type="button" className="primary-action" onClick={handleAcceptRide} disabled={transitioning}>
           Accept Ride
         </button>
@@ -463,52 +473,33 @@ export function DriverExperience() {
   )
 
   const renderHeadingToPickup = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state active-ride-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">Ride Status</p>
-          <h3>Heading to Passenger</h3>
+          <p className="section-label">CURRENT RIDE</p>
+          <h3>Heading to passenger</h3>
+          <p>{activeRide?.customer_name} · {activeRide?.passenger_count} passenger(s)</p>
         </div>
-        <span className="mini-tag">Driver en route</span>
+        <span className="state-badge progress-badge">EN ROUTE</span>
       </div>
 
-      <div className="ride-meta">
-        <div>
-          <dt>Passenger</dt>
-          <dd>{activeRide?.customer_name}</dd>
+      <div className="ride-route">
+        <div className="route-point">
+          <span className="route-dot pickup-dot" aria-hidden="true" />
+          <div><small>PICKUP</small><strong>{activeRide?.pickup_address}</strong></div>
         </div>
-        <div>
-          <dt>Phone</dt>
-          <dd>{activeRide?.customer_phone}</dd>
-        </div>
-        <div>
-          <dt>Pickup</dt>
-          <dd>{activeRide?.pickup_address}</dd>
-        </div>
-        <div>
-          <dt>Destination</dt>
-          <dd>{activeRide?.destination_address}</dd>
-        </div>
-        <div>
-          <dt>Passengers</dt>
-          <dd>{activeRide?.passenger_count}</dd>
+        <div className="route-line" aria-hidden="true" />
+        <div className="route-point">
+          <span className="route-dot destination-dot" aria-hidden="true" />
+          <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
       </div>
 
-      <div className="driver-map-panel">
-        <MapView />
-      </div>
+      <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
-        <a
-          href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))}
-          className="secondary-action"
-        >
-          Call Passenger
-        </a>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>
-          Chat
-        </button>
+        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
       <button type="button" className="primary-action" onClick={handleArrived} disabled={transitioning}>
@@ -518,44 +509,36 @@ export function DriverExperience() {
   )
 
   const renderArrivedState = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state active-ride-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">Ride Status</p>
-          <h3>You're at the pickup location</h3>
+          <p className="section-label">CURRENT RIDE</p>
+          <h3>Passenger pickup</h3>
+          <p>You've arrived at the pickup location.</p>
         </div>
-        <span className="mini-tag warning">Arrived</span>
+        <span className="state-badge arrived-badge">ARRIVED</span>
       </div>
 
-      <div className="ride-meta">
-        <div>
-          <dt>Passenger</dt>
-          <dd>{activeRide?.customer_name}</dd>
+      <div className="ride-route">
+        <div className="route-point">
+          <span className="route-dot pickup-dot" aria-hidden="true" />
+          <div><small>PICKUP</small><strong>{activeRide?.pickup_address}</strong></div>
         </div>
-        <div>
-          <dt>Pickup</dt>
-          <dd>{activeRide?.pickup_address}</dd>
+        <div className="route-line" aria-hidden="true" />
+        <div className="route-point">
+          <span className="route-dot destination-dot" aria-hidden="true" />
+          <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
-        <div>
-          <dt>Destination</dt>
-          <dd>{activeRide?.destination_address}</dd>
-        </div>
-        <div>
-          <dt>Passengers</dt>
-          <dd>{activeRide?.passenger_count}</dd>
-        </div>
+      </div>
+
+      <div className="ride-info-grid">
+        <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
+        <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
       </div>
 
       <div className="driver-contact-actions">
-        <a
-          href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))}
-          className="secondary-action"
-        >
-          Call Passenger
-        </a>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>
-          Chat
-        </button>
+        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
       <button type="button" className="primary-action" onClick={handleStartRide} disabled={transitioning}>
@@ -565,97 +548,78 @@ export function DriverExperience() {
   )
 
   const renderInProgressState = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state active-ride-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">Ride Status</p>
-          <h3>Ride in Progress</h3>
+          <p className="section-label">CURRENT RIDE</p>
+          <h3>Ride in progress</h3>
+          <p>{activeRide?.customer_name} is on board.</p>
         </div>
-        <span className="mini-tag success">Live</span>
+        <span className="state-badge live-badge">IN PROGRESS</span>
       </div>
 
-      <div className="progress-steps">
-        <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">Ã¢â€ â€œ</span>
-        <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">Ã¢â€ â€œ</span>
-        <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">Ã¢â€ â€œ</span>
-        <span className="progress-step">Destination</span>
+      <div className="ride-progress">
+        <span className="progress-complete">ACCEPTED</span>
+        <span className="progress-arrow">→</span>
+        <span className="progress-complete">ARRIVED</span>
+        <span className="progress-arrow">→</span>
+        <span className="progress-active">IN PROGRESS</span>
+        <span className="progress-arrow">→</span>
+        <span>DESTINATION</span>
       </div>
 
-      <div className="ride-meta">
-        <div>
-          <dt>Passenger</dt>
-          <dd>{activeRide?.customer_name}</dd>
+      <div className="ride-route">
+        <div className="route-point">
+          <span className="route-dot pickup-dot" aria-hidden="true" />
+          <div><small>PICKUP</small><strong>{activeRide?.pickup_address}</strong></div>
         </div>
-        <div>
-          <dt>Pickup</dt>
-          <dd>{activeRide?.pickup_address}</dd>
-        </div>
-        <div>
-          <dt>Destination</dt>
-          <dd>{activeRide?.destination_address}</dd>
-        </div>
-        <div>
-          <dt>Vehicle</dt>
-          <dd>{demoDriver.vehicleModel}</dd>
+        <div className="route-line" aria-hidden="true" />
+        <div className="route-point">
+          <span className="route-dot destination-dot" aria-hidden="true" />
+          <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
       </div>
 
-      <div className="driver-map-panel">
-        <MapView />
-      </div>
+      <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
-        <a
-          href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))}
-          className="secondary-action"
-        >
-          Call Passenger
-        </a>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>
-          Chat
-        </button>
+        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
-      <button type="button" className="primary-action accent" onClick={handleCompleteRide} disabled={transitioning}>
+      <button type="button" className="primary-action" onClick={handleCompleteRide} disabled={transitioning}>
         Complete Ride
       </button>
     </section>
   )
 
   const renderCompletedState = () => (
-    <section className="driver-card request-card">
-      <div className="request-header-row compact-row">
+    <section className="driver-card work-state completed-state">
+      <div className="state-heading">
         <div>
-          <p className="section-label">Ride Status</p>
-          <h3>Ride Completed</h3>
+          <p className="section-label">RIDE COMPLETE</p>
+          <h3>Trip completed</h3>
+          <p>Great job. Your ride has been completed.</p>
         </div>
-        <span className="mini-tag success">Completed</span>
+        <span className="state-badge completed-badge">COMPLETED</span>
       </div>
 
-      <div className="ride-meta">
-        <div>
-          <dt>Passenger</dt>
-          <dd>{activeRide?.customer_name}</dd>
+      <div className="ride-route">
+        <div className="route-point">
+          <span className="route-dot pickup-dot" aria-hidden="true" />
+          <div><small>PICKUP</small><strong>{activeRide?.pickup_address}</strong></div>
         </div>
-        <div>
-          <dt>Pickup</dt>
-          <dd>{activeRide?.pickup_address}</dd>
+        <div className="route-line" aria-hidden="true" />
+        <div className="route-point">
+          <span className="route-dot destination-dot" aria-hidden="true" />
+          <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
-        <div>
-          <dt>Destination</dt>
-          <dd>{activeRide?.destination_address}</dd>
-        </div>
-        <div>
-          <dt>Passengers</dt>
-          <dd>{activeRide?.passenger_count}</dd>
-        </div>
-        <div>
-          <dt>Payment</dt>
-          <dd>Cash or GCash</dd>
-        </div>
+      </div>
+
+      <div className="ride-info-grid">
+        <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
+        <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
+        <div><span>Payment</span><strong>Cash or GCash</strong></div>
       </div>
 
       <button type="button" className="primary-action" onClick={handleBackToDashboard}>
@@ -666,24 +630,33 @@ export function DriverExperience() {
 
   const renderRecentRides = () => (
     <section className="driver-card history-card">
-      <div className="request-header-row compact-row">
+      <div className="section-heading">
         <div>
-          <p className="section-label">Recent Rides</p>
-          <h3>TodayÃ¢â‚¬â„¢s trips</h3>
+          <p className="section-label">RIDE HISTORY</p>
+          <h3>Recent trips</h3>
         </div>
+        <span className="history-count">{recentRides.length} today</span>
       </div>
 
       <ul className="history-list">
         {recentRides.map((ride) => (
-          <li key={ride.id}>
-            <div>
-              <strong>{ride.passenger}</strong>
-              <span>
-                {ride.pickup} Ã¢â€ â€™ {ride.destination}
-              </span>
-              <small>{ride.date}</small>
+          <li key={ride.id} className="history-item">
+            <div className="history-main">
+              <div className="history-passenger">
+                <strong>{ride.passenger}</strong>
+                <span>{ride.date}</span>
+              </div>
+              <span className="completed-badge">{ride.status}</span>
             </div>
-            <span className="completed-badge">{ride.status}</span>
+            <div className="history-route">
+              <span>{ride.pickup}</span>
+              <strong>→</strong>
+              <span>{ride.destination}</span>
+            </div>
+            <div className="history-footer">
+              <span>Completed trip</span>
+              <strong>{ride.fare}</strong>
+            </div>
           </li>
         ))}
       </ul>
@@ -724,6 +697,11 @@ export function DriverExperience() {
     </div>
   )
 }
+
+
+
+
+
 
 
 
