@@ -514,13 +514,17 @@ const validateForm = () => {
 
         <div className="form-stack route-fields">
           <div className="pickup-field-block">
-            <LocationInput
+<LocationInput
               label={pickupLocation ? 'Pickup landmark (optional)' : 'Pickup'}
               value={formData.pickup}
               placeholder={pickupLocation ? 'Add a nearby landmark (optional)' : 'Enter pickup location'}
               error={validationErrors.pickup}
               onChange={(value) => handleInput('pickup', value)}
             />
+
+            <p className="pickup-help-note">
+              Enter your pickup location, or tap <strong>Use my current location</strong>.
+            </p>
 
             {pickupLocation ? (
               <div className="field-note pickup-detected-note">
