@@ -400,6 +400,14 @@ h4 {
   gap: 0;
 }
 
+.mobile-booking-flow {
+  display: none;
+}
+
+.desktop-booking-flow {
+  display: contents;
+}
+
 .booking-section {
   display: grid;
   gap: 14px;
@@ -3659,74 +3667,178 @@ a.secondary-action {
     display: inline-flex;
   }
 
-  /* Mobile Nav Panel */
+  /* Mobile Nav Panel — full-screen navy menu */
   .mobile-nav-panel {
-    display: block;
-    position: absolute;
-    top: calc(100% + 1px);
-    left: 0;
-    right: 0;
-    z-index: 1000;
+    position: fixed;
+    inset: 0;
+    z-index: 1400;
+    display: flex;
+    flex-direction: column;
+    background: var(--graphite);
     overflow: hidden;
-    pointer-events: none;
     visibility: hidden;
-    opacity: 0;
-    transform: translateY(-8px);
-    transform-origin: top center;
-    background: rgba(255, 255, 255, 0.99);
-    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
-    box-shadow: 0 12px 40px rgba(20, 24, 32, 0.12);
+    pointer-events: none;
+    transform: translateX(100%);
     transition:
-      opacity 200ms ease,
-      transform 250ms cubic-bezier(0.22, 1, 0.36, 1),
-      visibility 200ms ease;
+      transform 320ms cubic-bezier(0.22, 1, 0.36, 1),
+      visibility 320ms ease;
   }
 
   .mobile-nav-panel.is-open {
-    pointer-events: auto;
     visibility: visible;
-    opacity: 1;
-    transform: translateY(0);
+    pointer-events: auto;
+    transform: translateX(0);
   }
 
-  .mobile-nav-inner {
-    padding: 8px 12px;
-  }
-
-  /* Mobile Role Switcher */
-  .mobile-role-switcher {
+  .mobile-nav-top {
+    flex-shrink: 0;
     display: flex;
-    gap: 6px;
-    padding: 6px;
-    margin-bottom: 4px;
-    background: #f3f4f6;
-    border-radius: 12px;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    padding: 0 14px;
+    background: #ffffff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
   }
 
-  .mobile-role-btn {
-    flex: 1;
+  .mobile-nav-brand {
+    display: flex;
+    align-items: center;
+    height: 100%;
+  }
+
+  .mobile-nav-brand .brand-logo {
+    height: 30px;
+  }
+
+  .mobile-nav-close {
+    width: 42px;
+    height: 42px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     border: none;
-    border-radius: 8px;
-    background: transparent;
-    color: var(--text-muted);
-    font-weight: 600;
-    font-size: 0.74rem;
-    padding: 9px 8px;
-    transition: all var(--transition);
+    border-radius: 50%;
+    background: rgba(28, 31, 35, 0.06);
+    color: var(--graphite);
+    font-size: 1.05rem;
+    line-height: 1;
+    cursor: pointer;
+    transition: background 160ms ease, transform 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
   }
 
-  .mobile-role-btn.active {
-    background: var(--white);
-    color: var(--text-primary);
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  .mobile-nav-close:hover,
+  .mobile-nav-close:focus-visible {
+    background: rgba(28, 31, 35, 0.12);
+    color: var(--brand-red);
+    outline: none;
+  }
+
+  .mobile-nav-close:active {
+    transform: scale(0.92);
+  }
+
+  .mobile-nav-scroll {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    padding: 16px 14px 24px;
+  }
+
+  .mobile-nav-section-label {
+    margin: 4px 4px 10px;
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+  }
+
+  .mobile-role-list {
+    display: grid;
+    gap: 8px;
+  }
+
+  .mobile-role-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    width: 100%;
+    min-height: 52px;
+    padding: 0 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    color: rgba(255, 255, 255, 0.88);
+    font: inherit;
+    font-size: 0.95rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    transition: background 160ms ease, color 160ms ease, border-color 160ms ease;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  .mobile-role-row:hover,
+  .mobile-role-row:focus-visible {
+    background: rgba(255, 255, 255, 0.09);
+    outline: none;
+  }
+
+  .mobile-role-row.active {
+    background: var(--brand-red);
+    border-color: var(--brand-red);
+    color: #ffffff;
     font-weight: 700;
+  }
+
+  .mobile-role-check {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    border: 2px solid currentColor;
+    opacity: 0;
+    position: relative;
+    transition: opacity 160ms ease;
+  }
+
+  .mobile-role-row.active .mobile-role-check {
+    opacity: 1;
+  }
+
+  .mobile-role-check::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+    transform: translate(-50%, -50%);
+  }
+
+  .mobile-nav-divider {
+    height: 1px;
+    margin: 18px 4px;
+    background: rgba(255, 255, 255, 0.12);
+  }
+
+  .mobile-nav-links {
+    display: grid;
+    gap: 6px;
   }
 
   .mobile-nav-item {
     position: relative;
     display: flex;
     width: 100%;
-    min-height: 50px;
+    min-height: 52px;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
@@ -3734,17 +3846,17 @@ a.secondary-action {
     border: 0;
     border-radius: 12px;
     background: transparent;
-    color: var(--text-primary);
+    color: rgba(255, 255, 255, 0.88);
     text-decoration: none;
     font: inherit;
     font-weight: 600;
-    font-size: 0.88rem;
+    font-size: 0.92rem;
     text-align: left;
     cursor: pointer;
     overflow: hidden;
     -webkit-tap-highlight-color: transparent;
     touch-action: manipulation;
-    transition: background 160ms ease, padding 180ms ease;
+    transition: background 160ms ease, color 160ms ease, padding 180ms ease;
   }
 
   .mobile-nav-item::before {
@@ -3762,9 +3874,10 @@ a.secondary-action {
 
   .mobile-nav-item:hover,
   .mobile-nav-item:focus-visible {
-    background: rgba(215, 25, 32, 0.04);
-    color: var(--brand-red);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
     padding-left: 18px;
+    outline: none;
   }
 
   .mobile-nav-item:hover::before,
@@ -3773,13 +3886,8 @@ a.secondary-action {
   }
 
   .mobile-nav-item:active {
-    background: rgba(215, 25, 32, 0.08);
+    background: rgba(215, 25, 32, 0.18);
     transform: scale(0.985);
-  }
-
-  .mobile-nav-item:focus-visible {
-    outline: 2px solid rgba(215, 25, 32, 0.2);
-    outline-offset: -2px;
   }
 
   .mobile-nav-label {
@@ -3796,7 +3904,7 @@ a.secondary-action {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(20, 24, 32, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     font-size: 0.88rem;
     transition: transform 180ms ease, background 180ms ease, color 180ms ease;
   }
@@ -3809,10 +3917,26 @@ a.secondary-action {
   }
 
   .mobile-nav-driver {
-    margin-top: 4px;
-    background: rgba(215, 25, 32, 0.03);
+    margin-top: 6px;
+    border: 1px solid rgba(215, 25, 32, 0.35);
+    background: rgba(215, 25, 32, 0.1);
   }
 
+  .mobile-nav-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin: 18px 4px 4px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.4);
+    font-size: 0.64rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* Mobile Explore submenu */
   .mobile-explore-group {
     position: relative;
   }
@@ -3853,16 +3977,16 @@ a.secondary-action {
 
   .mobile-explore-item {
     display: flex;
-    min-height: 40px;
+    min-height: 42px;
     align-items: center;
     justify-content: space-between;
     padding: 0 12px;
     border: 0;
     border-radius: 10px;
     background: transparent;
-    color: var(--text-secondary);
+    color: rgba(255, 255, 255, 0.7);
     font: inherit;
-    font-size: 0.8rem;
+    font-size: 0.84rem;
     text-align: left;
     cursor: pointer;
     transition: background 140ms ease, color 140ms ease, padding 160ms ease;
@@ -3870,56 +3994,42 @@ a.secondary-action {
 
   .mobile-explore-item:hover,
   .mobile-explore-item:focus-visible {
-    background: rgba(20, 24, 32, 0.04);
-    color: var(--brand-red);
+    background: rgba(255, 255, 255, 0.06);
+    color: #ffffff;
     padding-left: 16px;
   }
 
   .mobile-explore-item:active {
-    background: rgba(215, 25, 32, 0.08);
-  }
-
-  .mobile-nav-footer {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 14px;
-    margin: 4px 16px 12px;
-    padding-top: 12px;
-    border-top: 1px solid rgba(20, 24, 32, 0.06);
-    color: var(--text-muted);
-    font-size: 0.64rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
+    background: rgba(215, 25, 32, 0.18);
   }
 
   /* Mobile staggered nav animation */
+  .mobile-nav-panel.is-open .mobile-role-row {
+    animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .mobile-nav-panel.is-open .mobile-role-row:nth-child(2) {
+    animation-delay: 30ms;
+  }
+
+  .mobile-nav-panel.is-open .mobile-role-row:nth-child(3) {
+    animation-delay: 60ms;
+  }
+
   .mobile-nav-panel.is-open .mobile-nav-item {
     animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .mobile-nav-panel.is-open .mobile-role-switcher {
-    animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .mobile-nav-panel.is-open .mobile-nav-item:nth-child(1) {
-    animation-delay: 25ms;
-  }
-
   .mobile-nav-panel.is-open .mobile-nav-item:nth-child(2) {
-    animation-delay: 45ms;
+    animation-delay: 20ms;
   }
 
   .mobile-nav-panel.is-open .mobile-explore-group {
-    animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) 65ms both;
+    animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) 40ms both;
   }
 
-  .mobile-nav-panel.is-open .mobile-nav-driver {
-    animation-delay: 85ms;
-  }
-
-  .mobile-nav-panel.is-open .mobile-nav-item:last-child {
-    animation-delay: 105ms;
+  .mobile-nav-panel.is-open .mobile-explore-item {
+    animation: mobileNavItemIn 300ms cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   @keyframes mobileNavItemIn {
@@ -3933,34 +4043,31 @@ a.secondary-action {
     }
   }
 
-  /* Mobile Layout — ordered booking flow */
+  /* Mobile Layout — card-based booking flow */
   .customer-layout {
     display: flex;
     flex-direction: column;
-    padding: 10px 0 52px;
+    padding: 0 0 52px;
     gap: 0;
     overflow: hidden;
   }
 
-  /*
-   * Flatten panels/form so CSS `order` controls the
-   * complete mobile booking sequence.
-   */
   .customer-layout .primary-panel,
   .customer-layout .map-panel,
   .customer-layout .ride-form,
-  .customer-layout .route-section,
-  .customer-layout .passenger-section,
-  .customer-layout .preferences-section,
-  .customer-layout .map-stage {
+  .customer-layout .mobile-booking-flow {
     display: contents;
   }
 
-  /* 1. Heading */
+  .customer-layout .desktop-booking-flow {
+    display: none;
+  }
+
+  /* 1. Hero */
   .customer-layout .section-header {
     order: 1;
     width: 100%;
-    padding: 6px 14px 12px;
+    padding: 8px 14px 10px;
     margin: 0;
   }
 
@@ -3969,164 +4076,399 @@ a.secondary-action {
     line-height: 1.02;
   }
 
+  .customer-layout .eyebrow {
+    font-size: 0.64rem;
+  }
+
   .customer-layout .subtitle {
     font-size: 0.82rem;
     line-height: 1.45;
+    max-width: 100%;
   }
 
-  /* 2. Trip details */
-  .customer-layout .route-heading {
+  /* Profile / ride-state panels */
+  .customer-layout .Rider-profile,
+  .customer-layout .demo-state-card {
     order: 2;
-    width: 100%;
-    padding: 12px 14px 6px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* 3. Pickup */
-  .customer-layout .pickup-field-block {
-    order: 3;
     width: calc(100% - 24px);
     margin: 0 12px;
+  }
+
+  /* 2. Pickup card */
+  .booking-card {
+    width: calc(100% - 24px);
+    margin: 0 12px 10px;
+    padding: 12px 14px 14px;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    display: grid;
+    gap: 10px;
+  }
+
+  .customer-layout .pickup-card {
+    order: 2;
+    margin-bottom: 0;
+    border-bottom: none;
+    border-radius: 16px 16px 0 0;
+    box-shadow: none;
+  }
+
+  .customer-layout .destination-card {
+    order: 5;
+  }
+
+  .booking-card-heading {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .booking-badge {
+    flex-shrink: 0;
+    width: 26px;
+    height: 26px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: var(--brand-red);
+    color: #ffffff;
+    font-size: 0.84rem;
+    font-weight: 800;
+    line-height: 1;
+    margin-top: 1px;
+  }
+
+  .booking-card-titles {
+    display: grid;
+    gap: 2px;
+  }
+
+  .booking-card-titles strong {
+    font-size: 1rem;
+    letter-spacing: -0.01em;
+    color: var(--graphite);
+  }
+
+  .booking-card-titles span {
+    color: var(--text-secondary);
+    font-size: 0.74rem;
+  }
+
+  .customer-layout .pickup-field-block,
+  .customer-layout .destination-field-block {
+    width: 100%;
+    margin: 0;
   }
 
   .customer-layout .pickup-detected-note,
   .customer-layout .pickup-location-error {
-    order: 3.4;
-    width: calc(100% - 24px);
-    margin: 2px 12px 0;
+    width: 100%;
+    margin: 0;
   }
 
-  /* 4. Current location */
-  .customer-layout .map-location-action {
-    order: 4;
-    position: static;
+  /* 3. Map (positioned container, current-location overlay) */
+  .customer-layout .map-stage {
+    order: 3;
+    position: relative;
     width: calc(100% - 24px);
-    min-height: 44px;
-    margin: 10px 12px 8px;
-    padding: 0 14px;
-    border: 1px solid rgba(215, 25, 32, 0.18);
-    border-radius: 10px;
+    height: 220px;
+    margin: 0 12px;
+    padding: 6px;
     background: #ffffff;
-    color: var(--brand-red);
-    box-shadow: 0 4px 12px rgba(28, 31, 35, 0.06);
-    font-size: 0.7rem;
-    font-weight: 700;
-    white-space: normal;
-  }
-
-  /* 5. Map */
-  .customer-layout .map-view {
-    order: 5;
-    width: calc(100% - 24px);
-    height: 300px !important;
-    min-height: 300px !important;
-    margin: 0 12px 8px;
-    border-radius: 12px;
+    border: 1px solid var(--border);
+    border-radius: 0 0 16px 16px;
+    box-shadow: var(--shadow-soft);
     overflow: hidden;
   }
 
+  .customer-layout .map-view,
   .customer-layout .map-view .maplibregl-map {
     width: 100%;
-    height: 300px !important;
-    min-height: 300px !important;
+    height: 206px !important;
+    min-height: 206px !important;
+    border-radius: 11px;
   }
 
-  /* 6. Map status */
+  .customer-layout .map-location-action {
+    position: absolute;
+    left: 50%;
+    bottom: 10px;
+    transform: translateX(-50%);
+    z-index: 20;
+    width: min(300px, calc(100% - 40px));
+    min-height: 40px;
+    padding: 0 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border: none;
+    border-radius: 999px;
+    background: var(--brand-red);
+    color: #ffffff;
+    box-shadow: 0 8px 20px rgba(215, 25, 32, 0.35);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+  }
+
+  .customer-layout .map-location-action .location-icon::before {
+    border-color: #ffffff;
+  }
+
+  .customer-layout .map-location-action .location-icon::after {
+    background: #ffffff;
+  }
+
+  .customer-layout .map-location-action:hover,
+  .customer-layout .map-location-action:focus-visible {
+    color: #ffffff;
+    box-shadow: 0 10px 24px rgba(215, 25, 32, 0.42);
+  }
+
   .customer-layout .map-location-status {
-    order: 6;
+    order: 4;
     width: calc(100% - 24px);
-    margin: 0 12px 4px;
+    margin: 6px 12px 2px;
     padding: 0;
     font-size: 0.62rem;
+    text-align: center;
+    color: var(--text-secondary);
+  }
+
+  /* Weather — compact light-blue card */
+  .customer-layout .weather-widget {
+    order: 9;
+    width: calc(100% - 24px);
+    margin: 14px 12px 4px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    border: 1px solid rgba(96, 165, 250, 0.35);
+    background: linear-gradient(135deg, #eaf3fc 0%, #dcebfa 100%);
+  }
+
+  .customer-layout .weather-main strong {
+    font-size: 1.4rem;
+  }
+
+  .customer-layout .weather-details {
+    font-size: 0.64rem;
+    gap: 6px;
+  }
+
+  /* 4. Compact booking accordion */
+  .customer-layout .booking-accordion {
+    order: 6;
+    width: calc(100% - 24px);
+    margin: 10px 12px 0;
+    background: #ffffff;
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    box-shadow: var(--shadow-soft);
+    overflow: hidden;
+  }
+
+  .accordion-row + .accordion-row {
+    border-top: 1px solid var(--border);
+  }
+
+  .accordion-trigger {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    min-height: 52px;
+    padding: 9px 12px;
+    border: 0;
+    background: transparent;
+    font: inherit;
+    text-align: left;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 160ms ease;
+  }
+
+  .accordion-trigger:hover,
+  .accordion-trigger:focus-visible {
+    background: rgba(215, 25, 32, 0.04);
+    outline: none;
+  }
+
+  .accordion-number {
+    flex-shrink: 0;
+    color: var(--brand-red);
+    font-size: 0.66rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    line-height: 1.4;
+    width: 26px;
+  }
+
+  .accordion-titles {
+    flex: 1;
+    min-width: 0;
+    display: grid;
+    gap: 1px;
+  }
+
+  .accordion-titles strong {
+    font-size: 0.88rem;
+    letter-spacing: -0.01em;
+    color: var(--graphite);
+  }
+
+  .accordion-titles small {
+    color: var(--text-secondary);
+    font-size: 0.7rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .accordion-chevron {
+    flex-shrink: 0;
+    width: 8px;
+    height: 8px;
+    margin-right: 8px;
+    border-right: 2px solid var(--text-secondary);
+    border-bottom: 2px solid var(--text-secondary);
+    transform: rotate(45deg);
+    transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .accordion-row.is-open .accordion-chevron {
+    transform: rotate(225deg);
+  }
+
+  .accordion-panel {
+    display: grid;
+    grid-template-rows: 0fr;
+    opacity: 0;
+    overflow: hidden;
+    transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+  }
+
+  .accordion-panel > * {
     min-height: 0;
   }
 
-  /* 7. Destination */
-  .customer-layout .destination-field-block {
-    order: 7;
-    width: calc(100% - 24px);
-    margin: 4px 12px 0;
+  .accordion-row.is-open .accordion-panel {
+    grid-template-rows: 1fr;
+    opacity: 1;
   }
 
-  /* 8. Weather */
-  .customer-layout .weather-widget {
-    order: 8;
-    width: calc(100% - 24px);
-    margin: 16px 12px 4px;
-    padding: 12px 14px;
-    border-radius: 12px;
+  .accordion-content {
+    padding: 0 12px;
   }
 
-  /* 9. Passenger heading */
-  .customer-layout .passenger-heading {
-    order: 9;
-    width: 100%;
-    padding: 14px 14px 6px;
-    border-top: 1px solid var(--border);
+  .accordion-row.is-open .accordion-content {
+    padding-bottom: 12px;
   }
 
-  /* 10. Passenger fields */
-  .customer-layout .passenger-details {
-    order: 10;
-    width: calc(100% - 24px);
-    margin: 0 12px;
+  .trip-editor {
     display: grid;
     gap: 10px;
   }
 
-  /* 11. Preferences heading */
-  .customer-layout .preferences-heading {
-    order: 11;
-    width: 100%;
-    padding: 14px 14px 6px;
-    border-top: 1px solid var(--border);
-  }
-
-  /* 12. Ride preferences */
-  .customer-layout .ride-options-grid {
-    order: 12;
-    width: calc(100% - 24px);
-    margin: 0 12px;
+  .passenger-fields {
     display: grid;
     gap: 10px;
   }
 
-  /* 13. Submit error */
+  .fare-note {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 0.78rem;
+    line-height: 1.5;
+    display: grid;
+    gap: 4px;
+  }
+
+  .fare-note small {
+    color: var(--text-muted);
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  /* 5. Submit error + Request Ride */
   .customer-layout form > .submit-error {
-    order: 13;
+    order: 7;
     width: calc(100% - 24px);
     margin: 8px 12px 0;
   }
 
-  /* 14. Request Ride */
   .customer-layout .request-ride-action {
-    order: 14;
+    order: 8;
     width: calc(100% - 24px);
-    min-height: 52px;
-    margin: 12px 12px 18px;
+    min-height: 54px;
+    margin: 14px 12px 18px;
+    border-radius: 14px;
+    font-size: 0.92rem;
+    letter-spacing: 0.04em;
+    box-shadow: 0 10px 24px rgba(215, 25, 32, 0.22);
   }
 
-  /* Booking Sections (mobile) */
-  .booking-section {
-    padding: 0;
-    border-top: none;
+  /* Mobile form fields — compact, instruction only on focus */
+  .mobile-booking-flow .field-block {
+    gap: 5px;
   }
 
-  .booking-section-heading {
-    margin-top: 0;
+  .mobile-booking-flow .field-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
   }
 
-  .booking-section-heading strong {
+  .mobile-booking-flow .input-field {
+    min-height: 42px;
+    padding: 0 12px;
+    border-radius: 12px;
     font-size: 0.82rem;
   }
 
-  .booking-section-heading span:last-child {
-    font-size: 0.7rem;
+  .mobile-booking-flow .input-field::placeholder {
+    opacity: 0;
+    transition: opacity 160ms ease;
   }
 
-  .input-field {
-    min-height: 46px;
-    font-size: 0.84rem;
+  .mobile-booking-flow .input-field:focus::placeholder {
+    opacity: 0.65;
+  }
+
+  .mobile-booking-flow .field-error {
+    font-size: 0.64rem;
+  }
+
+  .booking-card-value {
+    width: 100%;
+    margin: 0;
+    padding: 10px 12px;
+    border: 1px dashed #d6dbe2;
+    border-radius: 12px;
+    background: #f5f7f9;
+    color: var(--graphite);
+    font: inherit;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-align: left;
+    cursor: pointer;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .booking-card-value.is-empty {
+    color: var(--text-secondary);
+    font-weight: 500;
+  }
+
+  .booking-card-value:focus-visible {
+    outline: 2px solid var(--brand-red);
+    outline-offset: 2px;
   }
 
   .primary-action {
@@ -4231,23 +4573,9 @@ a.secondary-action {
     padding: 0 10px;
   }
 
-  .primary-panel {
-    padding: 16px 14px 18px;
-  }
-
   .customer-layout {
-    padding: 10px 10px 52px;
-    gap: 10px;
-  }
-
-  .map-panel {
-    padding: 8px;
-  }
-
-  .map-stage,
-  .map-view,
-  .map-view .maplibregl-map {
-    min-height: 260px;
+    padding: 0 0 52px;
+    gap: 0;
   }
 
   .booking-section-heading span:last-child {

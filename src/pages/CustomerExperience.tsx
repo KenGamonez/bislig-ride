@@ -132,6 +132,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
   const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [isExploreOpen, setIsExploreOpen] = useState(false)
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const exploreMenuRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
@@ -173,15 +174,30 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     const handleMobileNavOutsidePointer = (event: PointerEvent) => {
       const target = event.target as HTMLElement | null
 
-      if (!target?.closest('.app-header')) {
+      if (
+        !target?.closest('.app-header') &&
+        !target?.closest('.mobile-nav-panel')
+      ) {
         setIsMobileNavOpen(false)
       }
     }
 
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
     document.addEventListener('keydown', handleMobileNavEscape)
     document.addEventListener('pointerdown', handleMobileNavOutsidePointer)
 
+    const desktopQuery = window.matchMedia('(min-width: 768px)')
+    const handleViewportChange = (event: MediaQueryListEvent) => {
+      if (event.matches) {
+        setIsMobileNavOpen(false)
+      }
+    }
+    desktopQuery.addEventListener('change', handleViewportChange)
+
     return () => {
+      document.body.style.overflow = previousOverflow
+      desktopQuery.removeEventListener('change', handleViewportChange)
       document.removeEventListener('keydown', handleMobileNavEscape)
       document.removeEventListener('pointerdown', handleMobileNavOutsidePointer)
     }
@@ -231,6 +247,10 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     setIsSubmitting(false)
   }
 
+  const toggleMobileSection = (id: string) => {
+    setOpenMobileSection((current) => (current === id ? null : id))
+  }
+
   const handleInput = (field: keyof CustomerFormState, value: string) => {
     if (field === 'passengerType') {
       setFormData((current) => ({ ...current, passengerType: value as DemoPassengerType }))
@@ -261,6 +281,11 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     }
 
     setValidationErrors(nextErrors)
+
+    if (nextErrors.pickup || nextErrors.destination || nextErrors.name || nextErrors.phone) {
+      setOpenMobileSection(nextErrors.pickup || nextErrors.destination ? 'trip' : 'passenger')
+    }
+
     return Object.keys(nextErrors).length === 0
   }
 
@@ -481,6 +506,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
 
   const renderRequestScreen = () => (
     <form className="ride-form" onSubmit={handleSubmit} noValidate>
+      <div className="desktop-booking-flow">
       <section className="booking-section route-section">
         <div className="booking-section-heading route-heading">
           <span className="booking-section-number">01</span>
@@ -598,6 +624,191 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
           </div>
         </div>
       </section>
+      </div>
+
+      <div className="mobile-booking-flow">
+        <section className="booking-card pickup-card">
+          <div className="booking-card-heading">
+            <span className="booking-badge" aria-hidden="true">1</span>
+            <div className="booking-card-titles">
+              <strong>Pickup</strong>
+              <span>Where should we pick you up?</span>
+            </div>
+          </div>
+
+          <div className="pickup-field-block">
+            <button
+              type="button"
+              className={formValues.pickup || pickupLocation ? 'booking-card-value' : 'booking-card-value is-empty'}
+              onClick={() => toggleMobileSection('trip')}
+            >
+              {formValues.pickup || (pickupLocation ? 'Using your current location' : 'Tap to enter a pickup location')}
+            </button>
+
+            {pickupLocation ? (
+              <div className="field-note pickup-detected-note">
+                <span className="pickup-check" aria-hidden="true"></span>
+                <span>Your current location has been located.</span>
+              </div>
+            ) : null}
+
+            {pickupLocationError ? (
+              <p className="form-error-message pickup-location-error">
+                {pickupLocationError}
+              </p>
+            ) : null}
+          </div>
+        </section>
+
+        <section className="booking-card destination-card">
+          <div className="booking-card-heading">
+            <span className="booking-badge" aria-hidden="true">2</span>
+            <div className="booking-card-titles">
+              <strong>Destination</strong>
+              <span>Where are you going?</span>
+            </div>
+          </div>
+
+          <div className="destination-field-block">
+            <button
+              type="button"
+              className={formValues.destination ? 'booking-card-value' : 'booking-card-value is-empty'}
+              onClick={() => toggleMobileSection('trip')}
+            >
+              {formValues.destination || 'Tap to enter your destination'}
+            </button>
+          </div>
+        </section>
+
+        <section className="booking-accordion" aria-label="Booking details">
+          <div className={openMobileSection === 'trip' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'trip'}
+              onClick={() => toggleMobileSection('trip')}
+            >
+              <span className="accordion-number">01</span>
+              <span className="accordion-titles">
+                <strong>Trip details</strong>
+                <small>Pickup &amp; destination</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div className="accordion-panel">
+              <div className="accordion-content trip-editor">
+                <LocationInput
+                  label={pickupLocation ? 'Pickup landmark (optional)' : 'Pickup'}
+                  value={formData.pickup}
+                  placeholder={pickupLocation ? 'Add a nearby landmark (optional)' : 'Enter pickup location'}
+                  error={validationErrors.pickup}
+                  onChange={(value) => handleInput('pickup', value)}
+                />
+
+                <LocationInput
+                  label="Destination"
+                  value={formData.destination}
+                  placeholder="Where to?"
+                  error={validationErrors.destination}
+                  onChange={(value) => handleInput('destination', value)}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className={openMobileSection === 'passenger' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'passenger'}
+              onClick={() => toggleMobileSection('passenger')}
+            >
+              <span className="accordion-number">02</span>
+              <span className="accordion-titles">
+                <strong>Passenger details</strong>
+                <small>Name, number of passengers, passenger type</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div className="accordion-panel">
+              <div className="accordion-content passenger-fields">
+                <LocationInput
+                  label="Name"
+                  value={formData.name}
+                  placeholder="Enter your name"
+                  error={validationErrors.name}
+                  onChange={(value) => handleInput('name', value)}
+                />
+
+                <LocationInput
+                  label="Phone Number"
+                  value={formData.phone}
+                  placeholder="09XXXXXXXXX"
+                  error={validationErrors.phone}
+                  onChange={(value) => handleInput('phone', value)}
+                />
+
+                <div className="field-block">
+                  <span className="field-label">Number of passengers</span>
+                  <select
+                    className="input-field"
+                    value={formData.passengerCount}
+                    onChange={(event) => handleInput('passengerCount', event.target.value)}
+                  >
+                    {passengerCountOptions.map((count) => (
+                      <option key={count} value={count}>
+                        {count}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="field-block">
+                  <span className="field-label">Passenger type</span>
+                  <select
+                    className="input-field"
+                    value={formData.passengerType}
+                    onChange={(event) => handleInput('passengerType', event.target.value)}
+                  >
+                    {passengerTypes.map((type) => (
+                      <option key={type} value={type}>
+                        {type}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className={openMobileSection === 'preferences' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'preferences'}
+              onClick={() => toggleMobileSection('preferences')}
+            >
+              <span className="accordion-number">03</span>
+              <span className="accordion-titles">
+                <strong>Ride preferences</strong>
+                <small>Fare based on the official Bislig City matrix</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div className="accordion-panel">
+              <div className="accordion-content">
+                <p className="fare-note">
+                  Fare is calculated based on the official Bislig City fare matrix.
+                  <small>Ordinance No. 2023-21</small>
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
 
       {submitError ? (
         <p className="form-error-message submit-error">
@@ -1048,30 +1259,51 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
             </span>
           </button>
         </div>
+      </header>
 
-        <div
-          id="mobile-main-navigation"
-          className={isMobileNavOpen ? 'mobile-nav-panel is-open' : 'mobile-nav-panel'}
-          aria-hidden={!isMobileNavOpen}
-        >
-          <div className="mobile-nav-inner">
+      <div
+        id="mobile-main-navigation"
+        className={isMobileNavOpen ? 'mobile-nav-panel is-open' : 'mobile-nav-panel'}
+        aria-hidden={!isMobileNavOpen}
+      >
+        <div className="mobile-nav-top">
+          <a href="/" className="mobile-nav-brand" onClick={() => setIsMobileNavOpen(false)}>
+            <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
+          </a>
+          <button
+            type="button"
+            className="mobile-nav-close"
+            aria-label="Close navigation menu"
+            onClick={() => setIsMobileNavOpen(false)}
+          >
+            <span aria-hidden="true">✕</span>
+          </button>
+        </div>
 
-            <div className="mobile-role-switcher">
+        <div className="mobile-nav-scroll">
+          <div className="mobile-nav-group">
+            <p className="mobile-nav-section-label">Account / Role</p>
+            <div className="mobile-role-list">
               {(['Rider', 'driver', 'admin'] as ViewMode[]).map((role) => (
                 <button
                   key={role}
                   type="button"
-                  className={currentView === role ? 'mobile-role-btn active' : 'mobile-role-btn'}
+                  className={currentView === role ? 'mobile-role-row active' : 'mobile-role-row'}
                   onClick={() => {
                     onSwitchView?.(role)
                     setIsMobileNavOpen(false)
                   }}
                 >
-                  {role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}
+                  <span>{role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}</span>
+                  <span className="mobile-role-check" aria-hidden="true"></span>
                 </button>
               ))}
             </div>
+          </div>
 
+          <div className="mobile-nav-divider" aria-hidden="true"></div>
+
+          <nav className="mobile-nav-links" aria-label="Mobile navigation">
             <a
               className="mobile-nav-item"
               href="/pakyawan"
@@ -1130,15 +1362,6 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
             </div>
 
             <a
-              className="mobile-nav-item mobile-nav-driver"
-              href="/become-a-driver"
-              onClick={() => setIsMobileNavOpen(false)}
-            >
-              <span className="mobile-nav-label">Become a Driver</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
-            </a>
-
-            <a
               className="mobile-nav-item"
               href="/contact"
               onClick={() => setIsMobileNavOpen(false)}
@@ -1147,14 +1370,22 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               <span className="mobile-nav-arrow" aria-hidden="true">→</span>
             </a>
 
-          </div>
+            <a
+              className="mobile-nav-item mobile-nav-driver"
+              href="/become-a-driver"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Become a Driver</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+            </a>
+          </nav>
 
           <div className="mobile-nav-footer">
             <span>Bislig City</span>
             <span>Ride local. Move freely.</span>
           </div>
         </div>
-      </header>
+      </div>
 
       <main className="customer-layout">
         <section className="primary-panel">
