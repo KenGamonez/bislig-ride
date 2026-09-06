@@ -195,7 +195,12 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
             aria-label="Close navigation menu"
             onClick={() => setIsMobileNavOpen(false)}
           >
-            <span aria-hidden="true">?</span>
+            <span aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M18 6 6 18" />
+                <path d="m6 6 12 12" />
+              </svg>
+            </span>
           </button>
         </div>
 
@@ -282,20 +287,26 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
                 className="mobile-explore-list"
                 aria-hidden={!isExploreOpen}
               >
-                {discoveryCategories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    className="mobile-explore-item"
-                    onClick={() => {
-                      setIsExploreOpen(false)
-                      setIsMobileNavOpen(false)
-                    }}
-                  >
-                    <span>{category}</span>
-                    <span aria-hidden="true">?</span>
-                  </button>
-                ))}
+                <div className="mobile-explore-inner">
+                  {discoveryCategories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      className="mobile-explore-item"
+                      onClick={() => {
+                        setIsExploreOpen(false)
+                        setIsMobileNavOpen(false)
+                      }}
+                    >
+                      <span>{category}</span>
+                      <span aria-hidden="true">
+                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                          <path d="m9 18 6-6-6-6" />
+                        </svg>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
@@ -305,7 +316,11 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
               onClick={() => setIsMobileNavOpen(false)}
             >
               <span className="mobile-nav-label">Contact</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
+                </svg>
+              </span>
             </a>
 
             <a
@@ -314,7 +329,14 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
               onClick={() => setIsMobileNavOpen(false)}
             >
               <span className="mobile-nav-label">Become a Driver</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m19.07 4.93-4.24 4.24" />
+                  <path d="m8.93 4.93 4.24 4.24" />
+                  <circle cx="12" cy="12" r="2" />
+                </svg>
+              </span>
             </a>
           </nav>
 

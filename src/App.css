@@ -4045,6 +4045,10 @@ a.secondary-action {
     min-height: 0;
   }
 
+  .mobile-explore-inner {
+    display: grid;
+  }
+
   .mobile-explore-group.is-open .mobile-explore-list {
     grid-template-rows: 1fr;
     opacity: 1;
