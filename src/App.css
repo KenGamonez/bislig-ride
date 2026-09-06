@@ -1098,6 +1098,29 @@ a.secondary-action {
   color: var(--brand-orange);
 }
 
+.rating-summary-stars {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  color: var(--brand-orange);
+}
+
+.rating-stars-inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 1px;
+  color: var(--brand-orange);
+  vertical-align: -1px;
+}
+
+.auth-back,
+.driver-back-button,
+.admin-back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 .text-input {
   width: 100%;
   min-height: 100px;

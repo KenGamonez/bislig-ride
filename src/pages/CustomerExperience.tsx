@@ -628,7 +628,7 @@ const validateForm = () => {
           </div>
 
           <div className="pickup-field-block">
-            <LocationInput
+<LocationInput
               label="Pickup"
               value={formData.pickup}
               placeholder="Enter pickup location"
@@ -639,13 +639,6 @@ const validateForm = () => {
             <p className="pickup-help-note">
               Enter your pickup location, or tap <strong>Use my current location</strong>.
             </p>
-
-            {pickupLocation ? (
-              <div className="field-note pickup-detected-note">
-                <span className="pickup-check" aria-hidden="true"></span>
-                <span>Your current location has been located.</span>
-              </div>
-            ) : null}
 
             {pickupLocationError ? (
               <p className="form-error-message pickup-location-error">
@@ -985,12 +978,23 @@ const validateForm = () => {
                 key={star}
                 type="button"
                 className={star <= rating ? 'rating-star selected' : 'rating-star'}
-                onClick={() => setRating(star)}
+onClick={() => setRating(star)}
                 aria-label={`${star} star${star > 1 ? 's' : ''}`}
                 aria-checked={star === rating}
                 role="radio"
               >
-                ?
+                <svg
+                  viewBox="0 0 24 24"
+                  width="26"
+                  height="26"
+                  fill={star <= rating ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
               </button>
             ))}
           </div>
@@ -1027,8 +1031,24 @@ const validateForm = () => {
 
           <div className="ride-summary compact">
             <div>
-              <dt>Your rating</dt>
-              <dd>{'?'.repeat(rating)}</dd>
+<dt>Your rating</dt>
+              <dd className="rating-summary-stars">
+                {[1, 2, 3, 4, 5].map((value) => (
+                  <svg
+                    key={value}
+                    viewBox="0 0 24 24"
+                    width="16"
+                    height="16"
+                    fill={value <= rating ? 'currentColor' : 'none'}
+                    stroke="currentColor"
+                    strokeWidth="1.6"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                  </svg>
+                ))}
+              </dd>
             </div>
             <div>
               <dt>Driver</dt>
@@ -1260,8 +1280,15 @@ const validateForm = () => {
               href="/pakyawan"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Book Pakyawan</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
+<span className="mobile-nav-label">Book Pakyawan</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
+                  <path d="M13 5v2" />
+                  <path d="M13 17v2" />
+                  <path d="M13 11v2" />
+                </svg>
+              </span>
             </a>
 
             <button
@@ -1273,9 +1300,16 @@ const validateForm = () => {
               }}
             >
               <span className="mobile-nav-label">
-                {showProfile ? 'Book a Ride' : 'My Rides'}
+{showProfile ? 'Book a Ride' : 'My Rides'}
               </span>
-              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1Z" />
+                  <path d="M8 8h8" />
+                  <path d="M8 12h8" />
+                  <path d="M8 16h5" />
+                </svg>
+              </span>
             </button>
 
             <div className={isExploreOpen ? 'mobile-explore-group is-open' : 'mobile-explore-group'}>
@@ -1286,8 +1320,13 @@ const validateForm = () => {
                 aria-controls="mobile-explore-list"
                 onClick={() => setIsExploreOpen((current) => !current)}
               >
-                <span className="mobile-nav-label">Explore Bislig</span>
-                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">?</span>
+<span className="mobile-nav-label">Explore Bislig</span>
+                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10" />
+                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+                  </svg>
+                </span>
               </button>
 
               <div

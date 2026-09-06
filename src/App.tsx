@@ -82,16 +82,17 @@ function App() {
         <CustomerExperience currentView={view} onSwitchView={setView} />
       ) : view === 'driver' ? (
         driverAuthenticated ? (
-          <DriverExperience />
+          <DriverExperience onBack={() => setView('Rider')} />
         ) : (
           <DriverLogin
             onLogin={() => {
               setDriverAuthenticated(true)
             }}
+            onBack={() => setView('Rider')}
           />
         )
       ) : (
-        <AdminExperience />
+        <AdminExperience onBack={() => setView('Rider')} />
       )}
     </div>
   )

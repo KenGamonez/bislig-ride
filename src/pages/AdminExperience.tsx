@@ -61,7 +61,7 @@ const rideStatusLabels: Record<AdminRide['status'], string> = {
   completed: 'Completed',
 }
 
-export function AdminExperience() {
+export function AdminExperience({ onBack }: { onBack?: () => void }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [drivers, setDrivers] = useState<AdminDriver[]>([])
@@ -344,11 +344,19 @@ useEffect(() => {
   }
 
   if (!isLoggedIn) {
-    return <AdminLogin />
+    return <AdminLogin onBack={onBack} />
   }
 
   return (
     <div className="admin-shell">
+      <button type="button" className="secondary-action compact-button admin-back-button" onClick={onBack}>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M19 12H5" />
+          <path d="m12 19-7-7 7-7" />
+        </svg>
+        Back to Rider
+      </button>
+
       <header className="admin-header">
         <div>
           <p className="section-label">Admin</p>
@@ -608,7 +616,7 @@ useEffect(() => {
                   <img src={selectedDriver.profilePhoto} alt={selectedDriver.name} className="detail-avatar" />
                   <div>
                     <h4>{selectedDriver.name}</h4>
-                    <p>Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦Ã¢Ëœâ€¦ {selectedDriver.rating}</p>
+                    <p><span className="rating-stars-inline"><svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg> <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg> <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg> <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg> <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg> </span> {selectedDriver.rating}</p>
                   </div>
                 </div>
                 <div className="detail-grid">
