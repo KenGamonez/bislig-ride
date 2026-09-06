@@ -215,7 +215,9 @@ const validateForm = () => {
 
   const handleUseCurrentLocation = () => {
     if (!navigator.geolocation) {
-      setPickupLocationError('Your device does not support location access. You can enter a pickup landmark instead.')
+      setPickupLocationError(
+        'Your device does not support location access. You can enter a pickup landmark instead.',
+      )
       return
     }
 
@@ -231,20 +233,50 @@ const validateForm = () => {
           accuracy,
         })
 
-        if (!Number.isFinite(accuracy) || accuracy > 100) {
+        if (!Number.isFinite(accuracy)) {
           setPickupLocation(null)
           setPickupLocationError(
-            `Your device returned an inaccurate location (${Math.round(accuracy || 0)}m accuracy). Please turn on precise location/GPS and try again.`,
+            'Your device could not determine location accuracy. Please turn on precise location/GPS and try again.',
           )
           return
         }
 
-        setPickupLocation({
-          latitude,
-          longitude,
-        })
+        // Excellent / good location: accept immediately.
+        if (accuracy <= 100) {
+          setPickupLocation({
+            latitude,
+            longitude,
+          })
+          setValidationErrors((current) => ({ ...current, pickup: undefined }))
+          return
+        }
 
-        setValidationErrors((current) => ({ ...current, pickup: undefined }))
+        // Usable but not ideal: accept up to 300m.
+        // This avoids unnecessarily rejecting legitimate mobile GPS fixes.
+        if (accuracy <= 300) {
+          setPickupLocation({
+            latitude,
+            longitude,
+          })
+          setValidationErrors((current) => ({ ...current, pickup: undefined }))
+          setPickupLocationError(
+            `Location detected with approximately ${Math.round(accuracy)}m accuracy. Please confirm your pickup point on the map.`,
+          )
+          return
+        }
+
+        // Anything above 300m is too coarse for a reliable ride pickup.
+        setPickupLocation(null)
+
+        if (accuracy >= 10000) {
+          setPickupLocationError(
+            'Your computer or device cannot provide a precise location. Please use a phone with precise location/GPS enabled, or enter your pickup landmark manually.',
+          )
+        } else {
+          setPickupLocationError(
+            `Your device returned an inaccurate location (${Math.round(accuracy)}m accuracy). Please turn on precise location/GPS and try again.`,
+          )
+        }
       },
       (error) => {
         console.error('Unable to get Rider pickup location:', error)
