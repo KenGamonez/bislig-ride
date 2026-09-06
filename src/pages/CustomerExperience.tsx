@@ -272,9 +272,7 @@ const validateForm = () => {
       nextErrors.destination = 'Destination is required.'
     }
 
-    const isMobileView = window.matchMedia('(max-width: 767px)').matches
-
-    if (isMobileView && !formValues.name) {
+    if (!formValues.name) {
       nextErrors.name = 'Please enter your name.'
     }
 
@@ -548,6 +546,25 @@ const validateForm = () => {
             />
           </div>
 </div>
+      </section>
+
+      <section className="booking-section passenger-section">
+        <div className="booking-section-heading passenger-heading">
+          <div>
+            <strong>Passenger details</strong>
+            <span>So your driver knows who to meet</span>
+          </div>
+        </div>
+
+        <div className="Rider-details passenger-details">
+          <LocationInput
+            label="Name"
+            value={formData.name}
+            placeholder="Enter your name"
+            error={validationErrors.name}
+            onChange={(value) => handleInput('name', value)}
+          />
+        </div>
       </section>
 
       <section className="booking-section preferences-section">
