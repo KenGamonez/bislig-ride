@@ -4208,23 +4208,25 @@ a.secondary-action {
 
   .customer-layout .map-location-action {
     position: absolute;
-    left: 50%;
+    left: 0;
+    right: 0;
     bottom: 0;
-    transform: translateX(-50%);
+    margin-inline: auto;
     z-index: 20;
-    width: min(300px, calc(100% - 40px));
-    min-height: 40px;
-    padding: 0 14px;
+    width: fit-content;
+    max-width: calc(100% - 24px);
+    min-height: 34px;
+    padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    gap: 7px;
+    gap: 6px;
     border: none;
     border-radius: 999px;
     background: #000000;
     color: #ffffff;
-    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
-    font-size: 0.72rem;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
+    font-size: 0.7rem;
     font-weight: 800;
     letter-spacing: 0.02em;
     white-space: nowrap;
@@ -4242,7 +4244,7 @@ a.secondary-action {
   .customer-layout .map-location-action:focus-visible {
     color: #ffffff;
     background: #1b1b1b;
-    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
   }
 
   .customer-layout .map-location-status {
