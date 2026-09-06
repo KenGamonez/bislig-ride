@@ -7,6 +7,7 @@ type MapViewProps = {
   driverLongitude?: number | null
   pickupLatitude?: number | null
   pickupLongitude?: number | null
+  className?: string
 }
 
 export function MapView({
@@ -14,6 +15,7 @@ export function MapView({
   driverLongitude = null,
   pickupLatitude = null,
   pickupLongitude = null,
+  className,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -146,6 +148,7 @@ export function MapView({
   return (
     <div
       ref={containerRef}
+      className={className}
       aria-label="Bislig City map"
       style={{
         position: 'relative',

@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { ViewSwitcher } from './components/ViewSwitcher'
 import { DriverLogin } from './components/DriverLogin'
 import { CustomerExperience } from './pages/CustomerExperience'
 import { DriverExperience } from './pages/DriverExperience'
@@ -79,14 +78,8 @@ function App() {
 
   return (
     <div className="app-stage">
-      <ViewSwitcher
-        currentView={view}
-        onSwitch={setView}
-        className="header-role-switcher"
-      />
-
       {view === 'Rider' ? (
-        <CustomerExperience />
+        <CustomerExperience currentView={view} onSwitchView={setView} />
       ) : view === 'driver' ? (
         driverAuthenticated ? (
           <DriverExperience />

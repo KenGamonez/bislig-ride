@@ -32,6 +32,8 @@ type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress
 
 type PaymentMethod = 'Cash' | 'GCash'
 
+type ViewMode = 'Rider' | 'driver' | 'admin'
+
 const initialFormState: CustomerFormState = {
   pickup: '',
   destination: '',
@@ -104,7 +106,12 @@ const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
   }
 }
 
-export function CustomerExperience() {
+type CustomerExperienceProps = {
+  currentView?: ViewMode
+  onSwitchView?: (view: ViewMode) => void
+}
+
+export function CustomerExperience({ currentView = 'Rider', onSwitchView }: CustomerExperienceProps) {
   const [formData, setFormData] = useState<CustomerFormState>(initialFormState)
   const [validationErrors, setValidationErrors] = useState<CustomerValidation>({})
   const [submitError, setSubmitError] = useState('')
@@ -246,7 +253,7 @@ export function CustomerExperience() {
     }
 
     if (!formValues.name) {
-      nextErrors.name = 'Please enter your full name.'
+      nextErrors.name = 'Please enter your name.'
     }
 
     if (!formValues.phone) {
@@ -495,8 +502,8 @@ export function CustomerExperience() {
 
             {pickupLocation ? (
               <div className="field-note pickup-detected-note">
-                <strong>Pickup location detected</strong>
-                <span>You don't need to enter an address.</span>
+                <span className="pickup-check" aria-hidden="true"></span>
+                <span>Your current location has been located.</span>
               </div>
             ) : null}
 
@@ -530,9 +537,9 @@ export function CustomerExperience() {
 
         <div className="Rider-details passenger-details">
           <LocationInput
-            label="Full Name"
+            label="Name"
             value={formData.name}
-            placeholder="Enter your full name"
+            placeholder="Enter your name"
             error={validationErrors.name}
             onChange={(value) => handleInput('name', value)}
           />
@@ -573,7 +580,7 @@ export function CustomerExperience() {
           </div>
 
           <div className="field-block">
-            <span className="field-label">Passenger Type</span>
+            <span className="field-label">Passenger type</span>
             <select
               className="input-field"
               value={formData.passengerType}
@@ -649,7 +656,7 @@ export function CustomerExperience() {
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
           <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
-          <p className="driver-rating">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â¹ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¦ {Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+          <p className="driver-rating">{Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
           <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>
@@ -725,11 +732,11 @@ export function CustomerExperience() {
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“</span>
+        <span className="progress-arrow">→</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“</span>
+        <span className="progress-arrow">→</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Â ÃƒÂ¢Ã¢â€šÂ¬Ã¢â€žÂ¢ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã‚Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â¦ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€¦Ã¢â‚¬Å“</span>
+        <span className="progress-arrow">→</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -775,7 +782,7 @@ export function CustomerExperience() {
         </div>
         <div>
           <dt>Route</dt>
-          <dd>{ride.pickup_address} ÃƒÆ’Ã†â€™Ãƒâ€ Ã¢â‚¬â„¢ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¾Ãƒâ€šÃ‚Â¢ {ride.destination_address}</dd>
+          <dd>{ride.pickup_address} → {ride.destination_address}</dd>
         </div>
         <div>
           <dt>Passengers</dt>
@@ -821,7 +828,7 @@ export function CustomerExperience() {
                 aria-checked={star === rating}
                 role="radio"
               >
-                ?
+                ★
               </button>
             ))}
           </div>
@@ -859,7 +866,7 @@ export function CustomerExperience() {
           <div className="ride-summary compact">
             <div>
               <dt>Your rating</dt>
-              <dd>{'?'.repeat(rating)}</dd>
+              <dd>{'★'.repeat(rating)}</dd>
             </div>
             <div>
               <dt>Driver</dt>
@@ -950,78 +957,97 @@ export function CustomerExperience() {
   )
 
   return (
-    <div className="shell-container">
+    <div className="app-wrapper">
       <header className={isMobileNavOpen ? 'app-header mobile-nav-active' : 'app-header'}>
-        <div className="brand-block">
-          <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
-        </div>
+        <div className="header-inner">
+          <div className="brand-block">
+            <a href="/" className="brand-link">
+              <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
+            </a>
+          </div>
 
-        <nav className="top-nav desktop-nav" aria-label="Main navigation">
-          <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
+          <nav className="top-nav desktop-nav" aria-label="Main navigation">
+            <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
 
-          <button
-            type="button"
-            className="nav-button"
-            onClick={() => setShowProfile((current) => !current)}
-          >
-            {showProfile ? 'Book a Ride' : 'My Rides'}
-          </button>
-
-          <div
-            className="explore-menu"
-            ref={exploreMenuRef}
-            onMouseEnter={() => setIsExploreOpen(true)}
-            onMouseLeave={() => setIsExploreOpen(false)}
-          >
             <button
               type="button"
-              className="nav-button explore-trigger"
-              aria-expanded={isExploreOpen}
-              aria-haspopup="true"
-              onClick={() => setIsExploreOpen((current) => !current)}
+              className="nav-button"
+              onClick={() => setShowProfile((current) => !current)}
             >
-              Explore Bislig <span className="explore-chevron" aria-hidden="true"></span>
+              {showProfile ? 'Book a Ride' : 'My Rides'}
             </button>
 
             <div
-              className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'}
-              role="menu"
-              aria-label="Explore Bislig categories"
+              className="explore-menu"
+              ref={exploreMenuRef}
+              onMouseEnter={() => setIsExploreOpen(true)}
+              onMouseLeave={() => setIsExploreOpen(false)}
             >
-              <div className="discovery-list">
-                {discoveryCategories.map((category) => (
-                  <button
-                    key={category}
-                    type="button"
-                    className="discovery-item"
-                    role="menuitem"
-                    onClick={() => setIsExploreOpen(false)}
-                  >
-                    {category}
-                  </button>
-                ))}
+              <button
+                type="button"
+                className="nav-button explore-trigger"
+                aria-expanded={isExploreOpen}
+                aria-haspopup="true"
+                onClick={() => setIsExploreOpen((current) => !current)}
+              >
+                Explore Bislig <span className="explore-chevron" aria-hidden="true"></span>
+              </button>
+
+              <div
+                className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'}
+                role="menu"
+                aria-label="Explore Bislig categories"
+              >
+                <div className="discovery-list">
+                  {discoveryCategories.map((category) => (
+                    <button
+                      key={category}
+                      type="button"
+                      className="discovery-item"
+                      role="menuitem"
+                      onClick={() => setIsExploreOpen(false)}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
 
-          <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
-          <a className="nav-link" href="/contact">Contact</a>
-        </nav>
+            <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
+            <a className="nav-link" href="/contact">Contact</a>
 
-        <button
-          type="button"
-          className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
-          aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
-          aria-expanded={isMobileNavOpen}
-          aria-controls="mobile-main-navigation"
-          onClick={() => setIsMobileNavOpen((current) => !current)}
-        >
-          <span className="mobile-menu-icon" aria-hidden="true">
-            <span></span>
-            <span></span>
-            <span></span>
-          </span>
-        </button>
+            <div className="desktop-role-divider" aria-hidden="true"></div>
+
+            <div className="desktop-role-switcher" aria-label="Role switcher">
+              {(['Rider', 'driver', 'admin'] as ViewMode[]).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  className={currentView === role ? 'role-btn active' : 'role-btn'}
+                  onClick={() => onSwitchView?.(role)}
+                >
+                  {role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}
+                </button>
+              ))}
+            </div>
+          </nav>
+
+          <button
+            type="button"
+            className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
+            aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={isMobileNavOpen}
+            aria-controls="mobile-main-navigation"
+            onClick={() => setIsMobileNavOpen((current) => !current)}
+          >
+            <span className="mobile-menu-icon" aria-hidden="true">
+              <span></span>
+              <span></span>
+              <span></span>
+            </span>
+          </button>
+        </div>
 
         <div
           id="mobile-main-navigation"
@@ -1029,6 +1055,22 @@ export function CustomerExperience() {
           aria-hidden={!isMobileNavOpen}
         >
           <div className="mobile-nav-inner">
+
+            <div className="mobile-role-switcher">
+              {(['Rider', 'driver', 'admin'] as ViewMode[]).map((role) => (
+                <button
+                  key={role}
+                  type="button"
+                  className={currentView === role ? 'mobile-role-btn active' : 'mobile-role-btn'}
+                  onClick={() => {
+                    onSwitchView?.(role)
+                    setIsMobileNavOpen(false)
+                  }}
+                >
+                  {role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}
+                </button>
+              ))}
+            </div>
 
             <a
               className="mobile-nav-item"
@@ -1118,11 +1160,7 @@ export function CustomerExperience() {
         <section className="primary-panel">
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
-            <div className="coming-soon-notice" role="status" aria-live="polite">
-  <div className="coming-soon-kicker">BISLIG RIDE - COMING SOON</div>
-  <div className="coming-soon-copy">We're onboarding our founding drivers.</div>
-</div>
-<h1>Where are you going?</h1>
+            <h1>Where are you going?</h1>
             <p className="subtitle">Get a reliable ride around Bislig City - simple, convenient, and made for your everyday trips.</p>
           </div>
 
@@ -1160,6 +1198,7 @@ export function CustomerExperience() {
         <aside className="map-panel" aria-label="Bislig City map preview">
           <div className="map-stage">
             <MapView
+              className="map-view"
               driverLatitude={driverLocation?.latitude}
               driverLongitude={driverLocation?.longitude}
               pickupLatitude={pickupLocation?.latitude}
@@ -1172,14 +1211,16 @@ export function CustomerExperience() {
               onClick={handleUseCurrentLocation}
               disabled={isSubmitting}
             >
+              <span className="location-icon" aria-hidden="true"></span>
               Use My Current Location
             </button>
           </div>
 
           <div className="map-location-status">
             {pickupLocation ? (
-              <p className="field-note">
-                Your pickup location is ready.
+              <p className="field-note map-location-confirmed">
+                <span className="pickup-check" aria-hidden="true"></span>
+                Your current location has been located.
               </p>
             ) : null}
 
@@ -1193,29 +1234,17 @@ export function CustomerExperience() {
           <WeatherWidget />
         </aside>
       </main>
+
+      <footer className="announcement-ticker" role="marquee" aria-label="Coming soon announcement">
+        <div className="ticker-track">
+          <span className="ticker-content">
+            BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span>
+          </span>
+          <span className="ticker-content" aria-hidden="true">
+            BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span>
+          </span>
+        </div>
+      </footer>
     </div>
   )
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
