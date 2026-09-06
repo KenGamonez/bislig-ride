@@ -6,8 +6,10 @@ import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
 import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
+import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
+import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
@@ -20,7 +22,7 @@ type AdminPayment = {
   paymentMethod: string
   status: string
 }
-type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications'
+type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications' | 'contact-messages'
 
 type DriverDraft = {
   name: string
@@ -52,6 +54,7 @@ const adminTabs: { key: AdminTab; label: string }[] = [
   { key: 'ride-history', label: 'Ride History' },
   { key: 'payments', label: 'Payments' },
   { key: 'driver-applications', label: 'Driver Applications' },
+  { key: 'contact-messages', label: 'Contact Messages' },
 ]
 
 const rideStatusLabels: Record<AdminRide['status'], string> = {
@@ -91,6 +94,10 @@ export function AdminExperience({
   const [selectedApplicationId, setSelectedApplicationId] = useState('')
   const [applicationError, setApplicationError] = useState('')
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
+  const [selectedContactMessageId, setSelectedContactMessageId] = useState('')
+  const [contactMessageError, setContactMessageError] = useState('')
+  const [isLoadingContactMessages, setIsLoadingContactMessages] = useState(false)
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -200,6 +207,19 @@ useEffect(() => {
       .finally(() => setIsLoadingApplications(false))
   }, [activeTab, isLoggedIn])
 
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'contact-messages') return
+    setIsLoadingContactMessages(true)
+    setContactMessageError('')
+    getContactMessages()
+      .then((items) => {
+        setContactMessages(items)
+        setSelectedContactMessageId((current) => current || items[0]?.id || '')
+      })
+      .catch(() => setContactMessageError('Unable to load contact messages. Check admin access and try again.'))
+      .finally(() => setIsLoadingContactMessages(false))
+  }, [activeTab, isLoggedIn])
+
   const filteredDrivers = useMemo(() => {
     return drivers.filter((driver) => {
       const matchesFilter = driverFilter === 'all' || driver.status === driverFilter
@@ -238,6 +258,7 @@ useEffect(() => {
   const selectedDriver = drivers.find((driver) => driver.id === selectedDriverId) ?? drivers[0]
   const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
+  const selectedContactMessage = contactMessages.find((message) => message.id === selectedContactMessageId)
 
   const handleApplicationStatusChange = async (id: string, status: DriverApplicationStatus) => {
     try {
@@ -245,6 +266,16 @@ useEffect(() => {
       setApplications((current) => current.map((application) => application.id === id ? updated : application))
     } catch {
       setApplicationError('Unable to update this application. Please try again.')
+    }
+  }
+
+  const handleContactMessageStatusChange = async (id: string, status: ContactMessageStatus) => {
+    try {
+      setContactMessageError('')
+      const updated = await updateContactMessageStatus(id, status)
+      setContactMessages((current) => current.map((message) => message.id === id ? updated : message))
+    } catch {
+      setContactMessageError('Unable to update this message. Please try again.')
     }
   }
 
@@ -911,6 +942,30 @@ useEffect(() => {
           <aside className="admin-panel detail-panel">{selectedApplication ? <><div className="panel-header-row"><h3>Application Details</h3></div><div className="detail-grid">
             <div><span>Full name</span><strong>{selectedApplication.full_name}</strong></div><div><span>Mobile</span><strong>{selectedApplication.mobile_number}</strong></div><div><span>Email</span><strong>{selectedApplication.email || 'Not provided'}</strong></div><div><span>Facebook</span><strong>{selectedApplication.facebook_profile || 'Not provided'}</strong></div><div><span>Barangay</span><strong>{selectedApplication.barangay}</strong></div><div><span>Vehicle / body number</span><strong>{selectedApplication.vehicle_number}</strong></div><div><span>Plate number</span><strong>{selectedApplication.plate_number || 'Not provided'}</strong></div><div><span>Driving experience</span><strong>{selectedApplication.driving_experience} years</strong></div><div><span>Operating area</span><strong>{selectedApplication.operating_area}</strong></div><div><span>Schedule</span><strong>{selectedApplication.preferred_schedule}</strong></div><div><span>Reason</span><strong>{selectedApplication.reason || 'Not provided'}</strong></div><div><span>Submitted</span><strong>{new Date(selectedApplication.created_at).toLocaleString()}</strong></div>
           </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{driverApplicationStatusLabels[status]}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
+        </section>
+      ) : null}
+
+      {activeTab === 'contact-messages' ? (
+        <section className="admin-layout admin-grid-two">
+          <div className="admin-panel">
+            <div className="panel-header-row"><h3>Contact Messages</h3></div>
+            {contactMessageError ? <p className="form-error-message submit-error">{contactMessageError}</p> : null}
+            {isLoadingContactMessages ? <p className="muted-copy">Loading contact messages...</p> : contactMessages.length === 0 ? <div className="empty-state-box"><p>No contact messages found.</p></div> : (
+              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Inquiry</th><th>Name</th><th>Phone</th><th>Organization</th><th>Status</th><th>Submitted</th></tr></thead><tbody>
+                {contactMessages.map((message) => <tr key={message.id} onClick={() => setSelectedContactMessageId(message.id)} className={selectedContactMessageId === message.id ? 'selected-row' : ''}>
+                  <td>{message.inquiry_type}</td><td>{message.full_name}</td><td>{message.phone}</td><td>{message.organization || 'Not provided'}</td>
+                  <td><span className={`status-pill ${message.status}`}>{contactMessageStatusLabels[message.status]}</span></td><td>{new Date(message.created_at).toLocaleDateString()}</td>
+                </tr>)}
+              </tbody></table></div>
+            )}
+          </div>
+          <aside className="admin-panel detail-panel">{selectedContactMessage ? <><div className="panel-header-row"><h3>Message Details</h3></div><div className="detail-grid">
+            <div><span>Inquiry Type</span><strong>{selectedContactMessage.inquiry_type}</strong></div><div><span>Full Name</span><strong>{selectedContactMessage.full_name}</strong></div><div><span>Phone</span><strong>{selectedContactMessage.phone}</strong></div><div><span>Email</span><strong>{selectedContactMessage.email || 'Not provided'}</strong></div><div><span>Organization</span><strong>{selectedContactMessage.organization || 'Not provided'}</strong></div><div><span>Message</span><strong>{selectedContactMessage.message}</strong></div><div><span>Submitted</span><strong>{new Date(selectedContactMessage.created_at).toLocaleString()}</strong></div><div><span>Status</span><strong>{contactMessageStatusLabels[selectedContactMessage.status]}</strong></div>
+          </div><div className="contact-message-actions">
+            <button type="button" className="secondary-action compact-button" disabled={selectedContactMessage.status === 'read'} onClick={() => void handleContactMessageStatusChange(selectedContactMessage.id, 'read')}>Mark as Read</button>
+            <button type="button" className="secondary-action compact-button" disabled={selectedContactMessage.status === 'replied'} onClick={() => void handleContactMessageStatusChange(selectedContactMessage.id, 'replied')}>Mark as Replied</button>
+            <button type="button" className="secondary-action compact-button" disabled={selectedContactMessage.status === 'archived'} onClick={() => void handleContactMessageStatusChange(selectedContactMessage.id, 'archived')}>Archive</button>
+          </div></> : <div className="empty-state-box"><p>Select a message to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>

@@ -1,13 +1,37 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
+import { createContactMessage } from '../lib/contactMessages'
+import type { ContactMessageInsert } from '../types/contactMessage'
 
 export function ContactExperience() {
   const [submitted, setSubmitted] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault()
-    setSubmitted(true)
+    if (isSubmitting) return
+    setIsSubmitting(true)
+    setSubmitError('')
+    try {
+      const formData = new FormData(event.currentTarget)
+      const payload: ContactMessageInsert = {
+        inquiry_type: String(formData.get('inquiry_type') ?? ''),
+        full_name: String(formData.get('full_name') ?? '').trim(),
+        phone: String(formData.get('phone') ?? '').trim(),
+        email: String(formData.get('email') ?? '').trim() || null,
+        organization: String(formData.get('organization') ?? '').trim() || null,
+        message: String(formData.get('message') ?? '').trim(),
+      }
+      await createContactMessage(payload)
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Unable to submit contact message:', error)
+      setSubmitError('We could not send your message right now. Please try again.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -182,8 +206,10 @@ export function ContactExperience() {
                   />
                 </label>
 
-                <button type="submit" className="primary-action contact-submit">
-                  Send Message
+                {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}
+
+                <button type="submit" className="primary-action contact-submit" disabled={isSubmitting}>
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
                 </button>
 
                 <p className="contact-form-note">

@@ -1750,6 +1750,33 @@ a.secondary-action {
   color: var(--brand-red);
 }
 
+.status-pill.new {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.status-pill.read {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--text-secondary);
+}
+
+.status-pill.replied {
+  background: rgba(30, 166, 114, 0.12);
+  color: var(--success);
+}
+
+.status-pill.archived {
+  background: rgba(100, 116, 139, 0.15);
+  color: #475569;
+}
+
+.contact-message-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;
