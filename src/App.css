@@ -4175,68 +4175,54 @@ a.secondary-action {
     margin: 0 12px;
   }
 
-  /* 2. Pickup card */
-  .booking-card {
-    width: calc(100% - 24px);
-    margin: 0 12px 10px;
-    padding: 12px 14px 14px;
-    background: #ffffff;
-    border: 1px solid var(--border);
-    border-radius: 16px;
-    box-shadow: var(--shadow-soft);
-    display: grid;
-    gap: 10px;
-  }
-
-  .customer-layout .pickup-card {
+  /* 2. Use my current location button */
+  .customer-layout .mobile-location-action {
     order: 2;
-    margin-bottom: 0;
-    border-bottom: none;
-    border-radius: 16px 16px 0 0;
-    box-shadow: none;
-  }
-
-  .customer-layout .destination-card {
-    order: 5;
-    margin-top: 16px;
-  }
-
-  .booking-card-heading {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
-  .booking-badge {
-    flex-shrink: 0;
-    width: 26px;
-    height: 26px;
+    width: calc(100% - 24px);
+    min-height: 48px;
+    margin: 0 12px 12px;
+    padding: 0 16px;
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    border-radius: 50%;
+    gap: 8px;
+    border: 1px solid var(--brand-red);
+    border-radius: 999px;
     background: var(--brand-red);
     color: #ffffff;
-    font-size: 0.84rem;
+    font: inherit;
+    font-size: 0.78rem;
     font-weight: 800;
-    line-height: 1;
-    margin-top: 1px;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+    box-shadow: 0 6px 16px rgba(215, 25, 32, 0.18);
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: background 160ms ease, box-shadow 160ms ease, transform 160ms ease;
   }
 
-  .booking-card-titles {
-    display: grid;
-    gap: 2px;
+  .customer-layout .mobile-location-action .location-icon::before {
+    border-color: #ffffff;
   }
 
-  .booking-card-titles strong {
-    font-size: 1rem;
-    letter-spacing: -0.01em;
-    color: var(--graphite);
+  .customer-layout .mobile-location-action .location-icon::after {
+    background: #ffffff;
   }
 
-  .booking-card-titles span {
-    color: var(--text-secondary);
-    font-size: 0.74rem;
+  .customer-layout .mobile-location-action:hover,
+  .customer-layout .mobile-location-action:focus-visible {
+    background: #c2151b;
+    outline: none;
+    box-shadow: 0 8px 20px rgba(215, 25, 32, 0.24);
+  }
+
+  .customer-layout .mobile-location-action:active {
+    transform: scale(0.98);
+  }
+
+  .customer-layout .mobile-location-action:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
   }
 
   .customer-layout .pickup-field-block,
@@ -4251,9 +4237,9 @@ a.secondary-action {
     margin: 0;
   }
 
-  /* 3. Map (positioned container, current-location overlay) */
+  /* 3. Map — shown while Pickup is open */
   .customer-layout .map-stage {
-    order: 3;
+    order: 4;
     position: relative;
     width: calc(100% - 24px);
     height: 184px;
@@ -4267,6 +4253,18 @@ a.secondary-action {
     overflow: hidden;
   }
 
+  .customer-layout:not(.pickup-open) .map-stage {
+    position: absolute;
+    top: -200vh;
+    left: -200vw;
+    width: calc(100vw - 24px);
+    height: 184px;
+    min-height: 184px;
+    margin: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+
   .customer-layout .map-view,
   .customer-layout .map-view .maplibregl-map {
     width: 100%;
@@ -4276,54 +4274,11 @@ a.secondary-action {
   }
 
   .customer-layout .map-location-action {
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    margin-inline: auto;
-    z-index: 20;
-    width: fit-content;
-    max-width: calc(100% - 24px);
-    min-height: 34px;
-    padding: 0 16px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    border: none;
-    border-radius: 999px;
-    background: #000000;
-    color: #ffffff;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.25);
-    font-size: 0.7rem;
-    font-weight: 800;
-    letter-spacing: 0.02em;
-    white-space: nowrap;
-  }
-
-  .customer-layout .map-location-action .location-icon::before {
-    border-color: #ffffff;
-  }
-
-  .customer-layout .map-location-action .location-icon::after {
-    background: #ffffff;
-  }
-
-  .customer-layout .map-location-action:hover,
-  .customer-layout .map-location-action:focus-visible {
-    color: #ffffff;
-    background: #1b1b1b;
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+    display: none;
   }
 
   .customer-layout .map-location-status {
-    order: 4;
-    width: calc(100% - 24px);
-    margin: 6px 12px 2px;
-    padding: 0;
-    font-size: 0.62rem;
-    text-align: center;
-    color: var(--text-secondary);
+    display: none;
   }
 
   /* Weather — compact neutral card */
@@ -4353,7 +4308,7 @@ a.secondary-action {
 
   /* 4. Compact booking accordion */
   .customer-layout .booking-accordion {
-    order: 6;
+    order: 3;
     width: calc(100% - 24px);
     margin: 14px 12px 0;
     background: #ffffff;

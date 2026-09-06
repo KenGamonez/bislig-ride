@@ -206,14 +206,20 @@ const validateForm = () => {
 
     setValidationErrors(nextErrors)
 
-    if (nextErrors.name) {
+    if (nextErrors.pickup) {
+      setOpenMobileSection('pickup')
+    } else if (nextErrors.destination) {
+      setOpenMobileSection('destination')
+    } else if (nextErrors.name) {
       setOpenMobileSection('passenger')
     }
 
     return Object.keys(nextErrors).length === 0
   }
 
-  const handleUseCurrentLocation = () => {
+const handleUseCurrentLocation = () => {
+    setOpenMobileSection('pickup')
+
     if (!navigator.geolocation) {
       setPickupLocationError(
         'Your device does not support location access. You can enter a pickup landmark instead.',
@@ -613,57 +619,89 @@ const validateForm = () => {
       </div>
 
       <div className="mobile-booking-flow">
-        <section className="booking-card pickup-card">
-          <div className="booking-card-heading">
-            <span className="booking-badge" aria-hidden="true">1</span>
-            <div className="booking-card-titles">
-              <strong>Pickup</strong>
-              <span>Where should we pick you up?</span>
+<button
+          type="button"
+          className="mobile-location-action"
+          onClick={handleUseCurrentLocation}
+          disabled={isSubmitting}
+        >
+          <span className="location-icon" aria-hidden="true"></span>
+          Use my current location
+        </button>
+
+        <section className="booking-accordion" aria-label="Booking details">
+          <div className={openMobileSection === 'pickup' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'pickup'}
+              onClick={() => toggleMobileSection('pickup')}
+            >
+              <span className="accordion-number">01</span>
+              <span className="accordion-titles">
+                <strong>Pickup</strong>
+                <small>Where should we pick you up?</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
+
+            <div className="accordion-panel">
+              <div className="accordion-content passenger-fields">
+                <LocationInput
+                  label="Pickup"
+                  value={formData.pickup}
+                  placeholder="Enter pickup location"
+                  error={validationErrors.pickup}
+                  onChange={(value) => handleInput('pickup', value)}
+                />
+
+                <p className="pickup-help-note">
+                  Enter your pickup location, or tap <strong>Use my current location</strong>.
+                </p>
+
+                {pickupLocation ? (
+                  <div className="field-note pickup-detected-note">
+                    <span className="pickup-check" aria-hidden="true"></span>
+                    <span>Your current location has been located.</span>
+                  </div>
+                ) : null}
+
+                {pickupLocationError ? (
+                  <p className="form-error-message pickup-location-error">
+                    {pickupLocationError}
+                  </p>
+                ) : null}
+              </div>
             </div>
           </div>
 
-          <div className="pickup-field-block">
-<LocationInput
-              label="Pickup"
-              value={formData.pickup}
-              placeholder="Enter pickup location"
-              error={validationErrors.pickup}
-              onChange={(value) => handleInput('pickup', value)}
-            />
+          <div className={openMobileSection === 'destination' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'destination'}
+              onClick={() => toggleMobileSection('destination')}
+            >
+              <span className="accordion-number">02</span>
+              <span className="accordion-titles">
+                <strong>Destination</strong>
+                <small>Where are you going?</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
 
-            <p className="pickup-help-note">
-              Enter your pickup location, or tap <strong>Use my current location</strong>.
-            </p>
-
-            {pickupLocationError ? (
-              <p className="form-error-message pickup-location-error">
-                {pickupLocationError}
-              </p>
-            ) : null}
-          </div>
-        </section>
-
-        <section className="booking-card destination-card">
-          <div className="booking-card-heading">
-            <span className="booking-badge" aria-hidden="true">2</span>
-            <div className="booking-card-titles">
-              <strong>Destination</strong>
-              <span>Where are you going?</span>
+            <div className="accordion-panel">
+              <div className="accordion-content passenger-fields">
+                <LocationInput
+                  label="Destination"
+                  value={formData.destination}
+                  placeholder="Enter destination location"
+                  error={validationErrors.destination}
+                  onChange={(value) => handleInput('destination', value)}
+                />
+              </div>
             </div>
           </div>
-
-          <div className="destination-field-block">
-            <LocationInput
-              label="Destination"
-              value={formData.destination}
-              placeholder="Enter destination location"
-              error={validationErrors.destination}
-              onChange={(value) => handleInput('destination', value)}
-            />
-          </div>
-        </section>
-
-<section className="booking-accordion" aria-label="Booking details">
           <div className={openMobileSection === 'passenger' ? 'accordion-row is-open' : 'accordion-row'}>
             <button
               type="button"
@@ -1142,7 +1180,7 @@ onClick={() => setRating(star)}
         onPrimaryAction={() => setShowProfile((current) => !current)}
       />
 
-      <main className="customer-layout">
+      <main className={openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
         <section className="primary-panel">
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
