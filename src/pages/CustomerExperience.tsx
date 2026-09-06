@@ -220,19 +220,54 @@ const validateForm = () => {
     }
 
     setPickupLocationError('')
+
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setPickupLocation({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
+        const { latitude, longitude, accuracy } = position.coords
+
+        console.log('Bislig Ride rider location:', {
+          latitude,
+          longitude,
+          accuracy,
         })
+
+        if (!Number.isFinite(accuracy) || accuracy > 100) {
+          setPickupLocation(null)
+          setPickupLocationError(
+            `Your device returned an inaccurate location (${Math.round(accuracy || 0)}m accuracy). Please turn on precise location/GPS and try again.`,
+          )
+          return
+        }
+
+        setPickupLocation({
+          latitude,
+          longitude,
+        })
+
         setValidationErrors((current) => ({ ...current, pickup: undefined }))
       },
       (error) => {
         console.error('Unable to get Rider pickup location:', error)
-        setPickupLocationError('Unable to access your location. You can enter a pickup landmark instead.')
+
+        if (error.code === error.PERMISSION_DENIED) {
+          setPickupLocationError(
+            'Location permission was denied. Please allow location access and try again.',
+          )
+        } else if (error.code === error.TIMEOUT) {
+          setPickupLocationError(
+            'Location lookup timed out. Please move to an area with a clearer GPS signal and try again.',
+          )
+        } else {
+          setPickupLocationError(
+            'Unable to access your location. Please turn on precise location/GPS and try again.',
+          )
+        }
       },
-      { enableHighAccuracy: true },
+      {
+        enableHighAccuracy: true,
+        maximumAge: 0,
+        timeout: 15000,
+      },
     )
   }
 
