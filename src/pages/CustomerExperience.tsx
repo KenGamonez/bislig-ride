@@ -1,4 +1,4 @@
-﻿import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { RideChat } from '../components/RideChat'
@@ -275,14 +275,9 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     if (!formValues.name) {
       nextErrors.name = 'Please enter your name.'
     }
+setValidationErrors(nextErrors)
 
-    if (!formValues.phone) {
-      nextErrors.phone = 'Phone number is required.'
-    }
-
-    setValidationErrors(nextErrors)
-
-    if (nextErrors.pickup || nextErrors.destination || nextErrors.name || nextErrors.phone) {
+    if (nextErrors.pickup || nextErrors.destination || nextErrors.name) {
       setOpenMobileSection(nextErrors.pickup || nextErrors.destination ? 'trip' : 'passenger')
     }
 
@@ -701,22 +696,15 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
             </button>
 
             <div className="accordion-panel">
-              <div className="accordion-content trip-editor">
-                <LocationInput
-                  label="Pickup"
-                  value={formData.pickup}
-                  placeholder="Enter pickup location"
-                  error={validationErrors.pickup}
-                  onChange={(value) => handleInput('pickup', value)}
-                />
-
-                <LocationInput
-                  label="Destination"
-                  value={formData.destination}
-                  placeholder="Enter destination location"
-                  error={validationErrors.destination}
-                  onChange={(value) => handleInput('destination', value)}
-                />
+              <div className="accordion-content trip-summary">
+                <div>
+                  <dt>Pickup</dt>
+                  <dd>{formValues.pickup || (pickupLocation ? 'Using your current location' : 'Add a pickup location above')}</dd>
+                </div>
+                <div>
+                  <dt>Destination</dt>
+                  <dd>{formValues.destination || 'Add a destination above'}</dd>
+                </div>
               </div>
             </div>
           </div>
@@ -731,7 +719,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               <span className="accordion-number">02</span>
               <span className="accordion-titles">
                 <strong>Passenger details</strong>
-                <small>Name, passengers &amp; type</small>
+                <small>Passenger name</small>
               </span>
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
@@ -745,15 +733,27 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                   error={validationErrors.name}
                   onChange={(value) => handleInput('name', value)}
                 />
+              </div>
+            </div>
+          </div>
 
-                <LocationInput
-                  label="Phone Number"
-                  value={formData.phone}
-                  placeholder="09XXXXXXXXX"
-                  error={validationErrors.phone}
-                  onChange={(value) => handleInput('phone', value)}
-                />
+          <div className={openMobileSection === 'preferences' ? 'accordion-row is-open' : 'accordion-row'}>
+            <button
+              type="button"
+              className="accordion-trigger"
+              aria-expanded={openMobileSection === 'preferences'}
+              onClick={() => toggleMobileSection('preferences')}
+            >
+              <span className="accordion-number">03</span>
+              <span className="accordion-titles">
+                <strong>Ride preferences</strong>
+                <small>Passengers, type &amp; fare</small>
+              </span>
+              <span className="accordion-chevron" aria-hidden="true"></span>
+            </button>
 
+            <div className="accordion-panel">
+              <div className="accordion-content passenger-fields">
                 <div className="field-block">
                   <span className="field-label">Number of passengers</span>
                   <select
@@ -783,27 +783,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                     ))}
                   </select>
                 </div>
-              </div>
-            </div>
-          </div>
 
-          <div className={openMobileSection === 'preferences' ? 'accordion-row is-open' : 'accordion-row'}>
-            <button
-              type="button"
-              className="accordion-trigger"
-              aria-expanded={openMobileSection === 'preferences'}
-              onClick={() => toggleMobileSection('preferences')}
-            >
-              <span className="accordion-number">03</span>
-              <span className="accordion-titles">
-                <strong>Ride preferences</strong>
-                <small>Fare from the Bislig fare matrix</small>
-              </span>
-              <span className="accordion-chevron" aria-hidden="true"></span>
-            </button>
-
-            <div className="accordion-panel">
-              <div className="accordion-content">
                 <p className="fare-note">
                   Fare is calculated based on the official Bislig City fare matrix.
                   <small>Ordinance No. 2023-21</small>
@@ -947,11 +927,11 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
 
       <div className="progress-steps">
         <span className="progress-step complete">Driver accepted</span>
-        <span className="progress-arrow">→</span>
+        <span className="progress-arrow">?</span>
         <span className="progress-step complete">Arrived</span>
-        <span className="progress-arrow">→</span>
+        <span className="progress-arrow">?</span>
         <span className="progress-step active">Ride in progress</span>
-        <span className="progress-arrow">→</span>
+        <span className="progress-arrow">?</span>
         <span className="progress-step">Destination</span>
       </div>
 
@@ -997,7 +977,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
         </div>
         <div>
           <dt>Route</dt>
-          <dd>{ride.pickup_address} → {ride.destination_address}</dd>
+          <dd>{ride.pickup_address} ? {ride.destination_address}</dd>
         </div>
         <div>
           <dt>Passengers</dt>
@@ -1043,7 +1023,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                 aria-checked={star === rating}
                 role="radio"
               >
-                ★
+                ?
               </button>
             ))}
           </div>
@@ -1081,7 +1061,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
           <div className="ride-summary compact">
             <div>
               <dt>Your rating</dt>
-              <dd>{'★'.repeat(rating)}</dd>
+              <dd>{'?'.repeat(rating)}</dd>
             </div>
             <div>
               <dt>Driver</dt>
@@ -1280,7 +1260,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
             aria-label="Close navigation menu"
             onClick={() => setIsMobileNavOpen(false)}
           >
-            <span aria-hidden="true">✕</span>
+            <span aria-hidden="true">?</span>
           </button>
         </div>
 
@@ -1314,7 +1294,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               onClick={() => setIsMobileNavOpen(false)}
             >
               <span className="mobile-nav-label">Book Pakyawan</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
             </a>
 
             <button
@@ -1328,7 +1308,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               <span className="mobile-nav-label">
                 {showProfile ? 'Book a Ride' : 'My Rides'}
               </span>
-              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
             </button>
 
             <div className={isExploreOpen ? 'mobile-explore-group is-open' : 'mobile-explore-group'}>
@@ -1340,7 +1320,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                 onClick={() => setIsExploreOpen((current) => !current)}
               >
                 <span className="mobile-nav-label">Explore Bislig</span>
-                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">→</span>
+                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">?</span>
               </button>
 
               <div
@@ -1359,7 +1339,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                     }}
                   >
                     <span>{category}</span>
-                    <span aria-hidden="true">↗</span>
+                    <span aria-hidden="true">?</span>
                   </button>
                 ))}
               </div>
@@ -1371,7 +1351,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               onClick={() => setIsMobileNavOpen(false)}
             >
               <span className="mobile-nav-label">Contact</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
             </a>
 
             <a
@@ -1380,7 +1360,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               onClick={() => setIsMobileNavOpen(false)}
             >
               <span className="mobile-nav-label">Become a Driver</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">→</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">?</span>
             </a>
           </nav>
 
@@ -1483,3 +1463,6 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     </div>
   )
 }
+
+
+
