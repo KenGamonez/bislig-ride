@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import sanjayPhoto from '../assets/Sanjay Monteroso.jpg'
+import { AppHeader } from '../components/AppHeader'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
@@ -61,7 +62,15 @@ const rideStatusLabels: Record<AdminRide['status'], string> = {
   completed: 'Completed',
 }
 
-export function AdminExperience({ onBack }: { onBack?: () => void }) {
+export function AdminExperience({
+  onBack,
+  view,
+  onViewChange,
+}: {
+  onBack?: () => void
+  view: 'Rider' | 'driver' | 'admin'
+  onViewChange: (view: 'Rider' | 'driver' | 'admin') => void
+}) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
   const [drivers, setDrivers] = useState<AdminDriver[]>([])
@@ -344,10 +353,18 @@ useEffect(() => {
   }
 
   if (!isLoggedIn) {
-    return <AdminLogin onBack={onBack} />
+    return <AdminLogin onBack={onBack} view={view} onViewChange={onViewChange} />
   }
 
   return (
+    <>
+      <AppHeader
+        view={view}
+        onViewChange={onViewChange}
+        primaryLabel="My Rides"
+        onPrimaryAction={() => onViewChange('Rider')}
+      />
+
     <div className="admin-shell">
       <button type="button" className="secondary-action compact-button admin-back-button" onClick={onBack}>
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -897,6 +914,7 @@ useEffect(() => {
         </section>
       ) : null}
     </div>
+    </>
   )
 }
 

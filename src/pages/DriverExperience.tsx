@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import { AppHeader } from '../components/AppHeader'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { supabase } from '../lib/supabase'
@@ -41,7 +42,15 @@ const recentRides = [
   },
 ]
 
-export function DriverExperience({ onBack }: { onBack?: () => void }) {
+export function DriverExperience({
+  onBack,
+  view,
+  onViewChange,
+}: {
+  onBack?: () => void
+  view: 'Rider' | 'driver' | 'admin'
+  onViewChange: (view: 'Rider' | 'driver' | 'admin') => void
+}) {
   const [driverOnline, setDriverOnline] = useState(false)
   const [phase, setPhase] = useState<DriverPhase>('offline')
   const [request, setRequest] = useState<Ride | null>(null)
@@ -670,6 +679,14 @@ export function DriverExperience({ onBack }: { onBack?: () => void }) {
   )
 
   return (
+    <>
+      <AppHeader
+        view={view}
+        onViewChange={onViewChange}
+        primaryLabel="My Rides"
+        onPrimaryAction={() => onViewChange('Rider')}
+      />
+
     <div className="driver-shell">
       {showChat && activeRide?.id && (
         <RideChat
@@ -709,6 +726,7 @@ export function DriverExperience({ onBack }: { onBack?: () => void }) {
 
       {!driverOnline || phase === 'offline' ? renderRecentRides() : null}
     </div>
+    </>
   )
 }
 
