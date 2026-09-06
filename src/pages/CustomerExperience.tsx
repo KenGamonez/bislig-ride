@@ -261,7 +261,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     setValidationErrors((current) => ({ ...current, [field]: undefined }))
   }
 
-  const validateForm = () => {
+const validateForm = () => {
     const nextErrors: CustomerValidation = {}
 
     if (!formValues.pickup && !pickupLocation) {
@@ -272,13 +272,16 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
       nextErrors.destination = 'Destination is required.'
     }
 
-    if (!formValues.name) {
+    const isMobileView = window.matchMedia('(max-width: 767px)').matches
+
+    if (isMobileView && !formValues.name) {
       nextErrors.name = 'Please enter your name.'
     }
-setValidationErrors(nextErrors)
 
-    if (nextErrors.pickup || nextErrors.destination || nextErrors.name) {
-      setOpenMobileSection(nextErrors.pickup || nextErrors.destination ? 'trip' : 'passenger')
+    setValidationErrors(nextErrors)
+
+    if (nextErrors.name) {
+      setOpenMobileSection('passenger')
     }
 
     return Object.keys(nextErrors).length === 0
@@ -544,35 +547,7 @@ setValidationErrors(nextErrors)
               onChange={(value) => handleInput('destination', value)}
             />
           </div>
-        </div>
-      </section>
-
-      <section className="booking-section passenger-section">
-        <div className="booking-section-heading passenger-heading">
-          <span className="booking-section-number">02</span>
-          <div>
-            <strong>Passenger details</strong>
-            <span>So your driver knows who to meet</span>
-          </div>
-        </div>
-
-        <div className="Rider-details passenger-details">
-          <LocationInput
-            label="Name"
-            value={formData.name}
-            placeholder="Enter your name"
-            error={validationErrors.name}
-            onChange={(value) => handleInput('name', value)}
-          />
-
-          <LocationInput
-            label="Phone Number"
-            value={formData.phone}
-            placeholder="09XXXXXXXXX"
-            error={validationErrors.phone}
-            onChange={(value) => handleInput('phone', value)}
-          />
-        </div>
+</div>
       </section>
 
       <section className="booking-section preferences-section">
@@ -679,36 +654,7 @@ setValidationErrors(nextErrors)
           </div>
         </section>
 
-        <section className="booking-accordion" aria-label="Booking details">
-          <div className={openMobileSection === 'trip' ? 'accordion-row is-open' : 'accordion-row'}>
-            <button
-              type="button"
-              className="accordion-trigger"
-              aria-expanded={openMobileSection === 'trip'}
-              onClick={() => toggleMobileSection('trip')}
-            >
-              <span className="accordion-number">01</span>
-              <span className="accordion-titles">
-                <strong>Trip details</strong>
-                <small>Pickup &amp; destination</small>
-              </span>
-              <span className="accordion-chevron" aria-hidden="true"></span>
-            </button>
-
-            <div className="accordion-panel">
-              <div className="accordion-content trip-summary">
-                <div>
-                  <dt>Pickup</dt>
-                  <dd>{formValues.pickup || (pickupLocation ? 'Using your current location' : 'Add a pickup location above')}</dd>
-                </div>
-                <div>
-                  <dt>Destination</dt>
-                  <dd>{formValues.destination || 'Add a destination above'}</dd>
-                </div>
-              </div>
-            </div>
-          </div>
-
+<section className="booking-accordion" aria-label="Booking details">
           <div className={openMobileSection === 'passenger' ? 'accordion-row is-open' : 'accordion-row'}>
             <button
               type="button"
@@ -716,7 +662,7 @@ setValidationErrors(nextErrors)
               aria-expanded={openMobileSection === 'passenger'}
               onClick={() => toggleMobileSection('passenger')}
             >
-              <span className="accordion-number">02</span>
+<span className="accordion-number">03</span>
               <span className="accordion-titles">
                 <strong>Passenger details</strong>
                 <small>Passenger name</small>
@@ -744,7 +690,7 @@ setValidationErrors(nextErrors)
               aria-expanded={openMobileSection === 'preferences'}
               onClick={() => toggleMobileSection('preferences')}
             >
-              <span className="accordion-number">03</span>
+<span className="accordion-number">04</span>
               <span className="accordion-titles">
                 <strong>Ride preferences</strong>
                 <small>Passengers, type &amp; fare</small>
