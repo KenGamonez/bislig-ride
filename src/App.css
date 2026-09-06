@@ -3822,11 +3822,11 @@ a.secondary-action {
     min-height: 0;
     overflow-y: auto;
     -webkit-overflow-scrolling: touch;
-    padding: 16px 14px 24px;
+    padding: 12px 14px 16px;
   }
 
   .mobile-nav-section-label {
-    margin: 4px 4px 10px;
+    margin: 2px 4px 6px;
     color: rgba(255, 255, 255, 0.45);
     font-size: 0.62rem;
     font-weight: 800;
@@ -3836,7 +3836,7 @@ a.secondary-action {
 
   .mobile-role-list {
     display: grid;
-    gap: 8px;
+    gap: 6px;
   }
 
   .mobile-role-row {
@@ -3845,7 +3845,7 @@ a.secondary-action {
     justify-content: space-between;
     gap: 12px;
     width: 100%;
-    min-height: 52px;
+    min-height: 46px;
     padding: 0 16px;
     border: 1px solid rgba(255, 255, 255, 0.1);
     border-radius: 14px;
@@ -3902,20 +3902,20 @@ a.secondary-action {
 
   .mobile-nav-divider {
     height: 1px;
-    margin: 18px 4px;
+    margin: 10px 4px;
     background: rgba(255, 255, 255, 0.12);
   }
 
   .mobile-nav-links {
     display: grid;
-    gap: 6px;
+    gap: 4px;
   }
 
   .mobile-nav-item {
     position: relative;
     display: flex;
     width: 100%;
-    min-height: 52px;
+    min-height: 46px;
     align-items: center;
     justify-content: space-between;
     gap: 16px;
@@ -3994,7 +3994,7 @@ a.secondary-action {
   }
 
   .mobile-nav-driver {
-    margin-top: 6px;
+    margin-top: 4px;
     border: 1px solid rgba(215, 25, 32, 0.35);
     background: rgba(215, 25, 32, 0.1);
   }
@@ -4004,8 +4004,8 @@ a.secondary-action {
     align-items: center;
     justify-content: space-between;
     gap: 14px;
-    margin: 18px 4px 4px;
-    padding-top: 14px;
+    margin: 12px 4px 4px;
+    padding-top: 10px;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
     color: rgba(255, 255, 255, 0.4);
     font-size: 0.64rem;
