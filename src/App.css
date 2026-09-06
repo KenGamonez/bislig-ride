@@ -3674,7 +3674,7 @@ a.secondary-action {
     z-index: 1400;
     display: flex;
     flex-direction: column;
-    background: var(--graphite);
+    background: #000000;
     overflow: hidden;
     visibility: hidden;
     pointer-events: none;
@@ -4117,6 +4117,7 @@ a.secondary-action {
 
   .customer-layout .destination-card {
     order: 5;
+    margin-top: 16px;
   }
 
   .booking-card-heading {
@@ -4174,7 +4175,7 @@ a.secondary-action {
     order: 3;
     position: relative;
     width: calc(100% - 24px);
-    height: 220px;
+    height: 184px;
     margin: 0 12px;
     padding: 6px;
     background: #ffffff;
@@ -4187,15 +4188,15 @@ a.secondary-action {
   .customer-layout .map-view,
   .customer-layout .map-view .maplibregl-map {
     width: 100%;
-    height: 206px !important;
-    min-height: 206px !important;
+    height: 170px !important;
+    min-height: 170px !important;
     border-radius: 11px;
   }
 
   .customer-layout .map-location-action {
     position: absolute;
     left: 50%;
-    bottom: 10px;
+    bottom: 9px;
     transform: translateX(-50%);
     z-index: 20;
     width: min(300px, calc(100% - 40px));
@@ -4207,9 +4208,9 @@ a.secondary-action {
     gap: 7px;
     border: none;
     border-radius: 999px;
-    background: var(--brand-red);
+    background: #000000;
     color: #ffffff;
-    box-shadow: 0 8px 20px rgba(215, 25, 32, 0.35);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.3);
     font-size: 0.72rem;
     font-weight: 800;
     letter-spacing: 0.02em;
@@ -4227,7 +4228,8 @@ a.secondary-action {
   .customer-layout .map-location-action:hover,
   .customer-layout .map-location-action:focus-visible {
     color: #ffffff;
-    box-shadow: 0 10px 24px rgba(215, 25, 32, 0.42);
+    background: #1b1b1b;
+    box-shadow: 0 10px 22px rgba(0, 0, 0, 0.36);
   }
 
   .customer-layout .map-location-status {
@@ -4240,19 +4242,24 @@ a.secondary-action {
     color: var(--text-secondary);
   }
 
-  /* Weather — compact light-blue card */
+  /* Weather — compact neutral card */
   .customer-layout .weather-widget {
     order: 9;
     width: calc(100% - 24px);
-    margin: 14px 12px 4px;
-    padding: 12px 14px;
+    margin: 16px 12px 4px;
+    padding: 10px 14px;
     border-radius: 14px;
-    border: 1px solid rgba(96, 165, 250, 0.35);
-    background: linear-gradient(135deg, #eaf3fc 0%, #dcebfa 100%);
+    border: 1px solid var(--border);
+    background: var(--surface-soft);
   }
 
   .customer-layout .weather-main strong {
-    font-size: 1.4rem;
+    font-size: 1.3rem;
+  }
+
+  .customer-layout .weather-icon {
+    color: var(--text-muted);
+    font-size: 1.3rem;
   }
 
   .customer-layout .weather-details {
@@ -4264,7 +4271,7 @@ a.secondary-action {
   .customer-layout .booking-accordion {
     order: 6;
     width: calc(100% - 24px);
-    margin: 10px 12px 0;
+    margin: 14px 12px 0;
     background: #ffffff;
     border: 1px solid var(--border);
     border-radius: 16px;
@@ -4407,11 +4414,15 @@ a.secondary-action {
     order: 8;
     width: calc(100% - 24px);
     min-height: 54px;
-    margin: 14px 12px 18px;
+    margin: 16px 12px 20px;
     border-radius: 14px;
     font-size: 0.92rem;
     letter-spacing: 0.04em;
     box-shadow: 0 10px 24px rgba(215, 25, 32, 0.22);
+  }
+
+  .announcement-ticker {
+    background: #000000;
   }
 
   /* Mobile form fields — compact, instruction only on focus */
@@ -4444,31 +4455,16 @@ a.secondary-action {
     font-size: 0.64rem;
   }
 
-  .booking-card-value {
-    width: 100%;
+  .pickup-help-note {
     margin: 0;
-    padding: 10px 12px;
-    border: 1px dashed #d6dbe2;
-    border-radius: 12px;
-    background: #f5f7f9;
-    color: var(--graphite);
-    font: inherit;
-    font-size: 0.8rem;
-    font-weight: 600;
-    text-align: left;
-    cursor: pointer;
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
-  }
-
-  .booking-card-value.is-empty {
     color: var(--text-secondary);
-    font-weight: 500;
+    font-size: 0.72rem;
+    line-height: 1.45;
   }
 
-  .booking-card-value:focus-visible {
-    outline: 2px solid var(--brand-red);
-    outline-offset: 2px;
+  .pickup-help-note strong {
+    color: var(--text-primary);
+    font-weight: 700;
   }
 
   .primary-action {

@@ -637,13 +637,17 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
           </div>
 
           <div className="pickup-field-block">
-            <button
-              type="button"
-              className={formValues.pickup || pickupLocation ? 'booking-card-value' : 'booking-card-value is-empty'}
-              onClick={() => toggleMobileSection('trip')}
-            >
-              {formValues.pickup || (pickupLocation ? 'Using your current location' : 'Tap to enter a pickup location')}
-            </button>
+            <LocationInput
+              label="Pickup"
+              value={formData.pickup}
+              placeholder="Enter pickup location"
+              error={validationErrors.pickup}
+              onChange={(value) => handleInput('pickup', value)}
+            />
+
+            <p className="pickup-help-note">
+              Enter your pickup location, or tap <strong>Use my current location</strong>.
+            </p>
 
             {pickupLocation ? (
               <div className="field-note pickup-detected-note">
@@ -670,13 +674,13 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
           </div>
 
           <div className="destination-field-block">
-            <button
-              type="button"
-              className={formValues.destination ? 'booking-card-value' : 'booking-card-value is-empty'}
-              onClick={() => toggleMobileSection('trip')}
-            >
-              {formValues.destination || 'Tap to enter your destination'}
-            </button>
+            <LocationInput
+              label="Destination"
+              value={formData.destination}
+              placeholder="Enter destination location"
+              error={validationErrors.destination}
+              onChange={(value) => handleInput('destination', value)}
+            />
           </div>
         </section>
 
@@ -699,9 +703,9 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
             <div className="accordion-panel">
               <div className="accordion-content trip-editor">
                 <LocationInput
-                  label={pickupLocation ? 'Pickup landmark (optional)' : 'Pickup'}
+                  label="Pickup"
                   value={formData.pickup}
-                  placeholder={pickupLocation ? 'Add a nearby landmark (optional)' : 'Enter pickup location'}
+                  placeholder="Enter pickup location"
                   error={validationErrors.pickup}
                   onChange={(value) => handleInput('pickup', value)}
                 />
@@ -709,7 +713,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
                 <LocationInput
                   label="Destination"
                   value={formData.destination}
-                  placeholder="Where to?"
+                  placeholder="Enter destination location"
                   error={validationErrors.destination}
                   onChange={(value) => handleInput('destination', value)}
                 />
@@ -727,7 +731,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               <span className="accordion-number">02</span>
               <span className="accordion-titles">
                 <strong>Passenger details</strong>
-                <small>Name, number of passengers, passenger type</small>
+                <small>Name, passengers &amp; type</small>
               </span>
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
@@ -793,7 +797,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               <span className="accordion-number">03</span>
               <span className="accordion-titles">
                 <strong>Ride preferences</strong>
-                <small>Fare based on the official Bislig City matrix</small>
+                <small>Fare from the Bislig fare matrix</small>
               </span>
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
@@ -1443,7 +1447,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
               disabled={isSubmitting}
             >
               <span className="location-icon" aria-hidden="true"></span>
-              Use My Current Location
+              Use my current location
             </button>
           </div>
 
