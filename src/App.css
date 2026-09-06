@@ -1735,6 +1735,21 @@ a.secondary-action {
   color: #b45309;
 }
 
+.status-pill.pending {
+  background: rgba(245, 158, 11, 0.12);
+  color: #b45309;
+}
+
+.status-pill.approved {
+  background: rgba(30, 166, 114, 0.12);
+  color: var(--success);
+}
+
+.status-pill.rejected {
+  background: rgba(215, 25, 32, 0.1);
+  color: var(--brand-red);
+}
+
 .admin-tabs {
   display: flex;
   flex-wrap: wrap;

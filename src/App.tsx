@@ -11,8 +11,23 @@ import { supabase } from './lib/supabase'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
 
+const requestedViewKey = 'bislig-ride-requested-view'
+
+function readRequestedView(): ViewMode {
+  try {
+    const stored = window.sessionStorage.getItem(requestedViewKey)
+    if (stored === 'Rider' || stored === 'driver' || stored === 'admin') {
+      window.sessionStorage.removeItem(requestedViewKey)
+      return stored
+    }
+  } catch {
+    // sessionStorage unavailable — use the default view
+  }
+  return 'Rider'
+}
+
 function App() {
-  const [view, setView] = useState<ViewMode>('Rider')
+  const [view, setView] = useState<ViewMode>(readRequestedView)
   const [driverAuthenticated, setDriverAuthenticated] = useState(false)
 
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
@@ -53,6 +68,16 @@ function App() {
   if (isBecomeDriverPage) {
     return (
       <BecomeDriverExperience
+        view={view}
+        onViewChange={(nextView) => {
+          try {
+            window.sessionStorage.setItem(requestedViewKey, nextView)
+          } catch {
+            // sessionStorage unavailable — land on the default view
+          }
+          window.history.pushState({}, '', '/')
+          window.location.reload()
+        }}
         onHome={() => {
           window.history.pushState({}, '', '/')
           window.location.reload()

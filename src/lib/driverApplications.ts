@@ -1,4 +1,4 @@
-﻿import { supabase } from './supabase'
+import { supabase } from './supabase'
 import type {
   DriverApplication,
   DriverApplicationInsert,
@@ -24,7 +24,7 @@ type DatabaseDriverApplication = {
   operating_area: string | null
   preferred_schedule: string | null
   reason: string | null
-  contact_preference: string | null
+  facebook_profile: string | null
   status: DriverApplicationStatus
   created_at: string
 }
@@ -35,29 +35,25 @@ function mapApplication(row: DatabaseDriverApplication): DriverApplication {
     full_name: row.full_name,
     mobile_number: row.mobile_number ?? row.phone ?? '',
     barangay: row.barangay ?? row.address ?? '',
-    email: row.email,
+    email: row.email ?? '',
+    facebook_profile: row.facebook_profile ?? '',
     vehicle_number: row.vehicle_number ?? row.vehicle_model ?? '',
     plate_number: row.plate_number,
     driving_experience: row.driving_experience ?? 0,
     operating_area: row.operating_area ?? '',
     preferred_schedule: row.preferred_schedule ?? '',
     reason: row.reason ?? row.message,
-    contact_preference: row.contact_preference ?? 'Phone',
     status: row.status,
     created_at: row.created_at,
   }
 }
 
 export async function createDriverApplication(application: DriverApplicationInsert) {
-  const { data, error } = await supabase
-    .from('driver_applications')
-    .insert(application)
-    .select('*')
-    .single()
+  const { error } = await supabase
+      .from('driver_applications')
+      .insert(application)
 
-  if (error) throw error
-
-  return mapApplication(data as DatabaseDriverApplication)
+    if (error) throw error
 }
 
 export async function fetchDriverApplications() {

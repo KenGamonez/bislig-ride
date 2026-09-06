@@ -7,7 +7,7 @@ import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverS
 import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
-import { driverApplicationStatuses, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
+import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
 
@@ -903,14 +903,14 @@ useEffect(() => {
               <div className="table-wrap"><table className="admin-table"><thead><tr><th>Applicant</th><th>Mobile</th><th>Barangay</th><th>Vehicle</th><th>Operating area</th><th>Status</th><th>Submitted</th></tr></thead><tbody>
                 {applications.map((application) => <tr key={application.id} onClick={() => setSelectedApplicationId(application.id)} className={selectedApplicationId === application.id ? 'selected-row' : ''}>
                   <td>{application.full_name}</td><td>{application.mobile_number}</td><td>{application.barangay}</td><td>{application.vehicle_number}</td><td>{application.operating_area}</td>
-                  <td><span className="status-pill online">{application.status}</span></td><td>{new Date(application.created_at).toLocaleDateString()}</td>
+                  <td><span className={`status-pill ${application.status}`}>{driverApplicationStatusLabels[application.status]}</span></td><td>{new Date(application.created_at).toLocaleDateString()}</td>
                 </tr>)}
               </tbody></table></div>
             )}
           </div>
           <aside className="admin-panel detail-panel">{selectedApplication ? <><div className="panel-header-row"><h3>Application Details</h3></div><div className="detail-grid">
-            <div><span>Full name</span><strong>{selectedApplication.full_name}</strong></div><div><span>Mobile</span><strong>{selectedApplication.mobile_number}</strong></div><div><span>Email</span><strong>{selectedApplication.email || 'Not provided'}</strong></div><div><span>Barangay</span><strong>{selectedApplication.barangay}</strong></div><div><span>Vehicle / body number</span><strong>{selectedApplication.vehicle_number}</strong></div><div><span>Plate number</span><strong>{selectedApplication.plate_number || 'Not provided'}</strong></div><div><span>Driving experience</span><strong>{selectedApplication.driving_experience} years</strong></div><div><span>Operating area</span><strong>{selectedApplication.operating_area}</strong></div><div><span>Schedule</span><strong>{selectedApplication.preferred_schedule}</strong></div><div><span>Contact preference</span><strong>{selectedApplication.contact_preference}</strong></div><div><span>Reason</span><strong>{selectedApplication.reason || 'Not provided'}</strong></div>
-          </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{status}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
+            <div><span>Full name</span><strong>{selectedApplication.full_name}</strong></div><div><span>Mobile</span><strong>{selectedApplication.mobile_number}</strong></div><div><span>Email</span><strong>{selectedApplication.email || 'Not provided'}</strong></div><div><span>Facebook</span><strong>{selectedApplication.facebook_profile || 'Not provided'}</strong></div><div><span>Barangay</span><strong>{selectedApplication.barangay}</strong></div><div><span>Vehicle / body number</span><strong>{selectedApplication.vehicle_number}</strong></div><div><span>Plate number</span><strong>{selectedApplication.plate_number || 'Not provided'}</strong></div><div><span>Driving experience</span><strong>{selectedApplication.driving_experience} years</strong></div><div><span>Operating area</span><strong>{selectedApplication.operating_area}</strong></div><div><span>Schedule</span><strong>{selectedApplication.preferred_schedule}</strong></div><div><span>Reason</span><strong>{selectedApplication.reason || 'Not provided'}</strong></div><div><span>Submitted</span><strong>{new Date(selectedApplication.created_at).toLocaleString()}</strong></div>
+          </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{driverApplicationStatusLabels[status]}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>
