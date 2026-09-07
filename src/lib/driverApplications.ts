@@ -25,6 +25,8 @@ type DatabaseDriverApplication = {
   preferred_schedule: string | null
   reason: string | null
   facebook_profile: string | null
+  driver_photo_path: string | null
+  drivers_license_path: string | null
   status: DriverApplicationStatus
   created_at: string
 }
@@ -43,6 +45,8 @@ function mapApplication(row: DatabaseDriverApplication): DriverApplication {
     operating_area: row.operating_area ?? '',
     preferred_schedule: row.preferred_schedule ?? '',
     reason: row.reason ?? row.message,
+    driver_photo_path: row.driver_photo_path ?? '',
+    drivers_license_path: row.drivers_license_path ?? '',
     status: row.status,
     created_at: row.created_at,
   }

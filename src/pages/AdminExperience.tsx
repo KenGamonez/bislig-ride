@@ -6,6 +6,7 @@ import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
 import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
+import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
@@ -94,6 +95,8 @@ export function AdminExperience({
   const [selectedApplicationId, setSelectedApplicationId] = useState('')
   const [applicationError, setApplicationError] = useState('')
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
+  const [applicationPhotoUrl, setApplicationPhotoUrl] = useState<string | null>(null)
+  const [applicationLicenseUrl, setApplicationLicenseUrl] = useState<string | null>(null)
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
   const [selectedContactMessageId, setSelectedContactMessageId] = useState('')
   const [contactMessageError, setContactMessageError] = useState('')
@@ -259,6 +262,32 @@ useEffect(() => {
   const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
   const selectedContactMessage = contactMessages.find((message) => message.id === selectedContactMessageId)
+
+  useEffect(() => {
+    let cancelled = false
+    setApplicationPhotoUrl(null)
+    setApplicationLicenseUrl(null)
+
+    if (!selectedApplication?.driver_photo_path && !selectedApplication?.drivers_license_path) {
+      return
+    }
+
+    const loadUrls = async () => {
+      const [photoUrl, licenseUrl] = await Promise.all([
+        createSignedApplicationFileUrl(selectedApplication?.driver_photo_path ?? ''),
+        createSignedApplicationFileUrl(selectedApplication?.drivers_license_path ?? ''),
+      ])
+      if (cancelled) return
+      setApplicationPhotoUrl(photoUrl)
+      setApplicationLicenseUrl(licenseUrl)
+    }
+
+    void loadUrls()
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedApplication?.id, selectedApplication?.driver_photo_path, selectedApplication?.drivers_license_path])
 
   const handleApplicationStatusChange = async (id: string, status: DriverApplicationStatus) => {
     try {
@@ -941,6 +970,9 @@ useEffect(() => {
           </div>
           <aside className="admin-panel detail-panel">{selectedApplication ? <><div className="panel-header-row"><h3>Application Details</h3></div><div className="detail-grid">
             <div><span>Full name</span><strong>{selectedApplication.full_name}</strong></div><div><span>Mobile</span><strong>{selectedApplication.mobile_number}</strong></div><div><span>Email</span><strong>{selectedApplication.email || 'Not provided'}</strong></div><div><span>Facebook</span><strong>{selectedApplication.facebook_profile || 'Not provided'}</strong></div><div><span>Barangay</span><strong>{selectedApplication.barangay}</strong></div><div><span>Vehicle / body number</span><strong>{selectedApplication.vehicle_number}</strong></div><div><span>Plate number</span><strong>{selectedApplication.plate_number || 'Not provided'}</strong></div><div><span>Driving experience</span><strong>{selectedApplication.driving_experience} years</strong></div><div><span>Operating area</span><strong>{selectedApplication.operating_area}</strong></div><div><span>Schedule</span><strong>{selectedApplication.preferred_schedule}</strong></div><div><span>Reason</span><strong>{selectedApplication.reason || 'Not provided'}</strong></div><div><span>Submitted</span><strong>{new Date(selectedApplication.created_at).toLocaleString()}</strong></div>
+          </div><div className="application-documents"><h4 className="detail-documents-heading">Uploaded Documents</h4>
+            <div className="application-document"><span>Driver's Photo</span>{applicationPhotoUrl ? <a className="application-image-link" href={applicationPhotoUrl} target="_blank" rel="noopener noreferrer"><img className="application-image" src={applicationPhotoUrl} alt="Driver's photo" /></a> : <p className="muted-copy">No photo uploaded.</p>}</div>
+            <div className="application-document"><span>Driver's License</span>{applicationLicenseUrl ? <a className="application-image-link" href={applicationLicenseUrl} target="_blank" rel="noopener noreferrer"><img className="application-image" src={applicationLicenseUrl} alt="Driver's license" /></a> : <p className="muted-copy">No license uploaded.</p>}</div>
           </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{driverApplicationStatusLabels[status]}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
         </section>
       ) : null}

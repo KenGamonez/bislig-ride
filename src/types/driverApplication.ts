@@ -20,6 +20,8 @@ export type DriverApplication = {
   operating_area: string
   preferred_schedule: string
   reason: string | null
+  driver_photo_path: string
+  drivers_license_path: string
   status: DriverApplicationStatus
   created_at: string
 }

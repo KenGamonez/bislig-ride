@@ -1546,6 +1546,89 @@ a.secondary-action {
   resize: vertical;
 }
 
+.file-upload-field {
+  align-content: start;
+}
+
+.file-upload-field.has-error .file-upload-control {
+  border-color: rgba(220, 38, 38, 0.7);
+}
+
+.file-upload-control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius-sm);
+  background: #f8fafc;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.file-upload-control:hover,
+.file-upload-control:focus-within {
+  border-color: var(--brand-red);
+  background: #ffffff;
+}
+
+.file-upload-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.file-upload-input:focus-visible ~ .file-upload-label {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.file-upload-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  pointer-events: none;
+}
+
+.file-upload-button {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  padding: 0 12px;
+  border-radius: 8px;
+  background: var(--brand-red);
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.file-upload-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+}
+
+.file-upload-help {
+  display: block;
+}
+
+.upload-privacy-note {
+  margin: 0;
+  font-size: 0.8rem;
+}
+
 .choice-row {
   display: flex;
   flex-wrap: wrap;
@@ -1964,6 +2047,57 @@ a.secondary-action {
   line-height: 1.5;
   word-break: break-word;
 }
+
+.application-documents {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.detail-documents-heading {
+  margin: 0;
+  font-size: 0.8rem;
+  letter-spacing: -0.01em;
+  color: var(--graphite);
+}
+
+.application-document {
+  display: grid;
+  gap: 8px;
+}
+
+.application-document > span {
+  color: var(--text-secondary);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.application-image-link {
+  display: inline-flex;
+  width: fit-content;
+  max-width: 100%;
+}
+
+.application-image {
+  display: block;
+  width: 100%;
+  max-width: 280px;
+  height: auto;
+  max-height: 200px;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.application-document .muted-copy {
+  margin: 0;
+}
+
 
 .mini-list {
   list-style: none;
