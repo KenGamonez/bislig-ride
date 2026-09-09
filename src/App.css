@@ -5018,3 +5018,82 @@ a.secondary-action {
     animation: none !important;
   }
 }
+
+/* Destination mode + fare summary */
+.ride-mode-tabs {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.ride-mode-tab {
+  flex: 1;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #f8fafc;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.ride-mode-tab.selected {
+  background: rgba(242, 141, 28, 0.08);
+  border-color: rgba(242, 141, 28, 0.3);
+  color: var(--text-primary);
+}
+
+.extra-destination-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+}
+
+.add-stop-action {
+  align-self: flex-start;
+  border: none;
+  background: none;
+  padding: 4px 2px;
+  color: var(--brand-orange);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.ride-stops {
+  padding: 13px 15px;
+  border: 1px solid #ececec;
+  border-radius: 14px;
+  background: #fcfcfc;
+}
+
+.ride-stops .section-label {
+  margin-bottom: 8px;
+}
+
+.ride-stops-list {
+  display: grid;
+  gap: 7px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.ride-stops-list li {
+  display: flex;
+  gap: 8px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+.ride-stops-list li::before {
+  content: '·';
+  color: var(--brand-orange);
+  font-weight: 700;
+}

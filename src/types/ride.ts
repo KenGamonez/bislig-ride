@@ -19,6 +19,11 @@ export type Ride = {
   destination_lng: number | null
   driver_id: string | null
   passenger_count: number
+  passenger_type: string
+  destination_mode: 'same' | 'multiple'
+  destination_stops: string[] | null
+  fare_cents: number | null
+  fare_source: 'matrix' | 'distance' | null
   status: RideStatus
   rating?: number | null
   rating_comment?: string | null

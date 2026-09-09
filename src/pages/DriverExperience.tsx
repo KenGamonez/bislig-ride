@@ -5,6 +5,7 @@ import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
+import { formatCentavos, MULTIPLE_DESTINATIONS_FARE_NOTE } from '../lib/fare'
 import { updateDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
@@ -73,6 +74,44 @@ const renderStarRating = (average: number) => (
     ))}
   </span>
 )
+
+const fareDisplayFor = (ride: Ride | null): string => {
+  if (!ride) {
+    return '—'
+  }
+
+  if (ride.destination_mode === 'multiple') {
+    return MULTIPLE_DESTINATIONS_FARE_NOTE
+  }
+
+  if (typeof ride.fare_cents === 'number' && Number.isFinite(ride.fare_cents)) {
+    return `₱${formatCentavos(ride.fare_cents)}`
+  }
+
+  return 'Fare handled traditionally with the driver.'
+}
+
+const renderRideStops = (ride: Ride | null) => {
+  if (
+    !ride ||
+    ride.destination_mode !== 'multiple' ||
+    !Array.isArray(ride.destination_stops) ||
+    ride.destination_stops.length === 0
+  ) {
+    return null
+  }
+
+  return (
+    <div className="ride-stops">
+      <p className="section-label">DROP-OFFS</p>
+      <ol className="ride-stops-list">
+        {ride.destination_stops.map((stop, index) => (
+          <li key={index}>{stop}</li>
+        ))}
+      </ol>
+    </div>
+  )
+}
 
 export function DriverExperience({
   onBack,
@@ -722,9 +761,9 @@ return () => {
         <span className="state-badge request-badge">NEW</span>
       </div>
 
-      <div className="fare-highlight">
-        <span>Ride request</span>
-        <strong>Review & accept</strong>
+<div className="fare-highlight">
+        <span>{request?.destination_mode === 'multiple' ? 'FARE' : 'ESTIMATED FARE'}</span>
+        <strong>{fareDisplayFor(request)}</strong>
       </div>
 
       <div className="ride-route">
@@ -748,9 +787,12 @@ return () => {
 <div className="ride-info-grid">
         <div><span>Passenger</span><strong>{request?.customer_name}</strong></div>
         <div><span>Passengers</span><strong>{request?.passenger_count}</strong></div>
+        <div><span>Passenger type</span><strong>{request?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Phone</span><strong>{request?.customer_phone}</strong></div>
         <div><span>Requested</span><strong>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</strong></div>
       </div>
+
+      {renderRideStops(request)}
 
       <div className="passenger-reputation" aria-label="Passenger rating">
         <span>Passenger rating</span>
@@ -789,6 +831,14 @@ return () => {
           <span className="route-dot destination-dot" aria-hidden="true" />
           <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
+      </div>
+
+      {renderRideStops(activeRide)}
+
+      <div className="ride-info-grid">
+        <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
+        <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
+        <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
       </div>
 
       <div className="passenger-reputation" aria-label="Passenger rating">
@@ -832,9 +882,11 @@ return () => {
         </div>
       </div>
 
-      <div className="ride-info-grid">
+<div className="ride-info-grid">
         <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
+        <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
+        <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
       </div>
 
       <div className="driver-contact-actions">
@@ -869,7 +921,7 @@ return () => {
         <span>DESTINATION</span>
       </div>
 
-      <div className="ride-route">
+<div className="ride-route">
         <div className="route-point">
           <span className="route-dot pickup-dot" aria-hidden="true" />
           <div><small>PICKUP</small><strong>{activeRide?.pickup_address}</strong></div>
@@ -879,6 +931,14 @@ return () => {
           <span className="route-dot destination-dot" aria-hidden="true" />
           <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
+      </div>
+
+      {renderRideStops(activeRide)}
+
+      <div className="ride-info-grid">
+        <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
+        <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
+        <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
       </div>
 
       <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
@@ -920,6 +980,7 @@ return () => {
 <div className="ride-info-grid">
         <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
+        <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
         <div><span>Payment</span><strong>Cash or GCash</strong></div>
       </div>
 

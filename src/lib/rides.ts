@@ -13,6 +13,11 @@ export type CreateRideInput = {
   destination_lng?: number | null
   driver_id?: string | null
   passenger_count: string | number
+  passenger_type?: string
+  destination_mode?: 'same' | 'multiple'
+  destination_stops?: string[]
+  fare_cents?: number | null
+  fare_source?: 'matrix' | 'distance' | null
   status?: RideStatus
 }
 
@@ -33,6 +38,11 @@ export async function createRide(input: CreateRideInput): Promise<Ride> {
       destination_lng: input.destination_lng ?? null,
       driver_id: input.driver_id ?? null,
       passenger_count: Number.isFinite(normalizedPassengerCount) ? normalizedPassengerCount : 1,
+      passenger_type: input.passenger_type ?? 'Regular',
+      destination_mode: input.destination_mode ?? 'same',
+      destination_stops: (input.destination_stops ?? []).filter(Boolean),
+      fare_cents: input.fare_cents ?? null,
+      fare_source: input.fare_source ?? null,
       status: input.status ?? 'requested',
     })
     .select()

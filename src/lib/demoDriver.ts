@@ -1,4 +1,6 @@
-export type DemoPassengerType = 'Regular' | 'Student' | 'Senior Citizen' | 'PWD'
+import type { PassengerType } from './fare'
+
+export type DemoPassengerType = PassengerType
 
 export type DemoDriver = {
   id: string
