@@ -18,6 +18,15 @@ const emptySummary: ReputationSummary = {
   cancellationRate: 0,
 }
 
+type ReputationRpcResult = {
+  average_stars?: number | null
+  rating_count?: number | null
+  completed_rides?: number | null
+  cancelled_rides?: number | null
+  total_rides?: number | null
+  cancellation_rate?: number | null
+}
+
 type ReputationAggregates = {
   completedRides: number
   cancelledRides: number
@@ -93,3 +102,45 @@ export async function fetchCustomerReputation(customerAuthId: string): Promise<R
     return emptySummary
   }
 }
+
+// Cross-role reputation views (rider viewing a driver, driver viewing a rider).
+// Routes through public.get_reputation (security definer RPC) so unrelated trip
+// and rating rows are never exposed to the caller. Falls back to empty on any
+// failure (RPC not applied yet, unauthorized, network) so the UI degrades
+// gracefully instead of crashing.
+export async function fetchReputationFor(
+  userId: string,
+  isDriver: boolean,
+): Promise<ReputationSummary> {
+  try {
+    const { data, error } = await supabase
+      .rpc('get_reputation', { p_user_id: userId, p_is_driver: isDriver })
+      .maybeSingle()
+
+    if (error) {
+      console.warn('Unable to fetch reputation:', error.message)
+      return emptySummary
+    }
+
+    if (!data) {
+      return emptySummary
+    }
+
+    const result = data as ReputationRpcResult
+
+    return {
+      completedRides: Number(result.completed_rides ?? 0),
+      cancelledRides: Number(result.cancelled_rides ?? 0),
+      totalRides: Number(result.total_rides ?? 0),
+      totalRatings: Number(result.rating_count ?? 0),
+      averageStars: Number(result.average_stars ?? 0),
+      cancellationRate: Number(result.cancellation_rate ?? 0),
+    }
+  } catch (err) {
+    console.warn(`Error fetching ${isDriver ? 'driver' : 'rider'} reputation:`, err)
+    return emptySummary
+  }
+}
+
+export const formatCancellationRate = (rate: number) =>
+  Number.isInteger(rate) ? `${rate}%` : `${rate.toFixed(1)}%`

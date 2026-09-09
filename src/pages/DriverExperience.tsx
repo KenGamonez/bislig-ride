@@ -7,7 +7,7 @@ import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { updateDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
-import { fetchDriverReputation, type ReputationSummary } from '../lib/reputation'
+import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import {
   acceptRide,
   cancelRide,
@@ -54,6 +54,26 @@ const recentRides = [
   },
 ]
 
+const renderStarRating = (average: number) => (
+  <span className="rating-stars-inline" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map((value) => (
+      <svg
+        key={value}
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill={value <= Math.round(average) ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+      </svg>
+    ))}
+  </span>
+)
+
 export function DriverExperience({
   onBack,
   view,
@@ -81,7 +101,10 @@ export function DriverExperience({
   const [passengerRatingSubmitted, setPassengerRatingSubmitted] = useState(false)
   const [isSubmittingPassengerRating, setIsSubmittingPassengerRating] = useState(false)
   const [reputation, setReputation] = useState<ReputationSummary | null>(null)
+  const [passengerReputation, setPassengerReputation] = useState<ReputationSummary | null>(null)
+  const [passengerRatingError, setPassengerRatingError] = useState('')
   const lastActiveRideIdRef = useRef<string | null>(null)
+  const completedRideIdRef = useRef<string | null>(null)
   useEffect(() => {
     let mounted = true
 
@@ -143,10 +166,34 @@ return () => {
 
     void loadReputation()
 
-    return () => {
+return () => {
       mounted = false
     }
   }, [driverId])
+
+  useEffect(() => {
+    const targetCustomerId = request?.customer_auth_id ?? activeRide?.customer_auth_id ?? null
+
+    if (!targetCustomerId) {
+      return
+    }
+
+    let mounted = true
+
+    const loadPassengerReputation = async () => {
+      const summary = await fetchReputationFor(targetCustomerId, false)
+
+      if (mounted) {
+        setPassengerReputation(summary)
+      }
+    }
+
+    void loadPassengerReputation()
+
+    return () => {
+      mounted = false
+    }
+  }, [request?.customer_auth_id, activeRide?.customer_auth_id])
 
   useEffect(() => {
     if (!driverOnline || !navigator.geolocation) {
@@ -202,30 +249,38 @@ return () => {
             setPhase('arrived')
           } else if (activeAssignedRide.status === 'in_progress') {
             setPhase('in_progress')
-          } else if (activeAssignedRide.status === 'completed') {
-            setPhase('completed')
           }
           return
         }
 
-        lastActiveRideIdRef.current = null
+        setActiveRide(null)
+        setRequest(null)
 
         if (previousActiveRideId && !pendingRides.some((ride) => ride.id === previousActiveRideId)) {
           try {
             const previous = await fetchRideById(previousActiveRideId)
 
-            if (mounted && previous && previous.status === 'cancelled') {
-              setActiveRide(null)
-              const latestCancellation = await fetchLatestRideCancellation(previous.id)
+            if (mounted && previous) {
+              if (previous.status === 'cancelled') {
+                const latestCancellation = await fetchLatestRideCancellation(previous.id)
 
-              if (mounted && latestCancellation) {
-                setCancellationNotice(latestCancellation)
+                if (mounted && latestCancellation) {
+                  setCancellationNotice(latestCancellation)
+                }
+              } else if (previous.status === 'completed' && completedRideIdRef.current === previous.id) {
+                lastActiveRideIdRef.current = previous.id
+                setActiveRide(previous)
+                setPhase('completed')
+                return
               }
             }
           } catch (error) {
             console.error('Unable to check previously active ride:', error)
           }
         }
+
+        completedRideIdRef.current = null
+        lastActiveRideIdRef.current = null
 
         const nextRequest = pendingRides[0] ?? null
         setRequest(nextRequest)
@@ -293,6 +348,8 @@ return () => {
         return
       }
 
+      completedRideIdRef.current = null
+      lastActiveRideIdRef.current = null
       setCancellationNotice(incoming)
       setActiveRide(null)
       setRequest(null)
@@ -313,6 +370,8 @@ return () => {
 
     const nextOnline = !driverOnline
     setTransitioning(true)
+    completedRideIdRef.current = null
+    lastActiveRideIdRef.current = null
     setDriverOnline(nextOnline)
 
     if (nextOnline) {
@@ -405,6 +464,7 @@ return () => {
 
     try {
       const updatedRide = await updateRideStatus(activeRide.id, 'completed', driverId)
+      completedRideIdRef.current = activeRide.id
       setActiveRide(updatedRide)
       setPhase('completed')
     } catch (error) {
@@ -415,12 +475,15 @@ return () => {
   }
 
   const handleBackToDashboard = () => {
+    completedRideIdRef.current = null
+    lastActiveRideIdRef.current = null
     setRequest(null)
     setActiveRide(null)
     setCancellationNotice(null)
     setPassengerRating(0)
     setPassengerRatingComment('')
     setPassengerRatingSubmitted(false)
+    setPassengerRatingError('')
     setPhase(driverOnline ? 'online' : 'offline')
   }
 
@@ -456,6 +519,8 @@ return () => {
 
     try {
       await cancelRide(activeRide.id, driverId, 'driver', reason)
+      completedRideIdRef.current = null
+      lastActiveRideIdRef.current = null
       setCancellationNotice(null)
       setShowCancelModal(false)
       setActiveRide(null)
@@ -481,20 +546,33 @@ return () => {
     }
 
     setIsSubmittingPassengerRating(true)
+    setPassengerRatingError('')
 
     try {
-      const saved = await submitPassengerRating(
+      const alreadyRated = await hasRatedRide(activeRide.id, driverId)
+
+      if (alreadyRated) {
+        setPassengerRatingSubmitted(true)
+        return
+      }
+
+      await submitPassengerRating(
         activeRide.id,
         driverId,
         passengerRating,
         passengerRatingComment,
       )
 
-      if (saved) {
-        setPassengerRatingSubmitted(true)
-      }
+      setPassengerRatingSubmitted(true)
     } catch (error) {
       console.error('Unable to rate passenger:', error)
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to submit your rating. Please try again.'
+
+      setPassengerRatingError(message)
     } finally {
       setIsSubmittingPassengerRating(false)
     }
@@ -611,6 +689,28 @@ return () => {
     </section>
   )
 
+  const renderPassengerReputationRow = () => {
+    if (!passengerReputation) {
+      return <strong>Loading reputation...</strong>
+    }
+
+    if (passengerReputation.totalRatings === 0) {
+      return <strong>New passenger · no ratings yet</strong>
+    }
+
+    return (
+      <strong>
+        <span className="rating-stars-inline">
+          {renderStarRating(passengerReputation.averageStars)}
+        </span>
+        {' '}
+        {passengerReputation.averageStars.toFixed(1)}/5 (
+        {passengerReputation.totalRatings} rating{passengerReputation.totalRatings === 1 ? '' : 's'})
+        {' '}· {formatCancellationRate(passengerReputation.cancellationRate)} cancellation rate
+      </strong>
+    )
+  }
+
   const renderIncomingRequest = () => (
     <section className="driver-card work-state incoming-state">
       <div className="state-heading">
@@ -645,11 +745,16 @@ return () => {
         </div>
       </div>
 
-      <div className="ride-info-grid">
+<div className="ride-info-grid">
         <div><span>Passenger</span><strong>{request?.customer_name}</strong></div>
         <div><span>Passengers</span><strong>{request?.passenger_count}</strong></div>
         <div><span>Phone</span><strong>{request?.customer_phone}</strong></div>
         <div><span>Requested</span><strong>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</strong></div>
+      </div>
+
+      <div className="passenger-reputation" aria-label="Passenger rating">
+        <span>Passenger rating</span>
+        {renderPassengerReputationRow()}
       </div>
 
       <div className="action-row request-actions">
@@ -668,7 +773,7 @@ return () => {
       <div className="state-heading">
         <div>
           <p className="section-label">CURRENT RIDE</p>
-          <h3>Heading to passenger</h3>
+<h3>Heading to passenger</h3>
           <p>{activeRide?.customer_name} · {activeRide?.passenger_count} passenger(s)</p>
         </div>
         <span className="state-badge progress-badge">EN ROUTE</span>
@@ -684,6 +789,11 @@ return () => {
           <span className="route-dot destination-dot" aria-hidden="true" />
           <div><small>DESTINATION</small><strong>{activeRide?.destination_address}</strong></div>
         </div>
+      </div>
+
+      <div className="passenger-reputation" aria-label="Passenger rating">
+        <span>Passenger rating</span>
+        {renderPassengerReputationRow()}
       </div>
 
       <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
@@ -862,6 +972,12 @@ return () => {
             rows={4}
             maxLength={500}
           />
+
+          {passengerRatingError ? (
+            <p className="form-error-message" role="alert">
+              {passengerRatingError}
+            </p>
+          ) : null}
 
           <button
             type="button"

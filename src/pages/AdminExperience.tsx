@@ -9,6 +9,7 @@ import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/d
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
+import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
 import { supabase } from '../lib/supabase'
@@ -102,6 +103,10 @@ export function AdminExperience({
   const [selectedContactMessageId, setSelectedContactMessageId] = useState('')
   const [contactMessageError, setContactMessageError] = useState('')
   const [isLoadingContactMessages, setIsLoadingContactMessages] = useState(false)
+  const [cancellations, setCancellations] = useState<AdminCancellation[]>([])
+  const [isLoadingCancellations, setIsLoadingCancellations] = useState(false)
+  const [cancellationError, setCancellationError] = useState('')
+  const [cancellationFilter, setCancellationFilter] = useState<'all' | 'rider' | 'driver'>('all')
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
@@ -224,6 +229,16 @@ useEffect(() => {
       .finally(() => setIsLoadingContactMessages(false))
   }, [activeTab, isLoggedIn])
 
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'ride-history') return
+    setIsLoadingCancellations(true)
+    setCancellationError('')
+    fetchAdminRideCancellations()
+      .then(setCancellations)
+      .catch(() => setCancellationError('Unable to load cancellation history. Check admin access and try again.'))
+      .finally(() => setIsLoadingCancellations(false))
+  }, [activeTab, isLoggedIn])
+
   const filteredDrivers = useMemo(() => {
     return drivers.filter((driver) => {
       const matchesFilter = driverFilter === 'all' || driver.status === driverFilter
@@ -258,6 +273,15 @@ useEffect(() => {
   const filteredPayments = useMemo<AdminPayment[]>(() => {
     return []
   }, [paymentSearch])
+
+  const filteredCancellations = useMemo(() => {
+    if (cancellationFilter === 'all') return cancellations
+    return cancellations.filter((cancellation) =>
+      cancellationFilter === 'rider'
+        ? cancellation.cancelled_by_role === 'customer'
+        : cancellation.cancelled_by_role === 'driver'
+    )
+  }, [cancellations, cancellationFilter])
 
   const selectedDriver = drivers.find((driver) => driver.id === selectedDriverId) ?? drivers[0]
   const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
@@ -864,42 +888,106 @@ useEffect(() => {
       ) : null}
 
       {activeTab === 'ride-history' ? (
-        <section className="admin-panel">
-          <div className="panel-header-row">
-            <h3>Completed Rides</h3>
-          </div>
+        <div className="admin-layout">
+          <section className="admin-panel">
+            <div className="panel-header-row">
+              <h3>Completed Rides</h3>
+            </div>
 
-          <div className="table-wrap">
-            <table className="admin-table">
-              <thead>
-                <tr>
-                  <th>Ride ID</th>
-                  <th>Rider</th>
-                  <th>Driver</th>
-                  <th>Pickup</th>
-                  <th>Destination</th>
-                  <th>Date/Time</th>
-                  <th>Fare</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {liveRides.filter((ride) => ride.status === 'completed').map((ride) => (
-                  <tr key={ride.id}>
-                    <td>{ride.id}</td>
-                    <td>{ride.Rider}</td>
-                    <td>{ride.driver}</td>
-                    <td>{ride.pickup}</td>
-                    <td>{ride.destination}</td>
-                    <td>{ride.happenedAt}</td>
-                    <td>{ride.fare}</td>
-                    <td><span className="completed-pill">Completed</span></td>
+            <div className="table-wrap">
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Ride ID</th>
+                    <th>Rider</th>
+                    <th>Driver</th>
+                    <th>Pickup</th>
+                    <th>Destination</th>
+                    <th>Date/Time</th>
+                    <th>Fare</th>
+                    <th>Status</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+                </thead>
+                <tbody>
+                  {liveRides.filter((ride) => ride.status === 'completed').map((ride) => (
+                    <tr key={ride.id}>
+                      <td>{ride.id}</td>
+                      <td>{ride.Rider}</td>
+                      <td>{ride.driver}</td>
+                      <td>{ride.pickup}</td>
+                      <td>{ride.destination}</td>
+                      <td>{ride.happenedAt}</td>
+                      <td>{ride.fare}</td>
+                      <td><span className="completed-pill">Completed</span></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="admin-panel">
+            <div className="panel-header-row">
+              <h3>Cancellation History</h3>
+            </div>
+
+            <div className="toolbar-stack single-toolbar">
+              <select
+                className="input-field slim-input"
+                value={cancellationFilter}
+                onChange={(event) => setCancellationFilter(event.target.value as 'all' | 'rider' | 'driver')}
+              >
+                <option value="all">All cancellations</option>
+                <option value="rider">Rider cancellations</option>
+                <option value="driver">Driver cancellations</option>
+              </select>
+            </div>
+
+            {cancellationError ? <p className="error-copy">{cancellationError}</p> : null}
+            {isLoadingCancellations ? (
+              <p className="muted-copy">Loading cancellation history...</p>
+            ) : filteredCancellations.length === 0 ? (
+              <div className="empty-state-box">
+                <p>{cancellations.length === 0 ? 'No cancellations recorded yet.' : 'No cancellations match your filter.'}</p>
+              </div>
+            ) : (
+              <div className="table-wrap">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Date/Time</th>
+                      <th>Ride ID</th>
+                      <th>Rider</th>
+                      <th>Driver</th>
+                      <th>Route</th>
+                      <th>Cancelled by</th>
+                      <th>Role</th>
+                      <th>Reason</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredCancellations.map((cancellation) => (
+                      <tr key={cancellation.id}>
+                        <td>{new Date(cancellation.created_at).toLocaleString()}</td>
+                        <td><code className="ride-id-cell" title={cancellation.ride_id}>{cancellation.ride_id.slice(0, 8)}…</code></td>
+                        <td>{cancellation.riderName}</td>
+                        <td>{cancellation.driverName}</td>
+                        <td>{cancellation.pickupAddress} → {cancellation.destinationAddress}</td>
+                        <td>{cancellation.cancelledByName}</td>
+                        <td>
+                          <span className={cancellation.cancelled_by_role === 'driver' ? 'status-pill busy' : 'status-pill online'}>
+                            {cancellation.cancelled_by_role === 'driver' ? 'Driver' : 'Rider'}
+                          </span>
+                        </td>
+                        <td className="cancel-reason-cell">{cancellation.reason}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </section>
+        </div>
       ) : null}
 
       {activeTab === 'payments' ? (

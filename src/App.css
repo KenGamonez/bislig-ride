@@ -1947,6 +1947,17 @@ a.secondary-action {
   background: #f8fafc;
 }
 
+.ride-id-cell {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+}
+
+.cancel-reason-cell {
+  min-width: 240px;
+  white-space: normal;
+}
+
 .driver-cell {
   display: flex;
   align-items: center;
@@ -3518,6 +3529,32 @@ a.secondary-action {
   font-size: 0.78rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.passenger-reputation {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 12px 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8f8f8;
+}
+
+.passenger-reputation span {
+  color: #888;
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.passenger-reputation strong {
+  color: #333;
+  font-size: 0.78rem;
+  font-weight: 600;
+  line-height: 1.4;
 }
 
 .fare-highlight {

@@ -12,6 +12,7 @@ import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
+import { fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { cancelRide, createRide, fetchRideById, hasRatedRide, submitRideRating } from '../lib/rides'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
 import type { Ride, RideCancellation } from '../types/ride'
@@ -84,6 +85,26 @@ const initialRide: Ride = {
 
 const rideIdStorageKey = 'bislig-ride-last-ride-id'
 
+const renderStars = (average: number) => (
+  <span className="rating-stars-inline" aria-hidden="true">
+    {[1, 2, 3, 4, 5].map((value) => (
+      <svg
+        key={value}
+        viewBox="0 0 24 24"
+        width="14"
+        height="14"
+        fill={value <= Math.round(average) ? 'currentColor' : 'none'}
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+      </svg>
+    ))}
+  </span>
+)
+
 const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
   switch (status) {
     case 'requested':
@@ -116,6 +137,7 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
   const [showProfile, setShowProfile] = useState(false)
   const [customerAuthId, setCustomerAuthId] = useState<string | null>(null)
   const [assignedDriver, setAssignedDriver] = useState<DriverProfile | null>(null)
+  const [driverReputation, setDriverReputation] = useState<ReputationSummary | null>(null)
   const [showChat, setShowChat] = useState(false)
   const [ride, setRide] = useState<Ride>(initialRide)
           const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -380,7 +402,29 @@ const syncRideStatus = async () => {
       }
     }
 
-    void loadAssignedDriver()
+void loadAssignedDriver()
+
+    return () => {
+      cancelled = true
+    }
+  }, [ride.driver_id])
+
+  useEffect(() => {
+    if (!ride.driver_id) {
+      return
+    }
+
+    let cancelled = false
+
+    const loadDriverReputation = async () => {
+      const summary = await fetchReputationFor(String(ride.driver_id), true)
+
+      if (!cancelled) {
+        setDriverReputation(summary)
+      }
+    }
+
+    void loadDriverReputation()
 
     return () => {
       cancelled = true
@@ -449,6 +493,10 @@ return () => {
         return
       }
 
+      if (incoming.cancelled_by_role === 'customer' && incoming.cancelled_by === customerAuthId) {
+        return
+      }
+
       setCancellation(incoming)
       setRide((current) => ({ ...current, status: 'cancelled' }))
       setPhase('cancelled')
@@ -458,7 +506,7 @@ return () => {
       mounted = false
       unsubscribe()
     }
-  }, [ride.id, ride.status])
+  }, [ride.id, ride.status, customerAuthId])
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -971,8 +1019,18 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
       <div className="driver-identity-row">
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
-          <h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
-          <p className="driver-rating">{Number(assignedDriver?.rating_average ?? 5).toFixed(1)}</p>
+<h3>{assignedDriver?.full_name ?? 'John Doe'}</h3>
+          <p className="driver-rating">
+            <span className="rating-stars-inline">
+              {renderStars(driverReputation?.averageStars ?? 5)}
+            </span>
+            {' '}
+            {!driverReputation
+              ? 'Loading reputation...'
+              : driverReputation.totalRatings === 0
+                ? 'New driver · no ratings yet'
+                : `${driverReputation.averageStars.toFixed(1)}/5 (${driverReputation.totalRatings} rating${driverReputation.totalRatings === 1 ? '' : 's'}) · ${formatCancellationRate(driverReputation.cancellationRate)} cancellation rate`}
+          </p>
           <p className="driver-vehicle">{assignedDriver?.vehicle_type ?? 'Tricycle'}</p>
         </div>
       </div>

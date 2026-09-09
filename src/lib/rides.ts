@@ -169,36 +169,30 @@ export async function submitPassengerRating(
   driverId: string,
   stars: number,
   comment?: string,
-): Promise<RideRating | null> {
-  try {
-    const ride = await fetchRideById(rideId)
+): Promise<RideRating> {
+  const ride = await fetchRideById(rideId)
 
-    if (!ride || ride.status !== 'completed' || ride.driver_id !== driverId || !ride.customer_auth_id) {
-      return null
-    }
-
-    const { data, error } = await supabase
-      .from('ride_ratings')
-      .insert({
-        ride_id: ride.id,
-        rater_id: driverId,
-        rated_user_id: ride.customer_auth_id,
-        stars,
-        comment: comment?.trim() || null,
-      })
-      .select()
-      .single()
-
-    if (error) {
-      console.warn('Unable to store driver rating for passenger:', error.message)
-      return null
-    }
-
-    return data as RideRating
-  } catch (err) {
-    console.warn('Error submitting passenger rating:', err)
-    return null
+  if (!ride || ride.status !== 'completed' || ride.driver_id !== driverId || !ride.customer_auth_id) {
+    throw new Error('This ride is not eligible for rating.')
   }
+
+  const { data, error } = await supabase
+    .from('ride_ratings')
+    .insert({
+      ride_id: ride.id,
+      rater_id: driverId,
+      rated_user_id: ride.customer_auth_id,
+      stars,
+      comment: comment?.trim() || null,
+    })
+    .select()
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as RideRating
 }
 
 export async function hasRatedRide(rideId: string, raterId: string): Promise<boolean> {
