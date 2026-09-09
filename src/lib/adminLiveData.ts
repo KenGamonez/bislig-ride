@@ -8,7 +8,7 @@ export type LiveAdminRide = {
   passengerType: string
   pickup: string
   destination: string
-  status: 'requested' | 'accepted' | 'arrived' | 'in_progress' | 'completed'
+  status: 'requested' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled'
   requestedAt: string
   fare: string
   paymentMethod: string

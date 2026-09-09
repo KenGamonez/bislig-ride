@@ -1,12 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AppHeader } from '../components/AppHeader'
+import { CancelRideModal } from '../components/CancelRideModal'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { updateDriverLocation } from '../lib/driverLocations'
-import { acceptRide, fetchAssignedRidesForDriver, fetchPendingRides, updateRideStatus } from '../lib/rides'
-import type { Ride } from '../types/ride'
+import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
+import { fetchDriverReputation, type ReputationSummary } from '../lib/reputation'
+import {
+  acceptRide,
+  cancelRide,
+  fetchAssignedRidesForDriver,
+  fetchPendingRides,
+  fetchRideById,
+  hasRatedRide,
+  submitPassengerRating,
+  updateRideStatus,
+} from '../lib/rides'
+import type { Ride, RideCancellation } from '../types/ride'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
@@ -60,6 +72,16 @@ export function DriverExperience({
   const [driverId, setDriverId] = useState(TEST_DRIVER_ID)
   const [driverAuthId, setDriverAuthId] = useState<string | null>(null)
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelSubmitting, setCancelSubmitting] = useState(false)
+  const [cancelError, setCancelError] = useState('')
+  const [cancellationNotice, setCancellationNotice] = useState<RideCancellation | null>(null)
+  const [passengerRating, setPassengerRating] = useState(0)
+  const [passengerRatingComment, setPassengerRatingComment] = useState('')
+  const [passengerRatingSubmitted, setPassengerRatingSubmitted] = useState(false)
+  const [isSubmittingPassengerRating, setIsSubmittingPassengerRating] = useState(false)
+  const [reputation, setReputation] = useState<ReputationSummary | null>(null)
+  const lastActiveRideIdRef = useRef<string | null>(null)
   useEffect(() => {
     let mounted = true
 
@@ -102,11 +124,29 @@ export function DriverExperience({
       void loadDriverIdentity()
     })
 
-    return () => {
+return () => {
       mounted = false
       listener.subscription.unsubscribe()
     }
   }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    const loadReputation = async () => {
+      const summary = await fetchDriverReputation(driverId)
+
+      if (mounted) {
+        setReputation(summary)
+      }
+    }
+
+    void loadReputation()
+
+    return () => {
+      mounted = false
+    }
+  }, [driverId])
 
   useEffect(() => {
     if (!driverOnline || !navigator.geolocation) {
@@ -132,6 +172,8 @@ export function DriverExperience({
   }, [driverOnline, driverId])
 
   useEffect(() => {
+    let mounted = true
+
     const refreshRides = async () => {
       try {
         const [pendingRides, assignedRides] = await Promise.all([
@@ -147,7 +189,10 @@ export function DriverExperience({
         }
 
         const activeAssignedRide = assignedRides[0] ?? null
+        const previousActiveRideId = lastActiveRideIdRef.current
+
         if (activeAssignedRide) {
+          lastActiveRideIdRef.current = activeAssignedRide.id
           setActiveRide(activeAssignedRide)
           setRequest(null)
 
@@ -163,6 +208,25 @@ export function DriverExperience({
           return
         }
 
+        lastActiveRideIdRef.current = null
+
+        if (previousActiveRideId && !pendingRides.some((ride) => ride.id === previousActiveRideId)) {
+          try {
+            const previous = await fetchRideById(previousActiveRideId)
+
+            if (mounted && previous && previous.status === 'cancelled') {
+              setActiveRide(null)
+              const latestCancellation = await fetchLatestRideCancellation(previous.id)
+
+              if (mounted && latestCancellation) {
+                setCancellationNotice(latestCancellation)
+              }
+            }
+          } catch (error) {
+            console.error('Unable to check previously active ride:', error)
+          }
+        }
+
         const nextRequest = pendingRides[0] ?? null
         setRequest(nextRequest)
         setPhase(nextRequest ? 'incoming_request' : 'online')
@@ -176,7 +240,10 @@ export function DriverExperience({
       void refreshRides()
     }, 5000)
 
-    return () => window.clearInterval(timer)
+    return () => {
+      mounted = false
+      window.clearInterval(timer)
+    }
   }, [driverOnline, driverId])
 
   useEffect(() => {
@@ -215,6 +282,25 @@ export function DriverExperience({
       void supabase.removeChannel(channel)
     }
   }, [activeRide?.id, driverAuthId])
+
+  useEffect(() => {
+    if (!activeRide?.id) {
+      return
+    }
+
+    const unsubscribe = subscribeToRideCancellations(activeRide.id, (incoming) => {
+      if (incoming.cancelled_by_role !== 'customer') {
+        return
+      }
+
+      setCancellationNotice(incoming)
+      setActiveRide(null)
+      setRequest(null)
+      setPhase(driverOnline ? 'online' : 'offline')
+    })
+
+    return unsubscribe
+  }, [activeRide?.id, driverOnline])
   const todayEarnings = useMemo(
     () => recentRides.reduce((sum, ride) => sum + Number(ride.fare.replace(/[^\d.]/g, '')), 0),
     [],
@@ -331,7 +417,87 @@ export function DriverExperience({
   const handleBackToDashboard = () => {
     setRequest(null)
     setActiveRide(null)
+    setCancellationNotice(null)
+    setPassengerRating(0)
+    setPassengerRatingComment('')
+    setPassengerRatingSubmitted(false)
     setPhase(driverOnline ? 'online' : 'offline')
+  }
+
+  useEffect(() => {
+    if (!activeRide?.id || activeRide.status !== 'completed') {
+      return
+    }
+
+    let mounted = true
+
+    const checkExistingRating = async () => {
+      const alreadyRated = await hasRatedRide(activeRide.id, driverId)
+
+      if (mounted) {
+        setPassengerRatingSubmitted(alreadyRated)
+      }
+    }
+
+    void checkExistingRating()
+
+    return () => {
+      mounted = false
+    }
+  }, [activeRide?.id, activeRide?.status, driverId])
+
+  const handleConfirmCancellation = async (reason: string) => {
+    if (!activeRide || cancelSubmitting) {
+      return
+    }
+
+    setCancelError('')
+    setCancelSubmitting(true)
+
+    try {
+      await cancelRide(activeRide.id, driverId, 'driver', reason)
+      setCancellationNotice(null)
+      setShowCancelModal(false)
+      setActiveRide(null)
+      setRequest(null)
+      setPhase(driverOnline ? 'online' : 'offline')
+    } catch (error) {
+      console.error('Unable to cancel ride:', error)
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to cancel this ride right now. Please try again.'
+
+      setCancelError(message)
+    } finally {
+      setCancelSubmitting(false)
+    }
+  }
+
+  const handleSubmitPassengerRating = async () => {
+    if (!activeRide || passengerRating < 1 || passengerRating > 5 || isSubmittingPassengerRating) {
+      return
+    }
+
+    setIsSubmittingPassengerRating(true)
+
+    try {
+      const saved = await submitPassengerRating(
+        activeRide.id,
+        driverId,
+        passengerRating,
+        passengerRatingComment,
+      )
+
+      if (saved) {
+        setPassengerRatingSubmitted(true)
+      }
+    } catch (error) {
+      console.error('Unable to rate passenger:', error)
+    } finally {
+      setIsSubmittingPassengerRating(false)
+    }
   }
 
   const renderSummary = () => (
@@ -371,7 +537,7 @@ export function DriverExperience({
         </button>
       </div>
 
-      <div className="driver-metrics">
+<div className="driver-metrics">
         <div className="metric-card metric-earnings">
           <span>Today's earnings</span>
           <strong>₱{todayEarnings.toFixed(0)}</strong>
@@ -379,8 +545,18 @@ export function DriverExperience({
         </div>
         <div className="metric-card">
           <span>Completed rides</span>
-          <strong>{recentRides.length}</strong>
-          <small>Today's trips</small>
+          <strong>{reputation ? reputation.completedRides : recentRides.length}</strong>
+          <small>All-time trips</small>
+        </div>
+        <div className="metric-card">
+          <span>Rating</span>
+          <strong>{reputation ? reputation.averageStars.toFixed(1) : String(demoDriver.rating)}</strong>
+          <small>{reputation ? `${reputation.totalRatings} rating${reputation.totalRatings === 1 ? '' : 's'}` : 'Passenger feedback'}</small>
+        </div>
+        <div className="metric-card">
+          <span>Cancellations</span>
+          <strong>{reputation ? `${reputation.cancelledRides} (${reputation.cancellationRate}%)` : '0'}</strong>
+          <small>Of all completed rides</small>
         </div>
       </div>
     </section>
@@ -513,7 +689,7 @@ export function DriverExperience({
       <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
-        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
         <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
@@ -552,7 +728,7 @@ export function DriverExperience({
       </div>
 
       <div className="driver-contact-actions">
-        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
         <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
@@ -598,7 +774,7 @@ export function DriverExperience({
       <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
-        <a href={"tel:" + (activeRide?.customer_phone?.replace(/[^\d+]/g, ""))} className="secondary-action">Call Passenger</a>
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
         <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
 
@@ -631,11 +807,76 @@ export function DriverExperience({
         </div>
       </div>
 
-      <div className="ride-info-grid">
+<div className="ride-info-grid">
         <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
         <div><span>Payment</span><strong>Cash or GCash</strong></div>
       </div>
+
+      {!passengerRatingSubmitted ? (
+        <div className="driver-passenger-rating">
+          <p className="section-label">RATE YOUR PASSENGER</p>
+          <h3>How was your passenger?</h3>
+
+          <div
+            className="rating-stars"
+            role="radiogroup"
+            aria-label="Rate your passenger from 1 to 5 stars"
+          >
+            {[1, 2, 3, 4, 5].map((star) => (
+              <button
+                key={star}
+                type="button"
+                className={star <= passengerRating ? 'rating-star selected' : 'rating-star'}
+                onClick={() => setPassengerRating(star)}
+                aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                aria-checked={star === passengerRating}
+                role="radio"
+              >
+                <svg
+                  viewBox="0 0 24 24"
+                  width="26"
+                  height="26"
+                  fill={star <= passengerRating ? 'currentColor' : 'none'}
+                  stroke="currentColor"
+                  strokeWidth="1.6"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" />
+                </svg>
+              </button>
+            ))}
+          </div>
+
+          <label className="field-label" htmlFor="passenger-rating-comment">
+            Comment <span>(optional)</span>
+          </label>
+
+          <textarea
+            id="passenger-rating-comment"
+            className="text-input"
+            value={passengerRatingComment}
+            onChange={(event) => setPassengerRatingComment(event.target.value)}
+            placeholder="Tell us about your passenger..."
+            rows={4}
+            maxLength={500}
+          />
+
+          <button
+            type="button"
+            className="primary-action"
+            onClick={() => void handleSubmitPassengerRating()}
+            disabled={passengerRating === 0 || isSubmittingPassengerRating}
+          >
+            {isSubmittingPassengerRating ? 'Submitting...' : 'Submit Passenger Rating'}
+          </button>
+        </div>
+      ) : (
+        <p className="driver-passenger-rated-note">
+          You rated this passenger. Thanks for the feedback!
+        </p>
+      )}
 
       <button type="button" className="primary-action" onClick={handleBackToDashboard}>
         Back to Dashboard
@@ -724,7 +965,38 @@ export function DriverExperience({
       {phase === 'in_progress' ? renderInProgressState() : null}
       {phase === 'completed' ? renderCompletedState() : null}
 
+      {cancellationNotice ? (
+        <section className="ride-cancelled-notice" role="alert">
+          <div>
+            <strong>Ride cancelled by the passenger</strong>
+            <span>
+              {activeRide
+                ? `${activeRide.customer_name} cancelled this ride. `
+                : 'Your passenger cancelled this ride. '}
+              Reason: {cancellationNotice.reason}
+            </span>
+          </div>
+          <button type="button" onClick={() => setCancellationNotice(null)}>
+            Dismiss
+          </button>
+        </section>
+      ) : null}
+
       {!driverOnline || phase === 'offline' ? renderRecentRides() : null}
+
+      {showCancelModal && activeRide && (
+        <CancelRideModal
+          open={showCancelModal}
+          role="driver"
+          submitting={cancelSubmitting}
+          error={cancelError}
+          onClose={() => {
+            setShowCancelModal(false)
+            setCancelError('')
+          }}
+          onConfirm={(reason) => void handleConfirmCancellation(reason)}
+        />
+      )}
     </div>
     </>
   )

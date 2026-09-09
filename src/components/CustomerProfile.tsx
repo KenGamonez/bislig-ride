@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react'
 import { fetchDriverById } from '../lib/drivers'
+import { fetchCustomerReputation, type ReputationSummary } from '../lib/reputation'
 import { fetchCustomerRideHistory } from '../lib/rides'
+import { getCustomerAuthId } from '../lib/supabase'
 import type { Ride } from '../types/ride'
 import type { DriverProfile } from '../types/driver'
 
@@ -25,6 +27,8 @@ const formatStatus = (status: Ride['status']) => {
       return 'Ride in progress'
     case 'completed':
       return 'Completed'
+    case 'cancelled':
+      return 'Cancelled'
     default:
       return status
   }
@@ -34,6 +38,30 @@ export function CustomerProfile() {
   const [rides, setRides] = useState<Ride[]>([])
   const [driverDetails, setDriverDetails] = useState<Record<string, DriverDetails>>({})
   const [isLoading, setIsLoading] = useState(true)
+  const [reputation, setReputation] = useState<ReputationSummary | null>(null)
+
+  useEffect(() => {
+    let isMounted = true
+
+    const loadReputation = async () => {
+      try {
+        const customerAuthId = await getCustomerAuthId()
+        const summary = await fetchCustomerReputation(customerAuthId)
+
+        if (isMounted) {
+          setReputation(summary)
+        }
+      } catch (error) {
+        console.error('Failed to load Rider reputation:', error)
+      }
+    }
+
+    void loadReputation()
+
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     let isMounted = true
@@ -167,11 +195,31 @@ export function CustomerProfile() {
   }
 
   return (
-    <section className="Rider-profile">
+<section className="Rider-profile">
       <div className="Rider-profile-header">
         <h2>My Rides</h2>
         <p>Your current and previous Bislig Ride trips.</p>
       </div>
+
+      {reputation ? (
+        <div className="driver-metrics">
+          <div className="metric-card">
+            <span>Completed rides</span>
+            <strong>{reputation.completedRides}</strong>
+            <small>All-time trips</small>
+          </div>
+          <div className="metric-card">
+            <span>Rating</span>
+            <strong>{reputation.averageStars.toFixed(1)}</strong>
+            <small>{reputation.totalRatings} rating{reputation.totalRatings === 1 ? '' : 's'}</small>
+          </div>
+          <div className="metric-card">
+            <span>Cancellations</span>
+            <strong>{`${reputation.cancelledRides} (${reputation.cancellationRate}%)`}</strong>
+            <small>Of all completed rides</small>
+          </div>
+        </div>
+      ) : null}
 
       {isLoading ? (
         <div className="Rider-profile-empty">

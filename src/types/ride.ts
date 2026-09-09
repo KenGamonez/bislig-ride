@@ -4,6 +4,7 @@ export type RideStatus =
   | 'arrived'
   | 'in_progress'
   | 'completed'
+  | 'cancelled'
 
 export type Ride = {
   id: string
@@ -21,5 +22,26 @@ export type Ride = {
   status: RideStatus
   rating?: number | null
   rating_comment?: string | null
+  created_at: string
+}
+
+export type CancelledByRole = 'customer' | 'driver'
+
+export type RideCancellation = {
+  id: string
+  ride_id: string
+  cancelled_by: string
+  cancelled_by_role: CancelledByRole
+  reason: string
+  created_at: string
+}
+
+export type RideRating = {
+  id: string
+  ride_id: string
+  rater_id: string
+  rated_user_id: string
+  stars: number
+  comment: string | null
   created_at: string
 }

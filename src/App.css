@@ -2799,6 +2799,170 @@ a.secondary-action {
 }
 
 /* =========================================================
+   CANCEL RIDE MODAL
+   ========================================================= */
+
+.cancel-ride-panel {
+  height: auto;
+  max-height: min(680px, calc(100vh - 32px));
+}
+
+.cancel-ride-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 18px;
+  background: #f8fafc;
+}
+
+.cancel-ride-note {
+  margin: 0 0 16px;
+  max-width: 360px;
+  color: #4b5563;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.cancel-ride-reasons {
+  display: grid;
+  gap: 8px;
+}
+
+.cancel-ride-reason {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #fff;
+  color: #1f2937;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.cancel-ride-reason:hover {
+  border-color: rgba(215, 25, 32, 0.35);
+  background: #fff7f7;
+}
+
+.cancel-ride-reason.selected {
+  border-color: var(--brand-red);
+  background: rgba(215, 25, 32, 0.07);
+  color: var(--brand-red);
+}
+
+.cancel-ride-custom {
+  display: grid;
+  gap: 6px;
+  margin-top: 16px;
+  color: var(--text-primary);
+}
+
+.cancel-ride-custom span {
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.cancel-ride-textarea {
+  min-height: 84px;
+}
+
+.cancel-ride-error {
+  margin-top: 12px;
+}
+
+.cancel-ride-actions {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 14px 16px;
+  background: #fff;
+  border-top: 1px solid #e5e7eb;
+}
+
+.cancel-ride-confirm {
+  background: var(--brand-red);
+}
+
+/* Rider notified that the driver cancelled */
+.ride-cancelled-notice {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 12px 14px;
+  border: 1px solid #fecdd3;
+  border-radius: 12px;
+  background: #fff1f2;
+  color: #7f1d1d;
+}
+
+.ride-cancelled-notice strong {
+  display: block;
+  font-size: 0.85rem;
+}
+
+.ride-cancelled-notice span {
+  font-size: 0.78rem;
+  line-height: 1.45;
+  color: #991b1b;
+}
+
+.ride-cancelled-notice button {
+  justify-self: start;
+  border: 0;
+  background: none;
+  padding: 0;
+  color: var(--brand-red);
+  font-weight: 700;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+/* Driver reputation + rating copy */
+.driver-passenger-rating {
+  display: grid;
+  gap: 12px;
+  margin: 6px 0 16px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  background: #fbfbfc;
+}
+
+.driver-passenger-rating h3 {
+  margin: 0 0 2px;
+  font-size: 1.05rem;
+}
+
+.driver-passenger-rating .rating-stars {
+  gap: 6px;
+}
+
+.driver-passenger-rating .field-label span {
+  color: var(--text-muted);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.driver-passenger-rated-note {
+  margin: 6px 0 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(30, 166, 114, 0.25);
+  border-radius: 12px;
+  background: #f3fdf8;
+  color: #16804d;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+/* =========================================================
    CONTACT PAGE
    ========================================================= */
 
@@ -3201,7 +3365,7 @@ a.secondary-action {
 
 .driver-metrics {
   display: grid;
-  grid-template-columns: 1.4fr 1fr;
+  grid-template-columns: 1.4fr 1fr 1fr 1fr;
   gap: 12px;
   margin-top: 12px;
 }
@@ -3475,6 +3639,16 @@ a.secondary-action {
 
 .driver-contact-actions .secondary-action {
   width: 100%;
+}
+
+.cancel-action {
+  color: var(--brand-red);
+  border: 1px solid rgba(215, 25, 32, 0.25);
+  background: #fff5f5;
+}
+
+.cancel-action:hover {
+  background: #ffe9e9;
 }
 
 .ride-progress {

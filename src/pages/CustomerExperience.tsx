@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { AppHeader } from '../components/AppHeader'
+import { CancelRideModal } from '../components/CancelRideModal'
 import { CustomerProfile } from '../components/CustomerProfile'
 import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
@@ -10,9 +11,10 @@ import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
-import { createRide, fetchRideById, submitRideRating } from '../lib/rides'
+import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
+import { cancelRide, createRide, fetchRideById, hasRatedRide, submitRideRating } from '../lib/rides'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
-import type { Ride } from '../types/ride'
+import type { Ride, RideCancellation } from '../types/ride'
 
 type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
 
@@ -29,7 +31,7 @@ type CustomerFormState = {
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
 
-type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'rating' | 'payment' | 'payment_confirmed'
+type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'
 
 type PaymentMethod = 'Cash' | 'GCash'
 
@@ -44,7 +46,7 @@ const initialFormState: CustomerFormState = {
   passengerCount: '1 passenger',
 }
 
-const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'rating' | 'payment' | 'payment_confirmed'>, string> = {
+const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'>, string> = {
   searching: 'SEARCHING',
   accepted: 'DRIVER ON THE WAY',
   arrived: 'ARRIVED',
@@ -94,6 +96,8 @@ const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
       return 'in_progress'
     case 'completed':
       return 'completed'
+    case 'cancelled':
+      return 'cancelled'
     default:
       return 'request'
   }
@@ -119,10 +123,15 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
   const [pickupLocationError, setPickupLocationError] = useState('')
   const [phase, setPhase] = useState<RidePhase>('request')
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('Cash')
-  const [rating, setRating] = useState(0)
+const [rating, setRating] = useState(0)
   const [ratingComment, setRatingComment] = useState('')
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
+  const [ratingError, setRatingError] = useState('')
 const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [showCancelModal, setShowCancelModal] = useState(false)
+  const [cancelSubmitting, setCancelSubmitting] = useState(false)
+  const [cancelError, setCancelError] = useState('')
+  const [cancellation, setCancellation] = useState<RideCancellation | null>(null)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
 
   useEffect(() => {
@@ -137,7 +146,7 @@ useEffect(() => {
       return
     }
 
-    const restoreRide = async () => {
+const restoreRide = async () => {
       try {
         const latestRide = await fetchRideById(persistedRideId)
         if (!latestRide) {
@@ -146,6 +155,13 @@ useEffect(() => {
 
         setRide(latestRide)
         setPhase(mapRideStatusToPhase(latestRide.status))
+
+        if (latestRide.status === 'cancelled') {
+          const latestCancellation = await fetchLatestRideCancellation(latestRide.id)
+          if (latestCancellation) {
+            setCancellation(latestCancellation)
+          }
+        }
       } catch (error) {
         console.error('Unable to restore ride state:', error)
       }
@@ -316,7 +332,7 @@ const handleUseCurrentLocation = () => {
 
     let isMounted = true
 
-    const syncRideStatus = async () => {
+const syncRideStatus = async () => {
       try {
         const latestRide = await fetchRideById(ride.id)
         if (!isMounted || !latestRide) {
@@ -325,6 +341,13 @@ const handleUseCurrentLocation = () => {
 
         setRide(latestRide)
         setPhase(mapRideStatusToPhase(latestRide.status))
+
+        if (latestRide.status === 'cancelled') {
+          const latestCancellation = await fetchLatestRideCancellation(ride.id)
+          if (isMounted && latestCancellation) {
+            setCancellation(latestCancellation)
+          }
+        }
       } catch (error) {
         console.error('Unable to refresh ride status:', error)
       }
@@ -409,10 +432,33 @@ const handleUseCurrentLocation = () => {
       )
       .subscribe()
 
-    return () => {
+return () => {
       void supabase.removeChannel(channel)
     }
   }, [ride.id, customerAuthId])
+
+  useEffect(() => {
+    if (!ride.id || !['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)) {
+      return
+    }
+
+    let mounted = true
+
+    const unsubscribe = subscribeToRideCancellations(ride.id, (incoming) => {
+      if (!mounted) {
+        return
+      }
+
+      setCancellation(incoming)
+      setRide((current) => ({ ...current, status: 'cancelled' }))
+      setPhase('cancelled')
+    })
+
+    return () => {
+      mounted = false
+      unsubscribe()
+    }
+  }, [ride.id, ride.status])
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -458,25 +504,100 @@ const handleUseCurrentLocation = () => {
     }
   }
 
-  const handleSubmitRating = async () => {
-    if (!ride.id || rating < 1 || rating > 5 || isSubmittingRating) {
+const handleSubmitRating = async () => {
+    if (!ride.id || rating < 1 || rating > 5 || isSubmittingRating || ratingSubmitted) {
       return
     }
 
+    setRatingError('')
     setIsSubmittingRating(true)
 
     try {
+      const alreadyRated = await hasRatedRide(ride.id, customerAuthId ?? (await getCustomerAuthId()))
+
+      if (alreadyRated) {
+        setRatingSubmitted(true)
+        return
+      }
+
       const savedRide = await submitRideRating(ride.id, rating, ratingComment)
 
       if (savedRide) {
         setRide(savedRide)
       }
 
-      setRatingSubmitted(true)
+setRatingSubmitted(true)
+    } catch (error) {
+      console.warn('Unable to submit rating:', error)
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === 'object' && error && 'message' in error && typeof error.message === 'string'
+            ? error.message
+            : 'Unable to submit your rating. Please try again.'
+
+      setRatingError(message)
     } finally {
       setIsSubmittingRating(false)
     }
   }
+
+  useEffect(() => {
+    if (phase !== 'rating' || !ride.id || !customerAuthId) {
+      return
+    }
+
+    let mounted = true
+
+    const checkExistingRating = async () => {
+      const alreadyRated = await hasRatedRide(ride.id, customerAuthId)
+
+      if (mounted) {
+        setRatingSubmitted(alreadyRated)
+      }
+    }
+
+    void checkExistingRating()
+
+    return () => {
+      mounted = false
+    }
+  }, [phase, ride.id, customerAuthId])
+
+  const handleConfirmCancellation = async (reason: string) => {
+    if (!ride.id || !customerAuthId || cancelSubmitting) {
+      return
+    }
+
+    setCancelError('')
+    setCancelSubmitting(true)
+
+    try {
+      const cancelledRide = await cancelRide(ride.id, customerAuthId, 'customer', reason)
+      setRide(cancelledRide)
+      setPhase('cancelled')
+
+      const latestCancellation = await fetchLatestRideCancellation(ride.id)
+      if (latestCancellation) {
+        setCancellation(latestCancellation)
+      }
+
+      setShowCancelModal(false)
+    } catch (error) {
+      console.error('Unable to cancel ride:', error)
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to cancel this ride right now. Please try again.'
+
+      setCancelError(message)
+    } finally {
+      setCancelSubmitting(false)
+    }
+  }
+
   const handleBackToHome = () => {
     window.localStorage.removeItem(rideIdStorageKey)
     setRide(initialRide)
@@ -485,6 +606,8 @@ const handleUseCurrentLocation = () => {
     setRating(0)
     setRatingComment('')
     setRatingSubmitted(false)
+    setRatingError('')
+    setCancellation(null)
     resetForm()
   }
 
@@ -492,12 +615,13 @@ const handleUseCurrentLocation = () => {
   const showCustomerForm = isRequesting && !showProfile
   const showDemoRideState = phase !== 'request' && !showProfile
 
-  const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
+const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
     searching: 'Finding a driver',
     accepted: 'Driver accepted',
     arrived: 'Your driver has arrived',
     in_progress: 'Ride in progress',
     completed: 'Ride completed',
+    cancelled: 'Ride cancelled',
     rating: 'Rate your ride',
   }
 
@@ -813,7 +937,7 @@ const handleUseCurrentLocation = () => {
       <h2>{statusCopy.searching}</h2>
       <p>Looking for an available Bislig Ride driver nearby...</p>
 
-      <div className="ride-summary compact">
+<div className="ride-summary compact">
         <div>
           <dt>Pickup</dt>
           <dd>{ride.pickup_address}</dd>
@@ -830,6 +954,10 @@ const handleUseCurrentLocation = () => {
           <dt>Passenger Type</dt>
           <dd>{formValues.passengerType}</dd>
         </div>
+      </div>
+
+      <div className="action-row">
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
       </div>
     </div>
   )
@@ -874,8 +1002,8 @@ const handleUseCurrentLocation = () => {
         </div>
       </div>
 
-      <div className="action-row compact-actions">
-        <a href={"tel:" + (assignedDriver?.phone?.replace(/[^\d+]/g, ''))} className="secondary-action">Call Driver</a><button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
+<div className="action-row compact-actions">
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button><button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
       </div>
       <p className="lead-paragraph">Your driver will update the ride status when they arrive.</p>
     </div>
@@ -898,7 +1026,7 @@ const handleUseCurrentLocation = () => {
 
       <p className="lead-paragraph">{statusCopy.arrived}</p>
 
-      <div className="ride-summary compact">
+<div className="ride-summary compact">
         <div>
           <dt>Pickup</dt>
           <dd>{ride.pickup_address}</dd>
@@ -907,6 +1035,10 @@ const handleUseCurrentLocation = () => {
           <dt>Destination</dt>
           <dd>{ride.destination_address}</dd>
         </div>
+      </div>
+
+      <div className="action-row">
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
       </div>
       <p className="lead-paragraph">Your driver has arrived. The trip will begin when your driver starts the ride.</p>
     </div>
@@ -945,12 +1077,50 @@ const handleUseCurrentLocation = () => {
           <dt>Driver</dt>
           <dd>{assignedDriver?.full_name ?? 'John Doe'}</dd>
         </div>
-        <div>
+<div>
           <dt>Vehicle</dt>
           <dd>{assignedDriver?.vehicle_model ?? 'Demo Tricycle'}</dd>
         </div>
       </div>
+
+      <div className="action-row">
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
+      </div>
       <p className="lead-paragraph">Your ride is in progress. Your driver will complete the trip when you reach your destination.</p>
+    </div>
+  )
+
+  const renderCancelledScreen = () => (
+    <div className="demo-state-card">
+      <div className="status-stack">
+        <span className="demo-status-badge">CANCELLED</span>
+      </div>
+
+      <h2>{statusCopy.cancelled}</h2>
+      <p>
+        {cancellation?.cancelled_by_role === 'driver'
+          ? 'Your driver cancelled this ride.'
+          : 'You cancelled this ride.'}
+      </p>
+
+      <div className="ride-summary compact">
+        <div>
+          <dt>Reason</dt>
+          <dd>{cancellation?.reason ?? 'No reason provided.'}</dd>
+        </div>
+        <div>
+          <dt>Pickup</dt>
+          <dd>{ride.pickup_address}</dd>
+        </div>
+        <div>
+          <dt>Destination</dt>
+          <dd>{ride.destination_address}</dd>
+        </div>
+      </div>
+
+      <button type="button" className="primary-action" onClick={handleBackToHome}>
+        Back to Home
+      </button>
     </div>
   )
 
@@ -1045,6 +1215,12 @@ onClick={() => setRating(star)}
             rows={4}
             maxLength={500}
           />
+
+{ratingError ? (
+            <p className="form-error-message" role="alert">
+              {ratingError}
+            </p>
+          ) : null}
 
           <button
             type="button"
@@ -1201,8 +1377,10 @@ onClick={() => setRating(star)}
               renderArrivedScreen()
             ) : phase === 'in_progress' ? (
               renderInProgressScreen()
-            ) : phase === 'completed' ? (
+) : phase === 'completed' ? (
               renderCompletedScreen()
+            ) : phase === 'cancelled' ? (
+              renderCancelledScreen()
             ) : phase === 'rating' ? (
               renderRatingScreen()
             ) : phase === 'payment' ? (
@@ -1211,12 +1389,25 @@ onClick={() => setRating(star)}
               renderPaymentConfirmedScreen()
             )
           ) : null}
-        </section>        {showChat && ride.id && assignedDriver && (
+</section>        {showChat && ride.id && assignedDriver && (
           <RideChat
             rideId={ride.id}
             otherPartyName={assignedDriver.full_name ?? 'John Doe'}
             currentRole="Rider"
             onClose={() => setShowChat(false)}
+          />
+        )}
+        {showCancelModal && ride.id && (
+          <CancelRideModal
+            open={showCancelModal}
+            role="customer"
+            submitting={cancelSubmitting}
+            error={cancelError}
+            onClose={() => {
+              setShowCancelModal(false)
+              setCancelError('')
+            }}
+            onConfirm={(reason) => void handleConfirmCancellation(reason)}
           />
         )}
         <aside className="map-panel" aria-label="Bislig City map preview">

@@ -64,6 +64,7 @@ const rideStatusLabels: Record<AdminRide['status'], string> = {
   arrived: 'Driver Arrived',
   in_progress: 'In Progress',
   completed: 'Completed',
+  cancelled: 'Cancelled',
 }
 
 export function AdminExperience({
@@ -323,6 +324,7 @@ useEffect(() => {
     { label: 'Online Drivers', value: String(drivers.filter((driver) => driver.availability === 'Online').length) },
     { label: 'Active Rides', value: String(liveRides.filter((ride: any) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)).length) },
     { label: 'Completed Rides', value: String(liveRides.filter((ride: any) => ride.status === 'completed').length) },
+    { label: 'Cancelled Rides', value: String(liveRides.filter((ride: any) => ride.status === 'cancelled').length) },
     { label: 'Total Customers', value: String(liveCustomers.length) },
     { label: "Today's Revenue", value: 'Not connected' },
   ]

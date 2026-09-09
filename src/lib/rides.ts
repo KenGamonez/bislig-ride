@@ -1,4 +1,4 @@
-import type { Ride, RideStatus } from '../types/ride'
+import type { CancelledByRole, Ride, RideRating, RideStatus } from '../types/ride'
 import { getCustomerAuthId, supabase } from './supabase'
 
 export type CreateRideInput = {
@@ -128,27 +128,120 @@ export async function fetchAssignedRidesForDriver(driverId: string): Promise<Rid
 }
 
 export async function submitRideRating(rideId: string, rating: number, comment?: string): Promise<Ride | null> {
+  const ride = await fetchRideById(rideId)
+
+  if (!ride || ride.status !== 'completed' || !ride.driver_id || !ride.customer_auth_id) {
+    throw new Error('This ride is not eligible for rating.')
+  }
+
+  const { error: ratingError } = await supabase.from('ride_ratings').insert({
+    ride_id: ride.id,
+    rater_id: ride.customer_auth_id,
+    rated_user_id: ride.driver_id,
+    stars: rating,
+    comment: comment?.trim() || null,
+  })
+
+  if (ratingError) {
+    throw ratingError
+  }
+
+  const { data, error } = await supabase
+    .from('rides')
+    .update({
+      rating,
+      rating_comment: comment?.trim() || null,
+    })
+    .eq('id', rideId)
+    .select()
+    .maybeSingle()
+
+  if (error) {
+    console.warn('Unable to backfill rating onto the ride record (non-fatal):', error.message)
+    return ride
+  }
+
+  return (data ?? ride) as Ride
+}
+
+export async function submitPassengerRating(
+  rideId: string,
+  driverId: string,
+  stars: number,
+  comment?: string,
+): Promise<RideRating | null> {
   try {
+    const ride = await fetchRideById(rideId)
+
+    if (!ride || ride.status !== 'completed' || ride.driver_id !== driverId || !ride.customer_auth_id) {
+      return null
+    }
+
     const { data, error } = await supabase
-      .from('rides')
-      .update({
-        rating,
-        rating_comment: comment?.trim() || null,
+      .from('ride_ratings')
+      .insert({
+        ride_id: ride.id,
+        rater_id: driverId,
+        rated_user_id: ride.customer_auth_id,
+        stars,
+        comment: comment?.trim() || null,
       })
-      .eq('id', rideId)
       .select()
       .single()
 
     if (error) {
-      console.warn('Unable to persist ride rating to database (column may not exist yet):', error.message)
+      console.warn('Unable to store driver rating for passenger:', error.message)
       return null
     }
 
-    return data as Ride
+    return data as RideRating
   } catch (err) {
-    console.warn('Error submitting ride rating:', err)
+    console.warn('Error submitting passenger rating:', err)
     return null
   }
+}
+
+export async function hasRatedRide(rideId: string, raterId: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase
+      .from('ride_ratings')
+      .select('id')
+      .eq('ride_id', rideId)
+      .eq('rater_id', raterId)
+      .maybeSingle()
+
+    if (error) {
+      console.warn('Unable to check for existing rating:', error.message)
+      return false
+    }
+
+    return Boolean(data)
+  } catch (err) {
+    console.warn('Error checking for existing rating:', err)
+    return false
+  }
+}
+
+export async function cancelRide(
+  rideId: string,
+  actorId: string,
+  role: CancelledByRole,
+  reason: string,
+): Promise<Ride> {
+  const { data, error } = await supabase
+    .rpc('cancel_ride', {
+      p_ride_id: rideId,
+      p_cancelled_by: actorId,
+      p_cancelled_by_role: role,
+      p_reason: reason,
+    })
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as Ride
 }
 
 export async function fetchCustomerRideHistory(): Promise<Ride[]> {

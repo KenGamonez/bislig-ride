@@ -1,6 +1,6 @@
 import { demoDriver } from './demoDriver'
 
-export type AdminRideStatus = 'requested' | 'accepted' | 'arrived' | 'in_progress' | 'completed'
+export type AdminRideStatus = 'requested' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled'
 export type DriverAvailability = 'Offline' | 'Online' | 'Busy'
 export type DriverStatus = 'Active' | 'Inactive'
 export type PaymentStatus = 'Paid' | 'Pending'
