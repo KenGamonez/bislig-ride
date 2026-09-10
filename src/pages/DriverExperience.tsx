@@ -46,6 +46,7 @@ type DriverSummaryProfile = {
   vehicleModel: string
   plateNumber: string
   email: string | null
+  username: string | null
 }
 
 type DriverNotificationItem = {
@@ -198,6 +199,35 @@ export function DriverExperience({
   const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
   const [pakyawanError, setPakyawanError] = useState('')
   const [notificationPermissionState, setNotificationPermissionState] = useState<NotificationPermission>(() => notificationPermission())
+  const [showStatusHint, setShowStatusHint] = useState(false)
+  const statusHintTimerRef = useRef<number | null>(null)
+
+  const revealStatusHint = () => {
+    if (statusHintTimerRef.current !== null) {
+      window.clearTimeout(statusHintTimerRef.current)
+    }
+    setShowStatusHint(true)
+    statusHintTimerRef.current = window.setTimeout(() => {
+      setShowStatusHint(false)
+      statusHintTimerRef.current = null
+    }, 4000)
+  }
+
+  const hideStatusHint = () => {
+    if (statusHintTimerRef.current !== null) {
+      window.clearTimeout(statusHintTimerRef.current)
+      statusHintTimerRef.current = null
+    }
+    setShowStatusHint(false)
+  }
+
+  useEffect(() => {
+    return () => {
+      if (statusHintTimerRef.current !== null) {
+        window.clearTimeout(statusHintTimerRef.current)
+      }
+    }
+  }, [])
   useEffect(() => {
     let mounted = true
 
@@ -213,7 +243,7 @@ export function DriverExperience({
 
 const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, auth_user_id, full_name, email, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
+        .select('id, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -234,6 +264,7 @@ const { data: driver, error: driverError } = await supabase
           vehicleModel: driver.vehicle_model ?? demoDriver.vehicleModel,
           plateNumber: driver.plate_number ?? demoDriver.plateNumber,
           email: driver.email,
+          username: driver.username,
         })
       }
     }
@@ -1149,55 +1180,13 @@ const displayedDriver = driverProfile ?? demoDriver
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-          </span> {displayedDriver.rating}</p>
+</span> {displayedDriver.rating}</p>
           <p className="driver-vehicle">{displayedDriver.vehicleType} · {displayedDriver.vehicleModel} · {displayedDriver.plateNumber}</p>
-          {driverProfile?.email ? <p className="driver-email">Signed in as {driverProfile.email}</p> : null}
+          {driverProfile?.username ? <p className="driver-email">Signed in as: <strong>{driverProfile.username}</strong></p> : driverProfile?.email ? <p className="driver-email">Signed in as: <strong>{driverProfile.email}</strong></p> : null}
         </div>
       </div>
 
-      <div className="account-actions-row">
-        <button
-          type="button"
-          className="secondary-action compact-button"
-          onClick={() => {
-            setShowChangePassword((current) => !current)
-            setPasswordError('')
-            setPasswordSuccess('')
-          }}
-          disabled={isLoggingOut}
-        >
-          Change Password
-        </button>
-        <button
-          type="button"
-          className="secondary-action compact-button"
-          onClick={() => void handleLogout()}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? 'Signing out...' : 'Logout'}
-        </button>
-      </div>
-
-      <div className={driverOnline ? "driver-status-panel is-online" : "driver-status-panel is-offline"}>
-        <div>
-          <span className="status-indicator" aria-hidden="true" />
-          <div>
-            <strong>{driverOnline ? "You're Online" : "You're Offline"}</strong>
-            <span>{driverOnline ? "Ready to receive ride requests" : "You won't receive new requests"}</span>
-          </div>
-        </div>
-        <button
-          type="button"
-          className="status-toggle"
-          onClick={handleToggleOnline}
-          disabled={transitioning}
-          aria-label={driverOnline ? "Go offline" : "Go online"}
-        >
-          {driverOnline ? "GO OFFLINE" : "GO ONLINE"}
-        </button>
-      </div>
-
-<div className="driver-metrics">
+      <div className="driver-metrics">
         <div className="metric-card">
           <span>Completed rides</span>
           <strong>{reputation ? reputation.completedRides : recentRides.length}</strong>
@@ -1245,10 +1234,10 @@ const displayedDriver = driverProfile ?? demoDriver
         <span className="state-badge online-badge">ONLINE</span>
       </div>
 
-      <div className="waiting-box">
-        <div className="search-loader" aria-hidden="true" />
+<div className="waiting-box">
+        <span className="search-dots" aria-hidden="true"><i></i><i></i><i></i></span>
         <div>
-          <strong>Looking for nearby requests</strong>
+          <strong>Looking for nearby requests...</strong>
           <span>Keep the dashboard open while you're available.</span>
         </div>
       </div>
@@ -1668,12 +1657,35 @@ const displayedDriver = driverProfile ?? demoDriver
           <p className="driver-kicker">Bislig Ride</p>
           <h2>Driver Dashboard</h2>
         </div>
-        {renderNotificationBell()}
+        <div className="driver-header-controls">
+          <button
+            type="button"
+            className={driverOnline ? 'driver-status-chip is-online' : 'driver-status-chip is-offline'}
+            onClick={handleToggleOnline}
+            disabled={transitioning}
+            aria-label={driverOnline ? 'Go offline' : 'Go online'}
+            aria-describedby="driver-status-hint"
+            onPointerEnter={driverOnline ? revealStatusHint : undefined}
+            onFocus={driverOnline ? revealStatusHint : undefined}
+            onPointerLeave={hideStatusHint}
+            onBlur={hideStatusHint}
+          >
+            <span className="status-indicator" aria-hidden="true" />
+            <span className="status-chip-label">{driverOnline ? 'Online' : 'Offline'}</span>
+            <span
+              id="driver-status-hint"
+              className={showStatusHint ? 'driver-status-hint is-visible' : 'driver-status-hint'}
+              role="status"
+              aria-live="polite"
+            >
+              {driverOnline ? 'Ready to receive ride requests' : 'You are not receiving new requests'}
+            </span>
+          </button>
+          {renderNotificationBell()}
+        </div>
       </header>
 
       {renderSummary()}
-
-      {renderPakyawanSection()}
 
       {showChangePassword ? (
         <section className="driver-card account-panel">
@@ -1752,12 +1764,37 @@ const displayedDriver = driverProfile ?? demoDriver
 
       {!driverOnline || phase === 'offline' ? renderRecentRides() : null}
 
+      <div className="account-actions-row">
+        <button
+          type="button"
+          className="secondary-action compact-button"
+          onClick={() => {
+            setShowChangePassword((current) => !current)
+            setPasswordError('')
+            setPasswordSuccess('')
+          }}
+          disabled={isLoggingOut}
+        >
+          Change Password
+        </button>
+        <button
+          type="button"
+          className="secondary-action compact-button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? 'Signing out...' : 'Logout'}
+        </button>
+      </div>
+
+      {renderPakyawanSection()}
+
       {phase === 'online' || phase === 'offline' ? (
         <div className="driver-mobile-actions">
-          <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
+          <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning} aria-label={driverOnline ? 'Go offline' : 'Go online'}>
             {driverOnline ? 'Go Offline' : 'Go Online'}
           </button>
-          <button type="button" className="secondary-action" onClick={handleOpenNotifications}>
+          <button type="button" className="secondary-action" onClick={handleOpenNotifications} aria-label={`Open notifications${unreadNotificationCount > 0 ? ` (${unreadNotificationCount} unread)` : ''}`}>
             Notifications{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ''}
           </button>
         </div>
