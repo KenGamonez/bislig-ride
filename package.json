@@ -8,6 +8,7 @@
     "build": "tsc -b && vite build",
     "lint": "oxlint",
     "test:fares": "node scripts/fare-check.ts",
+    "test:driver-accounts": "node scripts/driver-accounts-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

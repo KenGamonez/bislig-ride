@@ -7,6 +7,7 @@ import { AdminExperience } from './pages/AdminExperience'
 import { BecomeDriverExperience } from './pages/BecomeDriverExperience'
 import { PakyawanExperience } from './pages/PakyawanExperience'
 import { ContactExperience } from './pages/ContactExperience'
+import { DriverPasswordReset } from './pages/DriverPasswordReset'
 import { supabase } from './lib/supabase'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
@@ -33,6 +34,7 @@ function App() {
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
   const isPakyawanPage = window.location.pathname === '/pakyawan'
   const isContactPage = window.location.pathname === '/contact'
+  const isDriverResetPage = window.location.pathname === '/driver/reset-password'
 
   useEffect(() => {
     const checkDriverSession = async () => {
@@ -99,6 +101,10 @@ function App() {
         }}
       />
     )
+  }
+
+  if (isDriverResetPage) {
+    return <DriverPasswordReset />
   }
 
   return (

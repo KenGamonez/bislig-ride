@@ -5178,3 +5178,71 @@ a.secondary-action {
     height: 38px;
   }
 }
+
+/* =========================================================
+   DRIVER ACCOUNTS — login, reset, change password, admin enrollment
+   ========================================================= */
+
+.driver-email {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  margin: 0;
+}
+
+.account-actions-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 12px 0 0;
+}
+
+.account-panel .state-heading {
+  margin-bottom: 16px;
+}
+
+.driver-password-success {
+  color: var(--success);
+  font-size: 0.9rem;
+  font-weight: 600;
+  margin: 8px 0 12px;
+}
+
+.password-meta {
+  color: var(--text-muted);
+  font-size: 0.78rem;
+  margin: 6px 0 0;
+}
+
+.form-note {
+  font-size: 0.78rem;
+  grid-column: 1 / -1;
+  margin: -4px 0 0;
+}
+
+.form-check {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  margin: 0;
+}
+
+.form-check input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--brand-red);
+  flex-shrink: 0;
+}
+
+.form-check .field-label {
+  margin: 0;
+}
+
+.credentials-box {
+  margin: 12px 0 0;
+}
+
+.credentials-box .detail-grid {
+  margin: 12px 0;
+}

@@ -9,6 +9,8 @@ import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/d
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
+import { createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
+import { generateTemporaryPassword, suggestUsername } from '../lib/driverAccounts'
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
@@ -35,6 +37,8 @@ type DriverDraft = {
   plateNumber: string
   status: DriverStatus
   availability: DriverAvailability
+  createAccount: boolean
+  username: string
 }
 
 const emptyDriverDraft: DriverDraft = {
@@ -46,6 +50,8 @@ const emptyDriverDraft: DriverDraft = {
   plateNumber: '',
   status: 'Active',
   availability: 'Offline',
+  createAccount: true,
+  username: '',
 }
 
 const adminTabs: { key: AdminTab; label: string }[] = [
@@ -97,6 +103,14 @@ export function AdminExperience({
   const [selectedApplicationId, setSelectedApplicationId] = useState('')
   const [applicationError, setApplicationError] = useState('')
   const [isLoadingApplications, setIsLoadingApplications] = useState(false)
+  const [creatingAccount, setCreatingAccount] = useState(false)
+  const [createdAccount, setCreatedAccount] = useState<{
+    name: string
+    email: string
+    username: string
+    tempPassword: string
+    needsEmailConfirmation: boolean
+  } | null>(null)
   const [applicationPhotoUrl, setApplicationPhotoUrl] = useState<string | null>(null)
   const [applicationLicenseUrl, setApplicationLicenseUrl] = useState<string | null>(null)
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
@@ -127,6 +141,7 @@ export function AdminExperience({
           ? 'Busy'
           : 'Offline',
     rating: Number(driver.rating_average ?? 5),
+    username: driver.username ?? '',
     recentRides: [],
   })
 
@@ -353,6 +368,30 @@ useEffect(() => {
     { label: "Today's Revenue", value: 'Not connected' },
   ]
 
+  const handleDriverNameChange = (name: string) => {
+    setDriverDraft((current) => {
+      const next = { ...current, name }
+
+      if (next.createAccount && !next.username.trim()) {
+        next.username = suggestUsername(name)
+      }
+
+      return next
+    })
+  }
+
+  const handleCreateAccountToggle = (createAccount: boolean) => {
+    setDriverDraft((current) => {
+      const next = { ...current, createAccount }
+
+      if (next.createAccount && !next.username.trim()) {
+        next.username = suggestUsername(next.name)
+      }
+
+      return next
+    })
+  }
+
   const handleDriverSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
 
@@ -360,8 +399,74 @@ useEffect(() => {
       return
     }
 
+    if (driverDraft.createAccount && !driverDraft.email.trim()) {
+      setDriverError('Email is required when creating a login account.')
+      return
+    }
+
+    setDriverError('')
+    setCreatingAccount(true)
+    setCreatedAccount(null)
+
+    let account: Awaited<ReturnType<typeof createDriverAuthUser>> | null = null
+
     try {
-      setDriverError('')
+      if (driverDraft.createAccount) {
+        const storedUsername = suggestUsername(driverDraft.username)
+
+        if (!storedUsername) {
+          setDriverError('Enter a valid username for the driver login.')
+          setCreatingAccount(false)
+          return
+        }
+
+        if (await isDriverUsernameTaken(storedUsername)) {
+          setDriverError('That username is already taken. Choose another one.')
+          setCreatingAccount(false)
+          return
+        }
+
+        const tempPassword = generateTemporaryPassword()
+        account = await createDriverAuthUser(driverDraft.email.trim(), tempPassword)
+
+        const created = await createDriver({
+          full_name: driverDraft.name.trim(),
+          phone: driverDraft.phone.trim(),
+          email: account.email,
+          vehicle_type: driverDraft.vehicleType,
+          vehicle_model: driverDraft.vehicleModel.trim(),
+          plate_number: driverDraft.plateNumber.trim(),
+          profile_photo_url:
+            driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
+              ? sanjayPhoto
+              : null,
+          status: driverDraft.status === 'Active' ? 'active' : 'inactive',
+          availability:
+            driverDraft.availability === 'Online'
+              ? 'online'
+              : driverDraft.availability === 'Busy'
+                ? 'busy'
+                : 'offline',
+          username: storedUsername,
+          auth_user_id: account.authUserId,
+        })
+
+        setCreatedAccount({
+          name: created.full_name,
+          email: account.email,
+          username: created.username ?? storedUsername,
+          tempPassword,
+          needsEmailConfirmation: account.needsEmailConfirmation,
+        })
+
+        const mappedDriver = mapDriverRecord(created)
+        setDrivers((current) => [mappedDriver, ...current])
+        setSelectedDriverId(mappedDriver.id)
+        setShowAddDriver(false)
+        setDriverDraft(emptyDriverDraft)
+        setDriverFilter('all')
+        return
+      }
 
       const created = await createDriver({
         full_name: driverDraft.name.trim(),
@@ -393,6 +498,8 @@ useEffect(() => {
     } catch (error) {
       console.error('Unable to create driver:', error)
       setDriverError('Unable to add driver. Please check the information and try again.')
+    } finally {
+      setCreatingAccount(false)
     }
   }
 
@@ -560,7 +667,7 @@ useEffect(() => {
                     <input
                       className="input-field"
                       value={driverDraft.name}
-                      onChange={(event) => setDriverDraft((current) => ({ ...current, name: event.target.value }))}
+                      onChange={(event) => handleDriverNameChange(event.target.value)}
                     />
                   </label>
 
@@ -579,8 +686,36 @@ useEffect(() => {
                       className="input-field"
                       value={driverDraft.email}
                       onChange={(event) => setDriverDraft((current) => ({ ...current, email: event.target.value }))}
+                      placeholder={driverDraft.createAccount ? 'required for the login account' : 'optional'}
                     />
                   </label>
+
+                  <label className="field-block form-check">
+                    <input
+                      type="checkbox"
+                      checked={driverDraft.createAccount}
+                      onChange={(event) => handleCreateAccountToggle(event.target.checked)}
+                    />
+                    <span className="field-label">Create driver login account</span>
+                  </label>
+
+                  {driverDraft.createAccount ? (
+                    <>
+                      <label className="field-block">
+                        <span className="field-label">Login username</span>
+                        <input
+                          className="input-field"
+                          value={driverDraft.username}
+                          onChange={(event) => setDriverDraft((current) => ({ ...current, username: event.target.value }))}
+                          placeholder="auto-suggested from the name"
+                        />
+                      </label>
+
+                      <p className="muted-copy form-note">
+                        A temporary password is generated automatically and shown once after saving.
+                      </p>
+                    </>
+                  ) : null}
 
                   <label className="field-block">
                     <span className="field-label">Vehicle Type</span>
@@ -636,12 +771,44 @@ useEffect(() => {
                 </div>
 
                 <div className="form-actions">
-                  <button type="submit" className="primary-action">Save Driver</button>
-                  <button type="button" className="secondary-action" onClick={() => setShowAddDriver(false)}>
+                  <button type="submit" className="primary-action" disabled={creatingAccount}>
+                    {creatingAccount ? 'Creating account...' : 'Save Driver'}
+                  </button>
+                  <button type="button" className="secondary-action" onClick={() => setShowAddDriver(false)} disabled={creatingAccount}>
                     Cancel
                   </button>
                 </div>
               </form>
+            ) : null}
+
+            {createdAccount ? (
+              <div className="panel-form credentials-box">
+                <div className="panel-header-row"><h3>Driver account created</h3></div>
+                <p className="muted-copy">
+                  Share these credentials with {createdAccount.name}. The temporary password is shown only once.
+                </p>
+                <div className="detail-grid">
+                  <div><span>Email</span><strong>{createdAccount.email}</strong></div>
+                  <div><span>Username</span><strong>{createdAccount.username}</strong></div>
+                  <div><span>Temporary password</span><strong>{createdAccount.tempPassword}</strong></div>
+                  <div><span>Login status</span><strong>{createdAccount.needsEmailConfirmation ? 'Awaiting email confirmation' : 'Ready to log in'}</strong></div>
+                </div>
+                {createdAccount.needsEmailConfirmation ? (
+                  <p className="muted-copy">
+                    "Confirm email" is enabled in the Authentication settings, so the driver must click the
+                    verification link in the email before their first login.
+                  </p>
+                ) : (
+                  <p className="muted-copy">
+                    The driver can log in immediately with their username and temporary password.
+                  </p>
+                )}
+                <div className="form-actions">
+                  <button type="button" className="secondary-action compact-button" onClick={() => setCreatedAccount(null)}>
+                    Dismiss
+                  </button>
+                </div>
+              </div>
             ) : null}
 
             {filteredDrivers.length === 0 ? (
@@ -725,6 +892,7 @@ useEffect(() => {
                 <div className="detail-grid">
                   <div><span>Phone</span><strong>{selectedDriver.phone}</strong></div>
                   <div><span>Email</span><strong>{selectedDriver.email}</strong></div>
+                  <div><span>Username</span><strong>{selectedDriver.username || 'No login'}</strong></div>
                   <div><span>Vehicle</span><strong>{selectedDriver.vehicleType}</strong></div>
                   <div><span>Model</span><strong>{selectedDriver.vehicleModel}</strong></div>
                   <div><span>Plate</span><strong>{selectedDriver.plateNumber}</strong></div>

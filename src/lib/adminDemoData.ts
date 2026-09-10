@@ -17,6 +17,7 @@ export type AdminDriver = {
   status: DriverStatus
   availability: DriverAvailability
   rating: number
+  username?: string
   recentRides: Array<{ rideId: string; destination: string; status: AdminRideStatus; fare: string }>
 }
 

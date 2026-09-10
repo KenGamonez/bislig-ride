@@ -5,6 +5,8 @@ import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
+import { changeDriverPassword } from '../lib/driverAuth'
+import { PASSWORD_HELP_TEXT, validatePasswordStrength } from '../lib/driverAccounts'
 import { formatCentavos, MULTIPLE_DESTINATIONS_FARE_NOTE } from '../lib/fare'
 import { updateDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
@@ -24,6 +26,16 @@ import type { Ride, RideCancellation } from '../types/ride'
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
 type DriverPhase = 'offline' | 'online' | 'incoming_request' | 'heading_to_pickup' | 'arrived' | 'in_progress' | 'completed'
+
+type DriverSummaryProfile = {
+  name: string
+  profilePhoto: string | null
+  rating: number
+  vehicleType: string
+  vehicleModel: string
+  plateNumber: string
+  email: string | null
+}
 
 const recentRides = [
   {
@@ -130,6 +142,16 @@ export function DriverExperience({
   const [showChat, setShowChat] = useState(false)
   const [driverId, setDriverId] = useState(TEST_DRIVER_ID)
   const [driverAuthId, setDriverAuthId] = useState<string | null>(null)
+  const [driverProfile, setDriverProfile] = useState<DriverSummaryProfile | null>(null)
+  const [showChangePassword, setShowChangePassword] = useState(false)
+  const [changingPassword, setChangingPassword] = useState(false)
+  const [passwordError, setPasswordError] = useState('')
+  const [passwordSuccess, setPasswordSuccess] = useState('')
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [showPasswordFields, setShowPasswordFields] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelSubmitting, setCancelSubmitting] = useState(false)
@@ -157,9 +179,9 @@ export function DriverExperience({
 
       const authUserId = data.session.user.id
 
-      const { data: driver, error: driverError } = await supabase
+const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, auth_user_id')
+        .select('id, auth_user_id, full_name, email, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -171,15 +193,25 @@ export function DriverExperience({
       if (mounted) {
         setDriverId(driver.id)
         setDriverAuthId(authUserId)
+        setDriverProfile({
+          name: driver.full_name,
+          profilePhoto: driver.profile_photo_url,
+          rating: Number(driver.rating_average ?? 5),
+          vehicleType: driver.vehicle_type ?? demoDriver.vehicleType,
+          vehicleModel: driver.vehicle_model ?? demoDriver.vehicleModel,
+          plateNumber: driver.plate_number ?? demoDriver.plateNumber,
+          email: driver.email,
+        })
       }
     }
 
     void loadDriverIdentity()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
         setDriverAuthId(null)
         setDriverId(TEST_DRIVER_ID)
+        setDriverProfile(null)
         return
       }
 
@@ -526,6 +558,76 @@ return () => {
     setPhase(driverOnline ? 'online' : 'offline')
   }
 
+  const handleLogout = async () => {
+    if (isLoggingOut) {
+      return
+    }
+
+    setIsLoggingOut(true)
+    setPasswordError('')
+    setPasswordSuccess('')
+    setShowChangePassword(false)
+
+    const { error } = await supabase.auth.signOut()
+
+    if (error) {
+      console.error('Unable to sign out driver:', error)
+    }
+
+    setIsLoggingOut(false)
+  }
+
+  const handleChangePasswordSubmit = async () => {
+    setPasswordSuccess('')
+    setPasswordError('')
+
+    if (!currentPassword) {
+      setPasswordError('Enter your current password.')
+      return
+    }
+
+    const strength = validatePasswordStrength(newPassword)
+
+    if (!strength.ok) {
+      setPasswordError(strength.problems[0])
+      return
+    }
+
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match.')
+      return
+    }
+
+    setChangingPassword(true)
+
+    try {
+      await changeDriverPassword(currentPassword, newPassword, driverProfile?.email)
+      setPasswordSuccess('Your password has been updated.')
+      setCurrentPassword('')
+      setNewPassword('')
+      setConfirmPassword('')
+      setShowPasswordFields(false)
+    } catch (error) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to update your password. Please try again.'
+      setPasswordError(message)
+    } finally {
+      setChangingPassword(false)
+    }
+  }
+
+  const handleCloseChangePassword = () => {
+    setShowChangePassword(false)
+    setCurrentPassword('')
+    setNewPassword('')
+    setConfirmPassword('')
+    setPasswordError('')
+    setPasswordSuccess('')
+    setShowPasswordFields(false)
+  }
+
   useEffect(() => {
     if (!activeRide?.id || activeRide.status !== 'completed') {
       return
@@ -617,22 +719,48 @@ return () => {
     }
   }
 
+const displayedDriver = driverProfile ?? demoDriver
+
   const renderSummary = () => (
     <section className="driver-card driver-overview">
       <div className="driver-identity">
-        <img src={demoDriver.profilePhoto} alt={demoDriver.name} className="driver-photo" />
+        <img src={displayedDriver.profilePhoto ?? ''} alt={displayedDriver.name} className="driver-photo" />
         <div className="driver-identity-copy">
           <p className="section-label">DRIVER ACCOUNT</p>
-          <h3>{demoDriver.name}</h3>
-          <p className="driver-rating"><span className="rating-stars-inline">
+          <h3>{displayedDriver.name}</h3>
+<p className="driver-rating"><span className="rating-stars-inline">
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-          </span> {demoDriver.rating}</p>
-          <p className="driver-vehicle">{demoDriver.vehicleType} · {demoDriver.vehicleModel} · {demoDriver.plateNumber}</p>
+          </span> {displayedDriver.rating}</p>
+          <p className="driver-vehicle">{displayedDriver.vehicleType} · {displayedDriver.vehicleModel} · {displayedDriver.plateNumber}</p>
+          {driverProfile?.email ? <p className="driver-email">Signed in as {driverProfile.email}</p> : null}
         </div>
+      </div>
+
+      <div className="account-actions-row">
+        <button
+          type="button"
+          className="secondary-action compact-button"
+          onClick={() => {
+            setShowChangePassword((current) => !current)
+            setPasswordError('')
+            setPasswordSuccess('')
+          }}
+          disabled={isLoggingOut}
+        >
+          Change Password
+        </button>
+        <button
+          type="button"
+          className="secondary-action compact-button"
+          onClick={() => void handleLogout()}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? 'Signing out...' : 'Logout'}
+        </button>
       </div>
 
       <div className={driverOnline ? "driver-status-panel is-online" : "driver-status-panel is-offline"}>
@@ -1133,6 +1261,56 @@ return () => {
       </header>
 
       {renderSummary()}
+
+      {showChangePassword ? (
+        <section className="driver-card account-panel">
+          <div className="state-heading">
+            <div>
+              <p className="section-label">ACCOUNT SECURITY</p>
+              <h3>Change password</h3>
+              <p>Update the password you use to sign in.</p>
+            </div>
+            <button type="button" className="secondary-action compact-button" onClick={handleCloseChangePassword} disabled={changingPassword}>
+              Close
+            </button>
+          </div>
+
+          {passwordSuccess ? <p className="driver-password-success" role="status">{passwordSuccess}</p> : null}
+
+          <form className="panel-form" onSubmit={(event) => { event.preventDefault(); void handleChangePasswordSubmit() }}>
+            <div className="form-grid">
+              <label className="field-block">
+                <span className="field-label">Current password</span>
+                <input className="input-field" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" disabled={changingPassword} />
+              </label>
+              <label className="field-block">
+                <span className="field-label">New password</span>
+                <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
+              </label>
+              <label className="field-block">
+                <span className="field-label">Confirm new password</span>
+                <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
+              </label>
+            </div>
+
+            <p className="password-meta">{PASSWORD_HELP_TEXT}</p>
+
+            <div className="form-actions">
+              <button type="button" className="link-button" onClick={() => setShowPasswordFields((current) => !current)} disabled={changingPassword}>
+                {showPasswordFields ? 'Hide passwords' : 'Show passwords'}
+              </button>
+            </div>
+
+            {passwordError ? <p className="form-error-message" role="alert">{passwordError}</p> : null}
+
+            <div className="form-actions">
+              <button type="submit" className="primary-action" disabled={changingPassword}>
+                {changingPassword ? 'Updating...' : 'Update Password'}
+              </button>
+            </div>
+          </form>
+        </section>
+      ) : null}
 
       {phase === 'offline' ? renderOfflineState() : null}
       {phase === 'online' ? renderOnlineState() : null}

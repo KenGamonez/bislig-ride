@@ -9,10 +9,11 @@ export type DriverRecord = {
   vehicle_type: string
   vehicle_model: string
   plate_number: string
-  status: 'active' | 'inactive'
+status: 'active' | 'inactive'
   availability: 'offline' | 'online' | 'busy'
   created_at: string
   auth_user_id: string | null
+  username: string | null
   vehicle_color: string | null
   rating_average: number | null
   total_ratings: number | null
@@ -40,6 +41,8 @@ export async function createDriver(driver: {
   availability?: 'offline' | 'online' | 'busy'
   vehicle_color?: string | null
   profile_photo_url?: string | null
+  username?: string | null
+  auth_user_id?: string | null
 }) {
   const { data, error } = await supabase
     .from('drivers')
@@ -65,6 +68,7 @@ export async function updateDriver(
     | 'status'
     | 'availability'
     | 'vehicle_color'
+    | 'username'
   >>
 ) {
   const { data, error } = await supabase

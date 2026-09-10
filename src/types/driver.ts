@@ -16,6 +16,7 @@ export type DriverProfile = {
   status: DriverStatus
   availability: DriverAvailability
   auth_user_id: string | null
+  username?: string | null
   created_at?: string
   updated_at?: string
 }
@@ -32,6 +33,7 @@ export type DriverProfileInput = {
   status?: DriverStatus
   availability?: DriverAvailability
   auth_user_id?: string | null
+  username?: string | null
 }
 
 export type DriverAuthUser = {

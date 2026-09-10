@@ -8,6 +8,8 @@ if (!supabaseUrl || !supabaseKey) {
 }
 
 export const supabase = createClient(supabaseUrl, supabaseKey)
+export const appSupabaseUrl = supabaseUrl
+export const appSupabasePublishableKey = supabaseKey
 
 export async function getCustomerAuthId(): Promise<string> {
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession()
