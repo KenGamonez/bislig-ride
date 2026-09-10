@@ -8643,3 +8643,88 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     font-size: 0.56rem;
   }
 }
+
+/* --------------------------------------------------------
+   MOBILE — compact segmented ride-mode selector + final
+   ride-request order (mode → fare → context → location →
+   steps → Request Ride → map → weather).
+   -------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Segmented-control shell */
+  .customer-layout .booking-mode-picker {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px;
+    width: calc(100% - 24px);
+    margin: 8px 12px 0;
+    padding: 4px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-pill);
+    background: var(--color-gray-100);
+  }
+
+  .customer-layout .booking-mode-card {
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    gap: 0;
+    padding: 8px 10px;
+    min-height: 40px;
+    border: none;
+    background: transparent;
+    box-shadow: none;
+    text-align: center;
+  }
+
+  .customer-layout .booking-mode-card:hover {
+    transform: none;
+    box-shadow: none;
+    border-color: transparent;
+  }
+
+  .customer-layout .booking-mode-card.is-active {
+    background: var(--color-black-soft);
+    border: 1px solid var(--color-green);
+    box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.18);
+  }
+
+  .customer-layout .booking-mode-card.is-active::after {
+    display: none;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-icon,
+  .customer-layout .booking-mode-card .booking-mode-copy small,
+  .customer-layout .booking-mode-card .booking-mode-check,
+  .customer-layout .booking-mode-card .booking-mode-arrow {
+    display: none;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy strong {
+    font-size: 0.78rem;
+    letter-spacing: 0.01em;
+    white-space: nowrap;
+  }
+
+  .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
+    content: ' · Popular';
+    color: var(--color-green);
+    font-weight: 700;
+  }
+
+  /* Request Ride follows step 04; map + weather are secondary */
+  .customer-layout form > .submit-error {
+    order: 6;
+  }
+
+  .customer-layout .request-ride-action {
+    order: 7;
+  }
+
+  .customer-layout .map-stage {
+    order: 8;
+  }
+
+  .customer-layout .weather-widget {
+    order: 9;
+  }
+}
