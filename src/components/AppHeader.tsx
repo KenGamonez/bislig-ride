@@ -10,7 +10,7 @@ type AppHeaderProps = {
   onPrimaryAction: () => void
 }
 
-export function AppHeader({ view: _view, onViewChange, primaryLabel, onPrimaryAction }: AppHeaderProps) {
+export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   useEffect(() => {
@@ -70,6 +70,8 @@ export function AppHeader({ view: _view, onViewChange, primaryLabel, onPrimaryAc
           </div>
 
           <nav className="top-nav desktop-nav" aria-label="Main navigation">
+            <a className={view === 'Rider' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
+
             <a className="nav-link nav-link-pakyawan" href="/pakyawan">Book Pakyawan</a>
 
             <button

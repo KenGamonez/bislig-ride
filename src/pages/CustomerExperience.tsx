@@ -6,6 +6,7 @@ import { CustomerProfile } from '../components/CustomerProfile'
 import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
+import { MobileBottomNav, type MobileBottomNavTab } from '../components/MobileBottomNav'
 import { WeatherWidget } from '../components/WeatherWidget'
 import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import {
@@ -169,6 +170,23 @@ const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [cancellation, setCancellation] = useState<RideCancellation | null>(null)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const [extraDestinations, setExtraDestinations] = useState<string[]>([''])
+  const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
+
+  const handleBottomNavChange = (tab: MobileBottomNavTab) => {
+    setBottomNavTab(tab)
+
+    if (tab === 'home') {
+      setShowProfile(false)
+      if (phase !== 'request') {
+        handleBackToHome()
+      }
+      window.requestAnimationFrame(() => {
+        document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
+    } else {
+      setShowProfile(true)
+    }
+  }
 
   useEffect(() => {
     void getCustomerAuthId()
@@ -936,6 +954,21 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
             error={validationErrors.name}
             onChange={(value) => handleInput('name', value)}
           />
+
+          <div className="field-block">
+            <span className="field-label">Passenger type</span>
+            <select
+              className="input-field"
+              value={formData.passengerType}
+              onChange={(event) => handleInput('passengerType', event.target.value)}
+            >
+              {passengerTypes.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </section>
 
@@ -962,24 +995,6 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
                 </option>
               ))}
             </select>
-          </div>
-
-          <div className="field-block">
-            <span className="field-label">Passenger type</span>
-            <select
-              className="input-field"
-              value={formData.passengerType}
-              onChange={(event) => handleInput('passengerType', event.target.value)}
-            >
-              {passengerTypes.map((type) => (
-                <option key={type} value={type}>
-                  {type}
-                </option>
-              ))}
-            </select>
-<small className="field-note">
-              Estimated fares follow the official Bislig City fare matrix.
-            </small>
           </div>
         </div>
       </section>
@@ -1668,9 +1683,9 @@ onClick={() => setRating(star)}
 
       <main className={openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
         <section className="primary-panel">
-<div className="section-header">
+          <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
-            <h1>Where are you going?</h1>
+            <h1>Where are <span className="hero-accent">you going?</span></h1>
             <p className="subtitle">Get a reliable ride around Bislig City - simple, convenient, and made for your everyday trips.</p>
           </div>
 
@@ -1800,6 +1815,8 @@ onClick={() => setRating(star)}
           </span>
         </div>
       </footer>
+
+      <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
     </div>
   )
 }

@@ -3,51 +3,58 @@
    ========================================================= */
 
 :root {
-  /* === COLOR TOKENS === */
-  --color-black: #0A0A0A;
-  --color-black-soft: #111111;
-  --color-surface-dark: #171717;
-  --color-gray-900: #262626;
-  --color-gray-700: #404040;
-  --color-gray-500: #737373;
-  --color-gray-400: #9ca3af;
-  --color-gray-300: #d4d4d4;
-  --color-gray-200: #e5e5e5;
-  --color-gray-150: #ededed;
-  --color-gray-100: #f5f5f5;
-  --color-gray-50: #fafafa;
-  --color-white: #ffffff;
-  --color-green: #16a34a;
-  --color-green-bright: #22c55e;
-  --color-green-soft: rgba(22,163,74,0.10);
-  --color-red: #dc2626;
-  --color-red-bright: #ef4444;
-  --color-red-soft: rgba(220,38,38,0.10);
+  /* === BRAND COLOR TOKENS — BISLIG RIDE === */
+  --color-green: #00E88A;
+  --color-green-bright: #2CF5A5;
+  --color-green-deep: #05B472;
+  --color-green-soft: rgba(0,232,138,0.10);
+
+  --color-red: #F0444F;
+  --color-red-bright: #FF6B6F;
+  --color-red-soft: rgba(240,68,79,0.12);
+
+  --color-black: #071012;
+  --color-black-soft: #0B1518;
+  --color-surface-dark: #101C20;
+  --color-border-dark: #22343A;
+
+  --color-gray-900: #0A1418;
+  --color-gray-700: #43555C;
+  --color-gray-500: #75868E;
+  --color-gray-400: #93A3AB;
+  --color-gray-300: #B9C6CC;
+  --color-gray-200: #D8E0E3;
+  --color-gray-150: #E4EAED;
+  --color-gray-100: #EDF1F3;
+  --color-gray-50: #F3F6F7;
+
+  --color-white: #FFFFFF;
+  --color-page: #F7F9FA;
 
   /* === SEMANTIC ALIASES === */
   --brand-red: var(--color-red);
-  --brand-red-dark: #b91c1c;
+  --brand-red-dark: #C12B34;
   --brand-red-light: var(--color-red-soft);
-  --brand-red-soft: rgba(220,38,38,0.10);
+  --brand-red-soft: rgba(240,68,79,0.12);
   --graphite: var(--color-black);
-  --charcoal: var(--color-gray-700);
+  --charcoal: var(--color-black-soft);
   --silver: var(--color-gray-400);
   --soft-gray: var(--color-gray-200);
   --white: var(--color-white);
-  --background: var(--color-gray-50);
+  --background: var(--color-page);
   --surface: var(--color-white);
   --surface-soft: var(--color-gray-100);
   --surface-muted: var(--color-gray-150);
   --border: var(--color-gray-200);
-  --text-primary: var(--color-black);
+  --text-primary: var(--color-gray-900);
   --text-secondary: var(--color-gray-700);
-  --text-muted: var(--color-gray-400);
+  --text-muted: var(--color-gray-500);
   --success: var(--color-green);
   --danger: var(--color-red);
-  --shadow-xs: 0 1px 2px rgba(10,10,10,0.04);
-  --shadow-soft: 0 2px 8px rgba(10,10,10,0.04);
-  --shadow-card: 0 1px 3px rgba(10,10,10,0.06);
-  --shadow-elevated: 0 4px 12px rgba(10,10,10,0.08);
+  --shadow-xs: 0 1px 2px rgba(7,16,18,0.04);
+  --shadow-soft: 0 2px 8px rgba(7,16,18,0.05);
+  --shadow-card: 0 1px 3px rgba(7,16,18,0.06);
+  --shadow-elevated: 0 6px 18px rgba(7,16,18,0.10);
   --radius-lg: 18px;
   --radius-md: 12px;
   --radius-sm: 8px;
@@ -7643,5 +7650,716 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     height: 24px;
     top: 12px;
     right: 12px;
+  }
+}
+
+/* =========================================================
+   BISLIG RIDE — PREMIUM CUSTOMER HOME REDESIGN
+   Premium mobility product layer: dark/light split, green
+   accents, editorial typography, restrained motion.
+   ========================================================= */
+
+/* --------------------------------------------------------
+   HEADER — compact, green active navigation
+   -------------------------------------------------------- */
+
+.app-header .nav-link.is-active {
+  color: var(--color-green-deep);
+  font-weight: 700;
+}
+
+.app-header .nav-link.is-active::after {
+  background: var(--color-green);
+  transform: scaleX(1);
+}
+
+.app-header .nav-link:hover {
+  color: var(--color-green-deep);
+  background: transparent;
+}
+
+.header-inner {
+  max-width: 1280px;
+}
+
+/* --------------------------------------------------------
+   CUSTOMER PAGE — premium editorial hero
+   -------------------------------------------------------- */
+
+.customer-layout .primary-panel {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.customer-layout .section-header {
+  position: relative;
+  margin: 0;
+  padding: 34px 32px 30px;
+  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
+  border: 1px solid var(--color-border-dark);
+  overflow: hidden;
+  color: var(--color-white);
+}
+
+.customer-layout .section-header::before,
+.customer-layout .section-header::after {
+  content: '';
+  position: absolute;
+  z-index: 0;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.customer-layout .section-header::before {
+  top: -120px;
+  right: -80px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(0, 232, 138, 0.18);
+  box-shadow: 0 0 0 40px rgba(0, 232, 138, 0.04), 0 0 0 84px rgba(0, 232, 138, 0.03);
+}
+
+.customer-layout .section-header::after {
+  bottom: -70px;
+  left: -60px;
+  width: 180px;
+  height: 180px;
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.02);
+}
+
+.customer-layout .section-header > * {
+  position: relative;
+  z-index: 1;
+}
+
+.customer-layout .section-header .eyebrow {
+  color: var(--color-green);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+}
+
+.customer-layout .section-header .eyebrow::after {
+  background: rgba(0, 232, 138, 0.45);
+  width: 34px;
+}
+
+.customer-layout .section-header h1 {
+  font-size: clamp(2.15rem, 4vw, 3.1rem);
+  line-height: 1.02;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--color-white);
+  max-width: 11ch;
+}
+
+.customer-layout .section-header .hero-accent {
+  color: var(--color-green);
+  display: block;
+}
+
+.customer-layout .section-header .subtitle {
+  margin-top: 12px;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.92rem;
+  line-height: 1.55;
+  max-width: 34rem;
+}
+
+/* --------------------------------------------------------
+   RIDE MODE SELECTOR — dark primary / light secondary
+   -------------------------------------------------------- */
+
+.customer-layout .booking-mode-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.booking-mode-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 20px 18px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition), background var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.booking-mode-card:hover {
+  border-color: var(--color-gray-300);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+
+.booking-mode-card.is-active {
+  background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
+  border: 1px solid var(--color-green);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.28), 0 0 22px rgba(0,232,138,0.16);
+}
+
+.booking-mode-card.is-active::after {
+  content: 'POPULAR';
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 232, 138, 0.16);
+  color: var(--color-green);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+}
+
+.booking-mode-card .booking-mode-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  transition: background var(--transition), color var(--transition);
+}
+
+.booking-mode-card.is-active .booking-mode-icon {
+  background: rgba(0, 232, 138, 0.14);
+  color: var(--color-green);
+  box-shadow: inset 0 0 0 1px rgba(0,232,138,0.35);
+}
+
+.booking-mode-card .booking-mode-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.booking-mode-card .booking-mode-copy strong {
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+
+.booking-mode-card.is-active .booking-mode-copy strong {
+  color: var(--color-white);
+}
+
+.booking-mode-card .booking-mode-copy small {
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.booking-mode-card.is-active .booking-mode-copy small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.booking-mode-card .booking-mode-check {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  margin-left: auto;
+  border-radius: 50%;
+  border: 2px solid var(--color-gray-300);
+  position: relative;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.booking-mode-card.is-active .booking-mode-check {
+  border-color: var(--color-green);
+  background: var(--color-green);
+}
+
+.booking-mode-card.is-active .booking-mode-check::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+  font-size: 0.7rem;
+  font-weight: 900;
+}
+
+.booking-mode-card .booking-mode-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-gray-400);
+  font-size: 1.2rem;
+  transition: transform var(--transition), color var(--transition);
+}
+
+.booking-mode-card:hover .booking-mode-arrow {
+  color: var(--color-gray-700);
+  transform: translateX(3px);
+}
+
+/* --------------------------------------------------------
+   RIDE FORM — premium white surface, editorial labels
+   -------------------------------------------------------- */
+
+.customer-layout .ride-form {
+  background: var(--color-white);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 22px 24px 24px;
+  box-shadow: var(--shadow-soft);
+}
+
+.customer-layout .desktop-booking-flow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 30px;
+}
+
+.customer-layout .desktop-booking-flow .route-section {
+  grid-column: 1 / -1;
+}
+
+.customer-layout .desktop-booking-flow .passenger-section,
+.customer-layout .desktop-booking-flow .preferences-section {
+  border-top: none;
+  padding-top: 4px;
+}
+
+.customer-layout .booking-section {
+  padding: 16px 0 18px;
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.customer-layout .booking-section:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.customer-layout .booking-section-heading strong {
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--color-gray-900);
+}
+
+.customer-layout .booking-section-heading span:last-child {
+  font-size: 0.76rem;
+}
+
+.customer-layout .booking-section-number {
+  width: 20px;
+  height: 20px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  font-size: 0.62rem;
+}
+
+.customer-layout .field-label {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+}
+
+.customer-layout .input-field {
+  background: var(--color-white);
+  border-color: var(--color-gray-200);
+}
+
+.customer-layout .input-field:hover {
+  border-color: var(--color-gray-400);
+}
+
+.customer-layout .input-field:focus {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
+  outline: none;
+}
+
+.customer-layout .fare-box {
+  background: var(--color-gray-50);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
+.customer-layout .fare-box .field-label {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .fare-box strong {
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.customer-layout .request-ride-action {
+  min-height: 54px;
+  background: var(--color-black);
+  border: 1px solid var(--color-black);
+  color: var(--color-green);
+  font-size: 0.96rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: none;
+}
+
+.customer-layout .request-ride-action::before {
+  background: linear-gradient(100deg, transparent 30%, rgba(0,232,138,0.12) 50%, transparent 70%);
+}
+
+.customer-layout .request-ride-action::after {
+  content: '\2192';
+  right: 22px;
+  opacity: 1;
+  color: var(--color-green);
+}
+
+.customer-layout .request-ride-action:hover,
+.customer-layout .request-ride-action:focus-visible {
+  background: var(--color-black-soft);
+  border-color: var(--color-green);
+  box-shadow: 0 0 22px rgba(0, 232, 138, 0.28);
+  transform: translateY(-1px);
+}
+
+/* Destination mode tabs — dark selected */
+.customer-layout .ride-mode-tab.selected {
+  background: var(--color-black);
+  border-color: var(--color-black);
+  color: var(--color-white);
+  box-shadow: 0 0 0 1px rgba(0,232,138,0.35);
+}
+
+.customer-layout .ride-options-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+/* --------------------------------------------------------
+   MAP PANEL — dark premium frame
+   -------------------------------------------------------- */
+
+.customer-layout .map-panel {
+  background: linear-gradient(150deg, var(--color-black) 0%, var(--color-black-soft) 100%);
+  border: 1px solid var(--color-border-dark);
+  padding: 12px;
+  gap: 12px;
+  box-shadow: var(--shadow-elevated);
+}
+
+.customer-layout .map-stage {
+  background: var(--color-black-soft);
+  min-height: 340px;
+}
+
+.customer-layout .map-view {
+  background: var(--color-black-soft);
+  border-color: var(--color-border-dark);
+}
+
+.customer-layout .map-location-status {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.customer-layout .map-location-confirmed {
+  color: var(--color-green);
+}
+
+/* Dark map controls */
+.customer-layout .map-view .maplibregl-ctrl-group {
+  background: rgba(16, 28, 32, 0.92);
+  border: 1px solid var(--color-border-dark);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  border-radius: 10px;
+}
+
+.customer-layout .map-view .maplibregl-ctrl-group button {
+  background: transparent;
+  border: none;
+}
+
+.customer-layout .map-view .maplibregl-ctrl-group button:hover {
+  background: rgba(0, 232, 138, 0.12);
+}
+
+.customer-layout .map-view .maplibregl-ctrl-group svg,
+.customer-layout .map-view .maplibregl-ctrl-group button:empty::before {
+  filter: invert(0.9);
+  opacity: 0.92;
+}
+
+.customer-layout .map-view .maplibregl-ctrl-attrib {
+  background: rgba(11, 21, 24, 0.7);
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.customer-layout .map-view .maplibregl-ctrl-attrib a {
+  color: rgba(255, 255, 255, 0.75);
+}
+
+/* --------------------------------------------------------
+   WEATHER — dark editorial card
+   -------------------------------------------------------- */
+
+.customer-layout .map-panel .weather-widget {
+  background: var(--color-surface-dark);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-md);
+  padding: 16px 18px;
+}
+
+.customer-layout .map-panel .weather-label {
+  color: var(--color-green);
+}
+
+.customer-layout .map-panel .weather-context,
+.customer-layout .map-panel .weather-status,
+.customer-layout .map-panel .weather-details {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.customer-layout .map-panel .weather-icon {
+  color: var(--color-green);
+}
+
+.customer-layout .map-panel .weather-main strong {
+  color: var(--color-white);
+  font-size: 1.9rem;
+}
+
+.customer-layout .map-panel .weather-main span {
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.customer-layout .map-panel .weather-details strong {
+  color: var(--color-white);
+}
+
+.customer-layout .map-panel .weather-updated {
+  border-top-color: var(--color-border-dark);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* --------------------------------------------------------
+   MOBILE — premium ride-hailing composition
+   -------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  /* Dark hero */
+  .customer-layout .section-header {
+    width: calc(100% - 24px);
+    margin: 0 12px;
+    padding: 28px 22px 26px;
+    border-radius: var(--radius-lg);
+  }
+
+  .customer-layout .section-header h1 {
+    font-size: clamp(1.9rem, 9vw, 2.4rem);
+    max-width: 12ch;
+  }
+
+  .customer-layout .section-header .subtitle {
+    font-size: 0.86rem;
+  }
+
+  /* Mode cards — equal width, compact */
+  .customer-layout .booking-mode-picker {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    width: calc(100% - 24px);
+    margin: 0 12px;
+  }
+
+  .customer-layout .booking-mode-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 16px 14px;
+    min-height: 128px;
+  }
+
+  .customer-layout .booking-mode-card.is-active::after {
+    top: 8px;
+    right: 10px;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy small {
+    font-size: 0.7rem;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-check,
+  .customer-layout .booking-mode-card .booking-mode-arrow {
+    position: absolute;
+    bottom: 12px;
+    right: 14px;
+  }
+
+  /* White ride request panel */
+  .customer-layout .ride-form {
+    width: calc(100% - 24px);
+    margin: 6px 12px 0;
+    padding: 18px 16px 20px;
+    border-radius: var(--radius-lg);
+  }
+
+  .customer-layout .request-ride-action {
+    min-height: 56px;
+  }
+
+  /* Weather — dark horizontal card */
+  .customer-layout .weather-widget {
+    background: var(--color-surface-dark);
+    border: 1px solid var(--color-border-dark);
+  }
+
+  .customer-layout .weather-label {
+    color: var(--color-green);
+  }
+
+  .customer-layout .weather-icon {
+    color: var(--color-green);
+  }
+
+  .customer-layout .weather-main strong {
+    color: var(--color-white);
+  }
+
+  /* Step accordion — green accents */
+  .accordion-trigger {
+    min-height: 56px;
+  }
+
+  .accordion-row.is-open .accordion-number,
+  .accordion-check {
+    color: var(--color-green);
+  }
+
+  .accordion-check {
+    font-weight: 800;
+  }
+
+  .accordion-trigger:focus-visible {
+    outline: 2px solid var(--color-green);
+    outline-offset: -2px;
+  }
+
+  /* Mobile bottom nav */
+  .customer-layout {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-bottom-nav {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1500;
+    display: flex;
+    align-items: stretch;
+    justify-content: space-around;
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+    background: var(--color-black);
+    border-top: 1px solid var(--color-border-dark);
+    box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    min-height: 52px;
+    padding: 4px 2px;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.55);
+    font: inherit;
+    cursor: pointer;
+    position: relative;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+    transition: color var(--transition);
+  }
+
+  .bottom-nav-item.is-active {
+    color: var(--color-green);
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-icon {
+    filter: drop-shadow(0 0 8px rgba(0, 232, 138, 0.4));
+  }
+
+  .bottom-nav-label {
+    font-size: 0.62rem;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .bottom-nav-indicator {
+    position: absolute;
+    top: -8px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 26px;
+    height: 3px;
+    border-radius: 0 0 4px 4px;
+    background: transparent;
+    transition: background var(--transition);
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-indicator {
+    background: var(--color-green);
+  }
+}
+
+@media (min-width: 768px) {
+  .mobile-bottom-nav {
+    display: none;
+  }
+}
+
+/* Tablet refinement — keep map/form pair from breaking */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .customer-layout {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
+
+  .customer-layout .map-panel {
+    min-height: 440px;
+  }
+
+  .customer-layout .map-stage {
+    min-height: 380px;
+  }
+}
+
+/* Reduced motion — guard new premium motion */
+@media (prefers-reduced-motion: reduce) {
+  .customer-layout .request-ride-action::after,
+  .cursor-area,
+  .bottom-nav-item .bottom-nav-icon {
+    transition: none !important;
+    transform: none !important;
   }
 }

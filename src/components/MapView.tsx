@@ -33,7 +33,7 @@ export function MapView({
 
     const map = new maplibregl.Map({
       container,
-      style: 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json',
+      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
       center: [126.327, 8.188],
       zoom: 12,
       attributionControl: { compact: true },
@@ -79,24 +79,24 @@ export function MapView({
       return
     }
 
-    if (!driverMarkerRef.current) {
-      const markerElement = document.createElement('div')
-      markerElement.setAttribute('aria-label', 'Driver location')
-      markerElement.style.width = '18px'
-      markerElement.style.height = '18px'
-      markerElement.style.borderRadius = '50%'
-      markerElement.style.backgroundColor = '#16A34A'
-      markerElement.style.border = '3px solid #ffffff'
-      markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
-
-      driverMarkerRef.current = new maplibregl.Marker({ element: markerElement }).setLngLat([
-        driverLongitude,
-        driverLatitude,
-      ]).addTo(map)
+    if (driverMarkerRef.current) {
+      driverMarkerRef.current.setLngLat([driverLongitude, driverLatitude])
       return
     }
 
-    driverMarkerRef.current.setLngLat([driverLongitude, driverLatitude])
+    const markerElement = document.createElement('div')
+    markerElement.setAttribute('aria-label', 'Driver location')
+    markerElement.style.width = '18px'
+    markerElement.style.height = '18px'
+    markerElement.style.borderRadius = '50%'
+    markerElement.style.backgroundColor = '#00E88A'
+    markerElement.style.border = '2px solid #071012'
+    markerElement.style.boxShadow = '0 0 0 2px rgba(0, 232, 138, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4)'
+
+    driverMarkerRef.current = new maplibregl.Marker({ element: markerElement }).setLngLat([
+      driverLongitude,
+      driverLatitude,
+    ]).addTo(map)
   }, [driverLatitude, driverLongitude, mapReady])
 
   useEffect(() => {
@@ -127,9 +127,9 @@ export function MapView({
       markerElement.style.width = '18px'
       markerElement.style.height = '18px'
       markerElement.style.borderRadius = '50%'
-      markerElement.style.backgroundColor = '#0A0A0A'
-      markerElement.style.border = '3px solid #ffffff'
-      markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
+      markerElement.style.backgroundColor = '#F7F9FA'
+      markerElement.style.border = '2px solid #00E88A'
+      markerElement.style.boxShadow = '0 0 0 3px rgba(0, 232, 138, 0.35), 0 2px 8px rgba(0, 0, 0, 0.4)'
 
       pickupMarkerRef.current = new maplibregl.Marker({ element: markerElement }).setLngLat([
         pickupLongitude,
