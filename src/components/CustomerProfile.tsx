@@ -1,12 +1,11 @@
 import { useEffect, useState } from 'react'
-import { fetchDriverById } from '../lib/drivers'
+import { fetchDriverById, type DriverProfileView } from '../lib/drivers'
 import { fetchCustomerReputation, type ReputationSummary } from '../lib/reputation'
 import { fetchCustomerRideHistory } from '../lib/rides'
 import { getCustomerAuthId } from '../lib/supabase'
 import type { Ride } from '../types/ride'
-import type { DriverProfile } from '../types/driver'
 
-type DriverDetails = DriverProfile | null
+type DriverDetails = DriverProfileView | null
 
 const activeStatuses: Ride['status'][] = [
   'requested',

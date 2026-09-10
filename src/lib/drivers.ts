@@ -69,6 +69,7 @@ export async function updateDriver(
     | 'availability'
     | 'vehicle_color'
     | 'username'
+    | 'auth_user_id'
   >>
 ) {
   const { data, error } = await supabase
@@ -82,12 +83,24 @@ export async function updateDriver(
 
   return data
 }
-export async function fetchDriverById(driverId: string) {
+export type DriverProfileView = {
+  id: string
+  full_name: string
+  profile_photo_url: string | null
+  vehicle_type: string | null
+  vehicle_model: string | null
+  vehicle_color: string | null
+  plate_number: string | null
+  rating_average: number | null
+  total_ratings: number | null
+}
+
+export async function fetchDriverById(driverId: string): Promise<DriverProfileView | null> {
   const { data, error } = await supabase
-    .from('drivers')
+    .from('driver_profiles')
     .select('*')
     .eq('id', driverId)
-    .single<DriverRecord>()
+    .maybeSingle<DriverProfileView>()
 
   if (error) throw error
 

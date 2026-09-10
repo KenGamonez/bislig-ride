@@ -16,6 +16,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
   const [mode, setMode] = useState<DriverLoginMode>('login')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
@@ -140,7 +141,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
                 <span className="field-label">Password</span>
                 <input
                   className="input-field"
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(event) => setPassword(event.target.value)}
                   placeholder="••••••••"
@@ -148,6 +149,17 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
                   disabled={loading}
                 />
               </label>
+
+              <div className="auth-links">
+                <button
+                  type="button"
+                  className="link-button"
+                  onClick={() => setShowPassword((current) => !current)}
+                  disabled={loading}
+                >
+                  {showPassword ? 'Hide password' : 'Show password'}
+                </button>
+              </div>
 
               <button
                 type="submit"

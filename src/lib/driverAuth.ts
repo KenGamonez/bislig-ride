@@ -9,6 +9,19 @@ export function isDriverLookupMiss(email: string | null): boolean {
   return !email || email === DRIVER_LOOKUP_MISS_EMAIL
 }
 
+export function isDuplicateSignupError(error: unknown): boolean {
+  if (!error || typeof error !== 'object') return false
+
+  const candidate = error as { code?: string; message?: string; status?: number }
+  const message = typeof candidate.message === 'string' ? candidate.message.toLowerCase() : ''
+
+  return (
+    candidate.code === 'user_already_exists' ||
+    message.includes('already registered') ||
+    message.includes('already been registered')
+  )
+}
+
 export async function resolveDriverCredentials(identifier: string): Promise<string> {
   const { data, error } = await supabase.rpc('resolve_driver_credentials', {
     p_identifier: identifier.trim(),
@@ -56,18 +69,26 @@ export async function sendDriverPasswordReset(identifier: string): Promise<void>
   }
 }
 
-export async function isDriverUsernameTaken(username: string): Promise<boolean> {
+export async function isDriverUsernameTaken(
+  username: string,
+  excludeDriverId?: string,
+): Promise<boolean> {
   const lookup = username.trim().toLowerCase()
 
   if (!lookup) {
     return true
   }
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('drivers')
     .select('id')
     .ilike('username', lookup)
-    .maybeSingle()
+
+  if (excludeDriverId) {
+    query = query.neq('id', excludeDriverId)
+  }
+
+  const { data, error } = await query.maybeSingle()
 
   if (error) {
     throw error
@@ -99,6 +120,14 @@ export async function createDriverAuthUser(
     const { data, error } = await isolatedClient.auth.signUp({ email, password })
 
     if (error) {
+      if (isDuplicateSignupError(error)) {
+        const duplicate = new Error(
+          'An authentication account already exists for this email address. Choose a different email so the driver gets their own login.',
+        )
+        Object.assign(duplicate, { __duplicateSignup: true })
+        throw duplicate
+      }
+
       throw error
     }
 

@@ -5246,3 +5246,52 @@ a.secondary-action {
 .credentials-box .detail-grid {
   margin: 12px 0;
 }
+
+.auth-error {
+  color: var(--brand-red);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 4px 0 0;
+}
+
+.error-copy {
+  color: var(--brand-red);
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.45;
+  margin: 8px 0 0;
+}
+
+.password-method {
+  display: grid;
+  gap: 8px;
+  margin: 4px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #f8fafc;
+}
+
+.password-method .form-check {
+  grid-column: 1 / -1;
+}
+
+.password-method input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--brand-red);
+  flex-shrink: 0;
+}
+
+.manage-account-box {
+  display: grid;
+  gap: 12px;
+  margin-top: 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+
+.manage-account-box .panel-header-row {
+  margin: 0;
+}

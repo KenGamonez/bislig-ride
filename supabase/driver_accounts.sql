@@ -14,6 +14,11 @@
 --      committed policies): a driver can read their own profile, admins can
 --      manage everything. Existing security-definer RPCs (cancel_ride,
 --      get_reputation) bypass RLS internally, so rides stay working.
+--   5. public.driver_profiles — a rider-facing view that exposes ONLY safe
+--      columns (name, photo, vehicle, plate, rating) so customers can still see
+--      their assigned driver during a ride WITHOUT readable access to sensitive
+--      columns (email, phone, username, auth_user_id) after RLS is enabled.
+--      Riders read driver info through this view, never through public.drivers.
 --
 -- Manual (dashboard) steps — Authentication > Providers > Email:
 --   * Turn OFF "Confirm email" if you want instant driver logins after the
@@ -150,3 +155,32 @@ create policy "Admins can manage driver profiles"
   to authenticated
   using ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin')
   with check ((auth.jwt() -> 'app_metadata' ->> 'role') = 'admin');
+
+-- ---------------------------------------------------------------------------
+-- 5. Rider-facing driver profile view (safe columns only)
+--    Customers call fetchDriverById() to show the assigned driver on an active
+--    ride. A permissive SELECT policy on public.drivers would hand them every
+--    column (email, phone, username, auth_user_id), so instead riders query
+--    this view, which only projects non-sensitive fields. Because views run
+--    with the defining owner's privileges by default, RLS on public.drivers
+--    does not block it, and the explicit column list hard-limits exposure.
+-- ---------------------------------------------------------------------------
+
+drop view if exists public.driver_profiles;
+
+create view public.driver_profiles
+as
+select
+  d.id,
+  d.full_name,
+  d.profile_photo_url,
+  d.vehicle_type,
+  d.vehicle_model,
+  d.vehicle_color,
+  d.plate_number,
+  d.rating_average,
+  d.total_ratings
+from public.drivers d;
+
+revoke all on public.driver_profiles from anon, authenticated, public;
+grant select on public.driver_profiles to anon, authenticated, service_role;

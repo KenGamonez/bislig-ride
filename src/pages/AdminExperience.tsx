@@ -10,7 +10,14 @@ import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
 import { createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
-import { generateTemporaryPassword, suggestUsername } from '../lib/driverAccounts'
+import {
+  generateTemporaryPassword,
+  isValidEmailLike,
+  normalizeUsername,
+  PASSWORD_HELP_TEXT,
+  suggestUsername,
+  validatePasswordStrength,
+} from '../lib/driverAccounts'
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
@@ -39,6 +46,23 @@ type DriverDraft = {
   availability: DriverAvailability
   createAccount: boolean
   username: string
+  passwordMethod: 'generated' | 'custom'
+  initialPassword: string
+}
+
+type ManageDraft = {
+  email: string
+  username: string
+  passwordMethod: 'generated' | 'custom'
+  initialPassword: string
+}
+
+type ManagedCredentials = {
+  name: string
+  email: string
+  username: string
+  initialPassword: string
+  needsEmailConfirmation: boolean
 }
 
 const emptyDriverDraft: DriverDraft = {
@@ -52,6 +76,15 @@ const emptyDriverDraft: DriverDraft = {
   availability: 'Offline',
   createAccount: true,
   username: '',
+  passwordMethod: 'generated',
+  initialPassword: '',
+}
+
+const emptyManageDraft: ManageDraft = {
+  email: '',
+  username: '',
+  passwordMethod: 'generated',
+  initialPassword: '',
 }
 
 const adminTabs: { key: AdminTab; label: string }[] = [
@@ -108,9 +141,16 @@ export function AdminExperience({
     name: string
     email: string
     username: string
-    tempPassword: string
+    initialPassword: string
     needsEmailConfirmation: boolean
   } | null>(null)
+  const [showManageAccount, setShowManageAccount] = useState(false)
+  const [manageContextId, setManageContextId] = useState<string | null>(null)
+  const [manageDraft, setManageDraft] = useState<ManageDraft>(emptyManageDraft)
+  const [managingAccount, setManagingAccount] = useState(false)
+  const [manageError, setManageError] = useState('')
+  const [manageMessage, setManageMessage] = useState('')
+  const [managedCredentials, setManagedCredentials] = useState<ManagedCredentials | null>(null)
   const [applicationPhotoUrl, setApplicationPhotoUrl] = useState<string | null>(null)
   const [applicationLicenseUrl, setApplicationLicenseUrl] = useState<string | null>(null)
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
@@ -142,6 +182,7 @@ export function AdminExperience({
           : 'Offline',
     rating: Number(driver.rating_average ?? 5),
     username: driver.username ?? '',
+    authUserId: driver.auth_user_id ?? null,
     recentRides: [],
   })
 
@@ -304,6 +345,15 @@ useEffect(() => {
   const selectedContactMessage = contactMessages.find((message) => message.id === selectedContactMessageId)
 
   useEffect(() => {
+    if (manageContextId !== selectedDriverId) {
+      setShowManageAccount(false)
+      setManageError('')
+      setManageMessage('')
+      setManagedCredentials(null)
+    }
+  }, [selectedDriverId, manageContextId])
+
+  useEffect(() => {
     let cancelled = false
     setApplicationPhotoUrl(null)
     setApplicationLicenseUrl(null)
@@ -412,7 +462,7 @@ useEffect(() => {
 
     try {
       if (driverDraft.createAccount) {
-        const storedUsername = suggestUsername(driverDraft.username)
+        const storedUsername = normalizeUsername(driverDraft.username)
 
         if (!storedUsername) {
           setDriverError('Enter a valid username for the driver login.')
@@ -426,8 +476,23 @@ useEffect(() => {
           return
         }
 
-        const tempPassword = generateTemporaryPassword()
-        account = await createDriverAuthUser(driverDraft.email.trim(), tempPassword)
+        let initialPassword: string
+
+        if (driverDraft.passwordMethod === 'custom') {
+          const strength = validatePasswordStrength(driverDraft.initialPassword)
+
+          if (!strength.ok) {
+            setDriverError(strength.problems[0])
+            setCreatingAccount(false)
+            return
+          }
+
+          initialPassword = driverDraft.initialPassword
+        } else {
+          initialPassword = generateTemporaryPassword()
+        }
+
+        account = await createDriverAuthUser(driverDraft.email.trim(), initialPassword)
 
         const created = await createDriver({
           full_name: driverDraft.name.trim(),
@@ -455,7 +520,7 @@ useEffect(() => {
           name: created.full_name,
           email: account.email,
           username: created.username ?? storedUsername,
-          tempPassword,
+          initialPassword,
           needsEmailConfirmation: account.needsEmailConfirmation,
         })
 
@@ -497,7 +562,14 @@ useEffect(() => {
       setDriverFilter('all')
     } catch (error) {
       console.error('Unable to create driver:', error)
-      setDriverError('Unable to add driver. Please check the information and try again.')
+
+      const isDuplicate = Boolean((error as { __duplicateSignup?: boolean })?.__duplicateSignup)
+
+      setDriverError(
+        isDuplicate && error instanceof Error
+          ? error.message
+          : 'Unable to add driver. Please check the information and try again.',
+      )
     } finally {
       setCreatingAccount(false)
     }
@@ -539,6 +611,131 @@ useEffect(() => {
     } catch (error) {
       console.error('Unable to update driver status:', error)
       setDriverError('Unable to update driver status. Please try again.')
+    }
+  }
+
+  const openManageAccount = (driver?: AdminDriver) => {
+    const target = driver ?? selectedDriver
+
+    if (!target) {
+      return
+    }
+
+    setManageContextId(target.id)
+    setManageError('')
+    setManageMessage('')
+    setManagedCredentials(null)
+    setManageDraft({
+      email: target.email,
+      username: target.username || suggestUsername(target.name),
+      passwordMethod: 'generated',
+      initialPassword: '',
+    })
+    setShowManageAccount(true)
+  }
+
+  const closeManageAccount = () => {
+    setShowManageAccount(false)
+    setManageError('')
+  }
+
+  const handleManageAccountSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+
+    if (!selectedDriver) {
+      return
+    }
+
+    setManageError('')
+    setManageMessage('')
+    setManagingAccount(true)
+
+    try {
+      const normalizedUsername = normalizeUsername(manageDraft.username)
+
+      if (!normalizedUsername) {
+        setManagingAccount(false)
+        setManageError('Enter a valid username for the driver login.')
+        return
+      }
+
+      if (await isDriverUsernameTaken(normalizedUsername, selectedDriver.id)) {
+        setManagingAccount(false)
+        setManageError('That username is already taken. Choose another one.')
+        return
+      }
+
+      if (selectedDriver.authUserId) {
+        const updated = await updateDriver(selectedDriver.id, { username: normalizedUsername })
+        const mappedDriver = mapDriverRecord(updated)
+
+        setDrivers((current) =>
+          current.map((driver) => driver.id === mappedDriver.id ? mappedDriver : driver),
+        )
+        setShowManageAccount(false)
+        setManagedCredentials(null)
+        setManageMessage('Login username updated.')
+        return
+      }
+
+      const email = manageDraft.email.trim()
+
+      if (!isValidEmailLike(email)) {
+        setManagingAccount(false)
+        setManageError('Enter a valid email address for the driver login account.')
+        return
+      }
+
+      let initialPassword: string
+
+      if (manageDraft.passwordMethod === 'custom') {
+        const strength = validatePasswordStrength(manageDraft.initialPassword)
+
+        if (!strength.ok) {
+          setManagingAccount(false)
+          setManageError(strength.problems[0])
+          return
+        }
+
+        initialPassword = manageDraft.initialPassword
+      } else {
+        initialPassword = generateTemporaryPassword()
+      }
+
+      const account = await createDriverAuthUser(email, initialPassword)
+
+      const updated = await updateDriver(selectedDriver.id, {
+        email: account.email,
+        username: normalizedUsername,
+        auth_user_id: account.authUserId,
+      })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((driver) => driver.id === mappedDriver.id ? mappedDriver : driver),
+      )
+
+      setManagedCredentials({
+        name: mappedDriver.name,
+        email: account.email,
+        username: normalizedUsername,
+        initialPassword,
+        needsEmailConfirmation: account.needsEmailConfirmation,
+      })
+      setShowManageAccount(false)
+      setManageMessage('')
+    } catch (error) {
+      console.error('Unable to manage driver login account:', error)
+
+      const isDuplicate = Boolean((error as { __duplicateSignup?: boolean })?.__duplicateSignup)
+
+      setManageError(
+        isDuplicate && error instanceof Error
+          ? error.message
+          : 'Unable to update the driver login account. Please try again.',
+      )
+    } finally {
+      setManagingAccount(false)
     }
   }
   if (!isAuthReady) {
@@ -632,7 +829,7 @@ useEffect(() => {
           <div className="admin-panel">
             <div className="panel-header-row">
               <h3>Drivers</h3>
-              <button type="button" className="secondary-action compact-button" onClick={() => setShowAddDriver((current) => !current)}>
+              <button type="button" className="secondary-action compact-button" onClick={() => { setShowAddDriver((current) => !current); setCreatedAccount(null); setDriverError('') }}>
                 {showAddDriver ? 'Close' : 'Add Driver'}
               </button>
             </div>
@@ -711,9 +908,47 @@ useEffect(() => {
                         />
                       </label>
 
-                      <p className="muted-copy form-note">
-                        A temporary password is generated automatically and shown once after saving.
-                      </p>
+                      <div className="password-method" role="radiogroup" aria-label="Initial password method">
+                        <label className="form-check">
+                          <input
+                            type="radio"
+                            name="driver-password-method"
+                            checked={driverDraft.passwordMethod === 'generated'}
+                            onChange={() => setDriverDraft((current) => ({ ...current, passwordMethod: 'generated' }))}
+                          />
+                          <span className="field-label">Generate a secure temporary password</span>
+                        </label>
+                        <label className="form-check">
+                          <input
+                            type="radio"
+                            name="driver-password-method"
+                            checked={driverDraft.passwordMethod === 'custom'}
+                            onChange={() => setDriverDraft((current) => ({ ...current, passwordMethod: 'custom' }))}
+                          />
+                          <span className="field-label">Set an initial password myself</span>
+                        </label>
+                      </div>
+
+                      {driverDraft.passwordMethod === 'custom' ? (
+                        <label className="field-block">
+                          <span className="field-label">Initial password</span>
+                          <input
+                            className="input-field"
+                            type="password"
+                            value={driverDraft.initialPassword}
+                            onChange={(event) => setDriverDraft((current) => ({ ...current, initialPassword: event.target.value }))}
+                            placeholder="At least 8 characters, with a letter and a number"
+                            autoComplete="new-password"
+                          />
+                          {driverDraft.initialPassword ? (
+                            <p className="password-meta">{PASSWORD_HELP_TEXT}</p>
+                          ) : null}
+                        </label>
+                      ) : (
+                        <p className="muted-copy form-note">
+                          A secure temporary password is generated automatically and shown once after saving.
+                        </p>
+                      )}
                     </>
                   ) : null}
 
@@ -774,7 +1009,7 @@ useEffect(() => {
                   <button type="submit" className="primary-action" disabled={creatingAccount}>
                     {creatingAccount ? 'Creating account...' : 'Save Driver'}
                   </button>
-                  <button type="button" className="secondary-action" onClick={() => setShowAddDriver(false)} disabled={creatingAccount}>
+                  <button type="button" className="secondary-action" onClick={() => { setShowAddDriver(false); setCreatedAccount(null); setDriverError('') }} disabled={creatingAccount}>
                     Cancel
                   </button>
                 </div>
@@ -785,12 +1020,13 @@ useEffect(() => {
               <div className="panel-form credentials-box">
                 <div className="panel-header-row"><h3>Driver account created</h3></div>
                 <p className="muted-copy">
-                  Share these credentials with {createdAccount.name}. The temporary password is shown only once.
+                  Share these credentials with {createdAccount.name} securely in person or by phone. The
+                  initial password is shown only once and is never stored by the app.
                 </p>
                 <div className="detail-grid">
                   <div><span>Email</span><strong>{createdAccount.email}</strong></div>
                   <div><span>Username</span><strong>{createdAccount.username}</strong></div>
-                  <div><span>Temporary password</span><strong>{createdAccount.tempPassword}</strong></div>
+                  <div><span>Initial password</span><strong>{createdAccount.initialPassword}</strong></div>
                   <div><span>Login status</span><strong>{createdAccount.needsEmailConfirmation ? 'Awaiting email confirmation' : 'Ready to log in'}</strong></div>
                 </div>
                 {createdAccount.needsEmailConfirmation ? (
@@ -826,6 +1062,7 @@ useEffect(() => {
                       <th>Plate</th>
                       <th>Status</th>
                       <th>Availability</th>
+                      <th>Login</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -860,7 +1097,15 @@ useEffect(() => {
                             <option value="Busy">Busy</option>
                           </select>
                         </td>
+                        <td>
+                          <span className={`status-pill ${driver.authUserId ? 'online' : 'offline'}`}>
+                            {driver.authUserId ? 'Active' : 'Not set'}
+                          </span>
+                        </td>
                         <td className="action-buttons-cell">
+                          <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); openManageAccount(driver) }}>
+                            Manage
+                          </button>
                           <button type="button" className="ghost-button" onClick={() => handleStatusChange(driver.id, driver.status === 'Active' ? 'Inactive' : 'Active')}>
                             {driver.status === 'Active' ? 'Deactivate' : 'Activate'}
                           </button>
@@ -899,6 +1144,162 @@ useEffect(() => {
                   <div><span>Status</span><strong>{selectedDriver.status}</strong></div>
                   <div><span>Availability</span><strong>{selectedDriver.availability}</strong></div>
                   <div><span>Recent rides</span><strong>{selectedDriver.recentRides.length}</strong></div>
+                </div>
+
+                <div className="manage-account-box">
+                  <div className="panel-header-row">
+                    <h4>Login account</h4>
+                    {selectedDriver.authUserId ? (
+                      <span className="status-pill online">Active</span>
+                    ) : (
+                      <span className="status-pill offline">No login</span>
+                    )}
+                  </div>
+
+                  {selectedDriver.authUserId ? (
+                    <div className="detail-grid">
+                      <div><span>Login status</span><strong>Login account active</strong></div>
+                      <div><span>Username</span><strong>{selectedDriver.username || '—'}</strong></div>
+                      <div><span>Login email</span><strong>{selectedDriver.email || '—'}</strong></div>
+                    </div>
+                  ) : (
+                    <p className="muted-copy">
+                      This driver cannot sign in yet. Create a login account so they can use the driver app.
+                    </p>
+                  )}
+
+                  {manageMessage ? <p className="driver-password-success" role="status">{manageMessage}</p> : null}
+                  {manageError ? <p className="form-error-message" role="alert">{manageError}</p> : null}
+
+                  {managedCredentials ? (
+                    <div className="credentials-box">
+                      <div className="panel-header-row"><h4>Login account created</h4></div>
+                      <p className="muted-copy">
+                        Share these credentials with {managedCredentials.name} securely in person or by
+                        phone. The initial password is shown only once.
+                      </p>
+                      <div className="detail-grid">
+                        <div><span>Email</span><strong>{managedCredentials.email}</strong></div>
+                        <div><span>Username</span><strong>{managedCredentials.username}</strong></div>
+                        <div><span>Initial password</span><strong>{managedCredentials.initialPassword}</strong></div>
+                        <div><span>Login status</span><strong>{managedCredentials.needsEmailConfirmation ? 'Awaiting email confirmation' : 'Ready to log in'}</strong></div>
+                      </div>
+                      {managedCredentials.needsEmailConfirmation ? (
+                        <p className="muted-copy">
+                          The driver must click the verification link in the email before their first login.
+                        </p>
+                      ) : (
+                        <p className="muted-copy">
+                          The driver can log in immediately with their username and initial password.
+                        </p>
+                      )}
+                      <div className="form-actions">
+                        <button type="button" className="secondary-action compact-button" onClick={() => setManagedCredentials(null)}>
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {!showManageAccount ? (
+                    <div className="form-actions">
+                      <button type="button" className="secondary-action compact-button" onClick={() => openManageAccount(selectedDriver)}>
+                        {selectedDriver.authUserId ? 'Manage login' : 'Create login account'}
+                      </button>
+                    </div>
+                  ) : null}
+
+                  {showManageAccount ? (
+                    <form className="panel-form" onSubmit={handleManageAccountSubmit}>
+                      {!selectedDriver.authUserId ? (
+                        <label className="field-block">
+                          <span className="field-label">Email</span>
+                          <input
+                            className="input-field"
+                            type="email"
+                            value={manageDraft.email}
+                            onChange={(event) => setManageDraft((current) => ({ ...current, email: event.target.value }))}
+                            placeholder="used for the driver's login"
+                          />
+                        </label>
+                      ) : (
+                        <p className="muted-copy">
+                          The login email is tied to this driver's authentication account and can't be
+                          changed here. Update it in the Authentication users table if needed.
+                        </p>
+                      )}
+
+                      <label className="field-block">
+                        <span className="field-label">Username</span>
+                        <input
+                          className="input-field"
+                          value={manageDraft.username}
+                          onChange={(event) => setManageDraft((current) => ({ ...current, username: event.target.value }))}
+                          placeholder="auto-suggested from the name"
+                        />
+                      </label>
+
+                      {!selectedDriver.authUserId ? (
+                        <>
+                          <div className="password-method" role="radiogroup" aria-label="Initial password method">
+                            <label className="form-check">
+                              <input
+                                type="radio"
+                                name="manage-password-method"
+                                checked={manageDraft.passwordMethod === 'generated'}
+                                onChange={() => setManageDraft((current) => ({ ...current, passwordMethod: 'generated' }))}
+                              />
+                              <span className="field-label">Generate a secure temporary password</span>
+                            </label>
+                            <label className="form-check">
+                              <input
+                                type="radio"
+                                name="manage-password-method"
+                                checked={manageDraft.passwordMethod === 'custom'}
+                                onChange={() => setManageDraft((current) => ({ ...current, passwordMethod: 'custom' }))}
+                              />
+                              <span className="field-label">Set an initial password myself</span>
+                            </label>
+                          </div>
+
+                          {manageDraft.passwordMethod === 'custom' ? (
+                            <label className="field-block">
+                              <span className="field-label">Initial password</span>
+                              <input
+                                className="input-field"
+                                type="password"
+                                value={manageDraft.initialPassword}
+                                onChange={(event) => setManageDraft((current) => ({ ...current, initialPassword: event.target.value }))}
+                                placeholder="At least 8 characters, with a letter and a number"
+                                autoComplete="new-password"
+                              />
+                              {manageDraft.initialPassword ? (
+                                <p className="password-meta">{PASSWORD_HELP_TEXT}</p>
+                              ) : null}
+                            </label>
+                          ) : (
+                            <p className="muted-copy form-note">
+                              A secure temporary password is generated automatically and shown once after
+                              creation.
+                            </p>
+                          )}
+                        </>
+                      ) : null}
+
+                      <div className="form-actions">
+                        <button type="submit" className="primary-action" disabled={managingAccount}>
+                          {managingAccount
+                            ? 'Saving...'
+                            : selectedDriver.authUserId
+                              ? 'Save username'
+                              : 'Create login account'}
+                        </button>
+                        <button type="button" className="secondary-action" onClick={closeManageAccount} disabled={managingAccount}>
+                          Cancel
+                        </button>
+                      </div>
+                    </form>
+                  ) : null}
                 </div>
 
                 <div className="mini-list-wrap">
