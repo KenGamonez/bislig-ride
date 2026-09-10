@@ -1044,10 +1044,6 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
                   onChange={(value) => handleInput('pickup', value)}
                 />
 
-                <p className="pickup-help-note">
-                  Enter your pickup location, or tap <strong>Use my current location</strong>.
-                </p>
-
                 {pickupLocation ? (
                   <div className="field-note pickup-detected-note">
                     <span className="pickup-check" aria-hidden="true"></span>
@@ -1080,7 +1076,7 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
                     {additionalDropOffsSummary}
                   </small>
                 ) : (
-                  <small>Where are you going?</small>
+                  <small>Enter your destination</small>
                 )}
               </span>
               {destinationSummary ? (
@@ -1188,12 +1184,8 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
                         {type}
                       </option>
                     ))}
-                  </select>
-</div>
-
-                <p className="fare-note">
-                  Estimated fares follow the official Bislig City fare matrix.
-                </p>
+</select>
+                </div>
               </div>
             </div>
           </div>

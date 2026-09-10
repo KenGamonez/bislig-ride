@@ -8565,6 +8565,57 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
+/* --------------------------------------------------------
+   MOBILE — ride-request hierarchy (restructure pass)
+   Explicit order: mode → fare → context → current location
+   → form → CTA → secondary. Hides duplicated copy.
+   -------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* Ride mode selection — lock to top */
+  .customer-layout .booking-mode-picker {
+    order: 1;
+  }
+
+  /* Fare notice — concise contextual strip, straight after mode */
+  .customer-layout .ride-form > .fare-box {
+    order: 2;
+    width: calc(100% - 24px);
+    margin: 10px 12px 0;
+    padding: 10px 14px;
+    border-radius: 12px;
+  }
+
+  /* Eyebrow + headline — single intent, no secondary marketing copy */
+  .customer-layout .section-header {
+    order: 3;
+  }
+
+  .customer-layout .section-header .subtitle {
+    display: none;
+  }
+
+  /* Current location action + profile/demo panels follow the headline */
+  .customer-layout .mobile-location-action,
+  .customer-layout .Rider-profile,
+  .customer-layout .demo-state-card {
+    order: 4;
+  }
+
+  /* Ride request form */
+  .customer-layout .booking-accordion {
+    order: 5;
+  }
+
+  /* Supporting content — only contextual while editing pickup */
+  .customer-layout .map-stage {
+    order: 6;
+  }
+
+  .customer-layout .weather-widget {
+    order: 9;
+  }
+}
+
 /* Small phones — extra tightening */
 @media (max-width: 420px) {
   .customer-layout .section-header {
