@@ -868,7 +868,7 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
   }
 
   const renderRequestScreen = () => (
-    <form className="ride-form" onSubmit={handleSubmit} noValidate>
+    <form className="ride-form" id="ride-booking-form" onSubmit={handleSubmit} noValidate>
       <div className="desktop-booking-flow">
       <section className="booking-section route-section">
         <div className="booking-section-heading route-heading">
@@ -1668,11 +1668,41 @@ onClick={() => setRating(star)}
 
       <main className={openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
         <section className="primary-panel">
-          <div className="section-header">
+<div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
             <h1>Where are you going?</h1>
             <p className="subtitle">Get a reliable ride around Bislig City - simple, convenient, and made for your everyday trips.</p>
           </div>
+
+          {!showProfile && showCustomerForm ? (
+            <div className="booking-mode-picker" role="group" aria-label="Choose a service">
+              <button
+                type="button"
+                className="booking-mode-card is-active"
+                onClick={() => document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              >
+                <span className="booking-mode-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>
+                </span>
+                <span className="booking-mode-copy">
+                  <strong>Ride Now</strong>
+                  <small>On-demand motorbike trips around Bislig City</small>
+                </span>
+                <span className="booking-mode-check" aria-hidden="true"></span>
+              </button>
+
+              <a className="booking-mode-card" href="/pakyawan">
+                <span className="booking-mode-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" /><path d="M16 2v4" /><path d="M8 2v4" /><path d="M3 10h18" /><path d="M8 14h.01" /><path d="M12 14h.01" /><path d="M16 14h.01" /><path d="M8 18h.01" /><path d="M12 18h.01" /><path d="M16 18h.01" /></svg>
+                </span>
+                <span className="booking-mode-copy">
+                  <strong>Book Pakyawan</strong>
+                  <small>Scheduled private & whole-day trips</small>
+                </span>
+                <span className="booking-mode-arrow" aria-hidden="true">→</span>
+              </a>
+            </div>
+          ) : null}
 
           {showProfile ? (
             <CustomerProfile />

@@ -5295,3 +5295,662 @@ a.secondary-action {
 .manage-account-box .panel-header-row {
   margin: 0;
 }
+
+/* ============ Master UX pass (Nov 2026): selective readability bump + new features ============ */
+
+/* Typography readability bump (targeted overrides ~+20%) */
+.top-nav a,
+.nav-button {
+  font-size: 0.88rem;
+}
+
+.top-nav a,
+.top-nav .nav-button {
+  letter-spacing: 0.01em;
+}
+
+.nav-cta {
+  font-size: 0.86rem;
+}
+
+.field-label {
+  font-size: 0.74rem;
+  letter-spacing: 0.05em;
+}
+
+.input-field {
+  font-size: 0.98rem;
+}
+
+.primary-action,
+.secondary-action {
+  font-size: 0.94rem;
+}
+
+.compact-button {
+  font-size: 0.84rem;
+}
+
+.ghost-button {
+  font-size: 0.86rem;
+}
+
+.metric-card span {
+  font-size: 0.78rem;
+}
+
+.metric-card strong {
+  font-size: 1.62rem;
+}
+
+.metric-card small {
+  font-size: 0.74rem;
+}
+
+.state-heading h3,
+.section-heading h3 {
+  font-size: 1.28rem;
+}
+
+.state-heading p:not(.section-label),
+.section-heading p:not(.section-label) {
+  font-size: 0.92rem;
+}
+
+.eyebrow,
+.section-label {
+  font-size: 0.76rem;
+}
+
+.driver-kicker {
+  font-size: 0.76rem;
+}
+
+.status-pill {
+  font-size: 0.74rem;
+}
+
+.inline-select {
+  font-size: 0.86rem;
+}
+
+.driver-header h2 {
+  font-size: clamp(1.7rem, 4.2vw, 2.35rem);
+}
+
+/* Pakyawan nav emphasis */
+.nav-link-pakyawan {
+  color: #167c4b;
+  font-weight: 700;
+}
+
+.nav-link-pakyawan:hover {
+  background: rgba(22, 124, 75, 0.08);
+  color: #0f5c38;
+}
+
+/* Booking mode picker */
+.booking-mode-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+  margin: 22px 0 10px;
+}
+
+.booking-mode-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 16px 18px;
+  text-align: left;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  text-decoration: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: transform var(--transition), border-color var(--transition), box-shadow var(--transition);
+}
+
+.booking-mode-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(215, 25, 32, 0.35);
+  box-shadow: 0 12px 28px rgba(6, 15, 20, 0.09);
+}
+
+.booking-mode-icon {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--brand-red-light);
+  color: var(--brand-red);
+}
+
+.booking-mode-card.is-active .booking-mode-icon {
+  background: #eaf8f0;
+  color: #167c4b;
+}
+
+.booking-mode-copy {
+  display: grid;
+  gap: 3px;
+}
+
+.booking-mode-copy strong {
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+}
+
+.booking-mode-copy small {
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.4;
+}
+
+.booking-mode-check {
+  flex: 0 0 auto;
+  width: 20px;
+  height: 20px;
+  margin-left: auto;
+  border-radius: 999px;
+  background: #167c4b;
+  position: relative;
+}
+
+.booking-mode-check::after {
+  content: "";
+  position: absolute;
+  left: 7px;
+  top: 4px;
+  width: 4px;
+  height: 8px;
+  border: solid #fff;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.booking-mode-arrow {
+  flex: 0 0 auto;
+  margin-left: auto;
+  color: var(--brand-red);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+/* Driver notification bell + panel */
+.notification-wrap {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.notification-bell {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: color var(--transition), border-color var(--transition), transform var(--transition);
+}
+
+.notification-bell:hover {
+  color: var(--brand-red);
+  border-color: rgba(215, 25, 32, 0.35);
+  transform: translateY(-1px);
+}
+
+.notification-badge {
+  position: absolute;
+  top: -4px;
+  right: -4px;
+  min-width: 19px;
+  height: 19px;
+  display: grid;
+  place-items: center;
+  padding: 0 5px;
+  border-radius: 999px;
+  background: var(--brand-red);
+  color: #fff;
+  font-size: 0.66rem;
+  font-weight: 800;
+}
+
+.notification-panel {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(340px, calc(100vw - 32px));
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 18px 42px rgba(6, 15, 20, 0.14);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  z-index: 60;
+}
+
+.notification-panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 2px 4px 6px;
+}
+
+.notification-panel-heading h4 {
+  font-size: 0.98rem;
+  letter-spacing: -0.01em;
+}
+
+.notification-enable {
+  border: 1px solid var(--border);
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 10px 12px;
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.notification-enable:hover {
+  border-color: rgba(215, 25, 32, 0.4);
+  background: var(--brand-red-light);
+}
+
+.notification-list {
+  display: grid;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.notification-item {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: start;
+  gap: 10px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.notification-item.new {
+  background: var(--brand-red-light);
+  border-color: rgba(215, 25, 32, 0.2);
+}
+
+.notification-item-icon {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 10px;
+  background: #eaf8f0;
+  color: #167c4b;
+}
+
+.notification-item.new .notification-item-icon {
+  background: var(--brand-red);
+  color: #fff;
+}
+
+.notification-item-title {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.notification-item-sub {
+  margin-top: 2px;
+  font-size: 0.76rem;
+  color: var(--text-secondary);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.notification-item-time {
+  margin-top: 2px;
+  font-size: 0.7rem;
+  color: #94a3b8;
+}
+
+.notification-actions {
+  display: grid;
+  gap: 6px;
+}
+
+.notification-actions .compact-button {
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.notification-empty {
+  padding: 18px 10px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: #94a3b8;
+}
+
+/* Driver Pakyawan dashboard */
+.pakyawan-section {
+  margin-bottom: 16px;
+}
+
+.pakyawan-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pakyawan-header h3 {
+  font-size: 1.18rem;
+  letter-spacing: -0.01em;
+}
+
+.pakyawan-count {
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: #167c4b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.pakyawan-card {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+  margin-bottom: 14px;
+}
+
+.pakyawan-card.pakyawan-disabled {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  background: #f8fafc;
+}
+
+.pakyawan-disabled-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: #f0f2f5;
+  color: #64748b;
+}
+
+.pakyawan-disabled-copy strong {
+  display: block;
+  font-size: 0.96rem;
+  margin-bottom: 3px;
+}
+
+.pakyawan-disabled-copy p {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+
+.pakyawan-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pakyawan-item {
+  display: grid;
+  gap: 12px;
+  padding: 16px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.pakyawan-route {
+  display: grid;
+  gap: 6px;
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.pakyawan-route small {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #167c4b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.pakyawan-route small svg {
+  flex: 0 0 auto;
+}
+
+.pakyawan-route-secondary {
+  display: block;
+  margin-top: 4px;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pakyawan-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pakyawan-meta span {
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: #f0f2f5;
+  color: #334155;
+  font-size: 0.76rem;
+  font-weight: 700;
+}
+
+.pakyawan-customer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px solid var(--border);
+}
+
+.pakyawan-customer-icon {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: var(--brand-red-light);
+  color: var(--brand-red);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.pakyawan-customer span {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pakyawan-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pakyawan-badge {
+  align-self: center;
+  justify-self: end;
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: #eaf8f0;
+  color: #167c4b;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.pakyawan-accepted-list {
+  display: grid;
+  gap: 12px;
+}
+
+.pakyawan-accepted {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+  background: #eaf8f0;
+  border: 1px solid rgba(22, 124, 75, 0.25);
+  border-radius: var(--radius-lg);
+}
+
+.pakyawan-accepted-icon {
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #167c4b;
+  color: #fff;
+}
+
+.pakyawan-accepted-copy strong {
+  display: block;
+  font-size: 0.92rem;
+}
+
+.pakyawan-accepted-copy small {
+  display: block;
+  margin-top: 2px;
+  color: #166534;
+  font-size: 0.8rem;
+}
+
+/* Admin Pakyawan eligibility toggle */
+.pakyawan-toggle {
+  border: 1px solid var(--border);
+  background: #fff;
+  color: var(--text-secondary);
+  padding: 4px 10px;
+  margin-left: 6px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.pakyawan-toggle:hover {
+  border-color: rgba(215, 25, 32, 0.35);
+  color: var(--brand-red);
+}
+
+.pakyawan-toggle.enabled {
+  background: #eaf8f0;
+  border-color: rgba(22, 124, 75, 0.3);
+  color: #167c4b;
+}
+
+/* Driver sticky mobile actions */
+.driver-mobile-actions {
+  display: none;
+}
+
+.driver-mobile-actions-status {
+  font-size: 0.74rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.driver-mobile-actions-chips {
+  display: flex;
+  gap: 10px;
+}
+
+.driver-mobile-actions-chips .primary-action,
+.driver-mobile-actions-chips .secondary-action {
+  flex: 1;
+  min-width: 0;
+}
+
+@media (max-width: 767px) {
+  .nav-link-pakyawan {
+    font-size: 0.88rem;
+  }
+
+  .booking-mode-picker {
+    grid-template-columns: 1fr;
+  }
+
+  .driver-shell {
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  }
+
+  .driver-mobile-actions {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 50;
+    display: grid;
+    gap: 6px;
+    padding: 10px 14px calc(10px + env(safe-area-inset-bottom));
+    background: rgba(255, 255, 255, 0.94);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -8px 24px rgba(6, 15, 20, 0.08);
+  }
+}
+
+@media (max-width: 480px) {
+  .booking-mode-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .booking-mode-copy strong {
+    font-size: 0.94rem;
+  }
+
+  .booking-mode-copy small {
+    font-size: 0.78rem;
+  }
+
+  .pakyawan-meta span {
+    font-size: 0.72rem;
+  }
+}

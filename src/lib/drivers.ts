@@ -11,6 +11,7 @@ export type DriverRecord = {
   plate_number: string
 status: 'active' | 'inactive'
   availability: 'offline' | 'online' | 'busy'
+  can_accept_pakyawan: boolean
   created_at: string
   auth_user_id: string | null
   username: string | null
@@ -39,6 +40,7 @@ export async function createDriver(driver: {
   plate_number: string
   status?: 'active' | 'inactive'
   availability?: 'offline' | 'online' | 'busy'
+  can_accept_pakyawan?: boolean
   vehicle_color?: string | null
   profile_photo_url?: string | null
   username?: string | null
@@ -67,6 +69,7 @@ export async function updateDriver(
     | 'plate_number'
     | 'status'
     | 'availability'
+    | 'can_accept_pakyawan'
     | 'vehicle_color'
     | 'username'
     | 'auth_user_id'

@@ -12,6 +12,16 @@ import { updateDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import {
+  acceptPakyawanBooking,
+  fetchAvailablePakyawanBookings,
+} from '../lib/scheduledBookings'
+import {
+  notificationPermission,
+  playRequestChime,
+  requestNotificationPermission,
+  showBrowserNotification,
+} from '../lib/notifications'
+import {
   acceptRide,
   cancelRide,
   fetchAssignedRidesForDriver,
@@ -22,6 +32,7 @@ import {
   updateRideStatus,
 } from '../lib/rides'
 import type { Ride, RideCancellation } from '../types/ride'
+import type { PakyawanBooking } from '../types/scheduledBooking'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
@@ -35,6 +46,16 @@ type DriverSummaryProfile = {
   vehicleModel: string
   plateNumber: string
   email: string | null
+}
+
+type DriverNotificationItem = {
+  id: string
+  kind: 'ride' | 'pakyawan'
+  title: string
+  subtitle: string
+  rideId: string | null
+  seen: boolean
+  createdAt: number
 }
 
 const recentRides = [
@@ -166,6 +187,17 @@ export function DriverExperience({
   const [passengerRatingError, setPassengerRatingError] = useState('')
   const lastActiveRideIdRef = useRef<string | null>(null)
   const completedRideIdRef = useRef<string | null>(null)
+  const notifiedRequestIdsRef = useRef<Set<string>>(new Set())
+  const phaseRef = useRef<DriverPhase>('offline')
+  const activeRideRef = useRef<Ride | null>(null)
+  const [notifications, setNotifications] = useState<DriverNotificationItem[]>([])
+  const [showNotifications, setShowNotifications] = useState(false)
+  const [canAcceptPakyawan, setCanAcceptPakyawan] = useState(false)
+  const [pakyawanRequests, setPakyawanRequests] = useState<PakyawanBooking[]>([])
+  const [acceptedPakyawan, setAcceptedPakyawan] = useState<PakyawanBooking[]>([])
+  const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
+  const [pakyawanError, setPakyawanError] = useState('')
+  const [notificationPermissionState, setNotificationPermissionState] = useState<NotificationPermission>(() => notificationPermission())
   useEffect(() => {
     let mounted = true
 
@@ -181,7 +213,7 @@ export function DriverExperience({
 
 const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, auth_user_id, full_name, email, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings')
+        .select('id, auth_user_id, full_name, email, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -193,6 +225,7 @@ const { data: driver, error: driverError } = await supabase
       if (mounted) {
         setDriverId(driver.id)
         setDriverAuthId(authUserId)
+        setCanAcceptPakyawan(Boolean(driver.can_accept_pakyawan))
         setDriverProfile({
           name: driver.full_name,
           profilePhoto: driver.profile_photo_url,
@@ -427,12 +460,145 @@ return () => {
       setPhase(driverOnline ? 'online' : 'offline')
     })
 
-    return unsubscribe
+return unsubscribe
   }, [activeRide?.id, driverOnline])
-  const todayEarnings = useMemo(
-    () => recentRides.reduce((sum, ride) => sum + Number(ride.fare.replace(/[^\d.]/g, '')), 0),
-    [],
-  )
+
+  useEffect(() => {
+    phaseRef.current = phase
+    activeRideRef.current = activeRide
+  }, [phase, activeRide])
+
+  useEffect(() => {
+    if (!driverAuthId) {
+      return
+    }
+
+    const channel = supabase
+      .channel('driver-ride-requests')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'rides',
+          filter: 'status=eq.requested',
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<Ride>
+
+          if (!incoming.id || notifiedRequestIdsRef.current.has(incoming.id)) {
+            return
+          }
+
+          notifiedRequestIdsRef.current.add(incoming.id)
+
+          const pickupAddress = incoming.pickup_address ?? 'Pickup'
+          const destinationAddress = incoming.destination_address ?? 'Destination'
+
+          setNotifications((current) => [
+            {
+              id: incoming.id!,
+              kind: 'ride',
+              rideId: incoming.id!,
+              title: 'New ride request',
+              subtitle: `${pickupAddress} → ${destinationAddress}`,
+              seen: false,
+              createdAt: Date.now(),
+            },
+            ...current,
+          ])
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('New ride request', `${pickupAddress} → ${destinationAddress}`)
+          }
+
+          if (driverOnline && !activeRideRef.current && phaseRef.current === 'online') {
+            setRequest(incoming as Ride)
+            setPhase('incoming_request')
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(channel)
+    }
+  }, [driverAuthId, driverOnline])
+
+  useEffect(() => {
+    if (!driverAuthId || !canAcceptPakyawan) {
+      return
+    }
+
+    let mounted = true
+
+    const loadRequests = async () => {
+      try {
+        const items = await fetchAvailablePakyawanBookings()
+        if (mounted) {
+          setPakyawanRequests(items)
+        }
+      } catch (error) {
+        console.error('Unable to load pakyawan requests:', error)
+        if (mounted) {
+          setPakyawanError('Unable to load Pakyawan requests right now.')
+        }
+      }
+    }
+
+    void loadRequests()
+
+    const channel = supabase
+      .channel('driver-pakyawan-requests')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pakyawan_bookings',
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<PakyawanBooking>
+
+          if (!incoming.id) {
+            return
+          }
+
+          setPakyawanRequests((current) =>
+            current.some((booking) => booking.id === incoming.id)
+              ? current
+              : [incoming as PakyawanBooking, ...current],
+          )
+
+          const subtitle = `${incoming.pickup_location ?? 'Pickup'} → ${incoming.destination ?? 'Destination'}`
+
+          setNotifications((current) => [
+            {
+              id: `pakyawan-${incoming.id}`,
+              kind: 'pakyawan',
+              rideId: null,
+              title: 'New Pakyawan request',
+              subtitle,
+              seen: false,
+              createdAt: Date.now(),
+            },
+            ...current,
+          ])
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('New Pakyawan request', subtitle)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      mounted = false
+      void supabase.removeChannel(channel)
+    }
+  }, [driverAuthId, canAcceptPakyawan, driverOnline])
 
   const handleToggleOnline = () => {
     if (transitioning) {
@@ -721,6 +887,255 @@ return () => {
 
 const displayedDriver = driverProfile ?? demoDriver
 
+  const unreadNotificationCount = useMemo(
+    () => notifications.filter((item) => !item.seen).length,
+    [notifications],
+  )
+
+  const handleOpenNotifications = () => {
+    setShowNotifications((current) => {
+      const next = !current
+
+      if (next) {
+        setNotifications((items) => items.map((item) => ({ ...item, seen: true })))
+      }
+
+      return next
+    })
+  }
+
+  const handleEnableNotifications = async () => {
+    const result = await requestNotificationPermission()
+    setNotificationPermissionState(result)
+  }
+
+  const handleDismissNotification = (id: string) => {
+    setNotifications((current) => current.filter((item) => item.id !== id))
+  }
+
+  const handleOpenRideRequest = async (id: string) => {
+    setNotifications((current) => current.filter((item) => item.id !== id))
+    setShowNotifications(false)
+
+    try {
+      const ride = await fetchRideById(id)
+
+      if (ride && ride.status === 'requested' && !activeRideRef.current) {
+        setRequest(ride)
+        setPhase('incoming_request')
+      }
+    } catch (error) {
+      console.error('Unable to open ride request:', error)
+    }
+  }
+
+  const handleAcceptPakyawan = async (bookingId: string) => {
+    if (pakyawanSubmittingId) {
+      return
+    }
+
+    setPakyawanSubmittingId(bookingId)
+    setPakyawanError('')
+
+    try {
+      const updated = await acceptPakyawanBooking(bookingId, driverId)
+      setPakyawanRequests((current) => current.filter((booking) => booking.id !== bookingId))
+      setAcceptedPakyawan((current) => [updated, ...current].slice(0, 10))
+      setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
+    } catch (error) {
+      console.error('Unable to accept pakyawan request:', error)
+      setPakyawanError('This request could not be accepted. It may have been taken by another driver.')
+    } finally {
+      setPakyawanSubmittingId(null)
+    }
+  }
+
+  const handleDeclinePakyawan = (bookingId: string) => {
+    setPakyawanRequests((current) => current.filter((booking) => booking.id !== bookingId))
+    setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
+  }
+
+  const renderNotificationBell = () => (
+    <div className="notification-wrap">
+      <button
+        type="button"
+        className="notification-bell"
+        aria-label={
+          unreadNotificationCount > 0
+            ? `Notifications (${unreadNotificationCount} unread)`
+            : 'Notifications'
+        }
+        aria-expanded={showNotifications}
+        onClick={handleOpenNotifications}
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+          <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+        </svg>
+        {unreadNotificationCount > 0 ? (
+          <span className="notification-badge">{unreadNotificationCount}</span>
+        ) : null}
+      </button>
+
+      {showNotifications ? (
+        <div className="notification-panel" role="dialog" aria-label="Notifications">
+          <div className="notification-panel-head">
+            <strong>Notifications</strong>
+            <span className="notification-count">{notifications.length} total</span>
+          </div>
+
+          {notifications.length === 0 ? (
+            <p className="notification-empty">No new requests. You are all caught up.</p>
+          ) : (
+            <ul className="notification-list">
+              {notifications.map((item) => (
+                <li key={item.id} className={item.seen ? 'notification-item seen' : 'notification-item'}>
+                  <div className="notification-copy">
+                    <strong>{item.title}</strong>
+                    <span>{item.subtitle}</span>
+                  </div>
+                  <div className="notification-actions">
+                    {item.kind === 'ride' ? (
+                      <button
+                        type="button"
+                        className="compact-button notification-action"
+                        onClick={() => void handleOpenRideRequest(item.rideId ?? item.id)}
+                      >
+                        View request
+                      </button>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="ghost-button notification-action"
+                      onClick={() => handleDismissNotification(item.id)}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+
+          {'Notification' in window && notificationPermissionState !== 'granted' ? (
+            <button
+              type="button"
+              className="secondary-action notification-enable"
+              onClick={() => void handleEnableNotifications()}
+            >
+              Enable desktop notifications
+            </button>
+          ) : null}
+        </div>
+      ) : null}
+    </div>
+  )
+
+  const renderPakyawanSection = () => {
+    if (!canAcceptPakyawan) {
+      return (
+        <section className="driver-card pakyawan-card pakyawan-disabled">
+          <div className="state-heading">
+            <div>
+              <p className="section-label">PAKYAWAN REQUESTS</p>
+              <h3>Pakyawan / scheduled trips</h3>
+              <p>
+                Pakyawan request handling is not enabled for this account yet. Contact the Bislig Ride
+                team to get it switched on.
+              </p>
+            </div>
+          </div>
+        </section>
+      )
+    }
+
+    return (
+      <section className="driver-card pakyawan-card">
+        <div className="state-heading">
+          <div>
+            <p className="section-label">PAKYAWAN REQUESTS</p>
+            <h3>Pakyawan / scheduled trips</h3>
+            <p>
+              {pakyawanRequests.length > 0
+                ? 'Customers are requesting private or scheduled handling. Accept a request to take it.'
+                : 'No new Pakyawan requests right now.'}
+            </p>
+          </div>
+          <span className="state-badge pakyawan-badge">{pakyawanRequests.length}</span>
+        </div>
+
+        {pakyawanError ? <p className="form-error-message">{pakyawanError}</p> : null}
+
+        {pakyawanRequests.length === 0 ? null : (
+          <ul className="pakyawan-list">
+            {pakyawanRequests.map((booking) => (
+              <li key={booking.id} className="pakyawan-item">
+                <div className="pakyawan-route">
+                  <span>{booking.pickup_location}</span>
+                  <strong>→</strong>
+                  <span>{booking.destination}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {booking.booking_date} · {booking.pickup_time}
+                  </span>
+                  <span>
+                    {booking.passengers} passenger{booking.passengers === 1 ? '' : 's'} · {booking.trip_type}
+                  </span>
+                  {booking.estimated_hours ? (
+                    <span>
+                      ~{booking.estimated_hours} hr{booking.estimated_hours === 1 ? '' : 's'}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{booking.customer_name}</span>
+                  <span>{booking.customer_phone}</span>
+                </div>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptPakyawan(booking.id)}
+                    disabled={pakyawanSubmittingId === booking.id}
+                  >
+                    {pakyawanSubmittingId === booking.id ? 'Accepting...' : 'Accept'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => handleDeclinePakyawan(booking.id)}
+                    disabled={pakyawanSubmittingId !== null}
+                  >
+                    Not now
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {acceptedPakyawan.length > 0 ? (
+          <div className="pakyawan-accepted">
+            <p className="section-label">ACCEPTED BY YOU</p>
+            <ul className="pakyawan-accepted-list">
+              {acceptedPakyawan.map((booking) => (
+                <li key={booking.id}>
+                  <strong>
+                    {booking.pickup_location} → {booking.destination}
+                  </strong>
+                  <span>
+                    {booking.booking_date} · {booking.pickup_time}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
+    )
+  }
+
   const renderSummary = () => (
     <section className="driver-card driver-overview">
       <div className="driver-identity">
@@ -783,11 +1198,6 @@ const displayedDriver = driverProfile ?? demoDriver
       </div>
 
 <div className="driver-metrics">
-        <div className="metric-card metric-earnings">
-          <span>Today's earnings</span>
-          <strong>₱{todayEarnings.toFixed(0)}</strong>
-          <small>100% of your fares</small>
-        </div>
         <div className="metric-card">
           <span>Completed rides</span>
           <strong>{reputation ? reputation.completedRides : recentRides.length}</strong>
@@ -1250,7 +1660,7 @@ const displayedDriver = driverProfile ?? demoDriver
           <path d="M19 12H5" />
           <path d="m12 19-7-7 7-7" />
         </svg>
-        Back to Rider
+        Back to Ride Booking
       </button>
 
       <header className="driver-header">
@@ -1258,9 +1668,12 @@ const displayedDriver = driverProfile ?? demoDriver
           <p className="driver-kicker">Bislig Ride</p>
           <h2>Driver Dashboard</h2>
         </div>
+        {renderNotificationBell()}
       </header>
 
       {renderSummary()}
+
+      {renderPakyawanSection()}
 
       {showChangePassword ? (
         <section className="driver-card account-panel">
@@ -1338,6 +1751,17 @@ const displayedDriver = driverProfile ?? demoDriver
       ) : null}
 
       {!driverOnline || phase === 'offline' ? renderRecentRides() : null}
+
+      {phase === 'online' || phase === 'offline' ? (
+        <div className="driver-mobile-actions">
+          <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
+            {driverOnline ? 'Go Offline' : 'Go Online'}
+          </button>
+          <button type="button" className="secondary-action" onClick={handleOpenNotifications}>
+            Notifications{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ''}
+          </button>
+        </div>
+      ) : null}
 
       {showCancelModal && activeRide && (
         <CancelRideModal

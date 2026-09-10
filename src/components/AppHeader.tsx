@@ -1,15 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 
 export type AppViewMode = 'Rider' | 'driver' | 'admin'
-
-const discoveryCategories = [
-  'Restaurants',
-  'Hotels & Resorts',
-  'Tourist Destinations',
-  'Upcoming Events',
-  'Local Businesses',
-]
 
 type AppHeaderProps = {
   view: AppViewMode
@@ -18,32 +10,8 @@ type AppHeaderProps = {
   onPrimaryAction: () => void
 }
 
-export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }: AppHeaderProps) {
+export function AppHeader({ view: _view, onViewChange, primaryLabel, onPrimaryAction }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
-  const [isExploreOpen, setIsExploreOpen] = useState(false)
-  const exploreMenuRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    const handlePointerDown = (event: PointerEvent) => {
-      if (!exploreMenuRef.current?.contains(event.target as Node)) {
-        setIsExploreOpen(false)
-      }
-    }
-
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') {
-        setIsExploreOpen(false)
-      }
-    }
-
-    document.addEventListener('pointerdown', handlePointerDown)
-    document.addEventListener('keydown', handleKeyDown)
-
-    return () => {
-      document.removeEventListener('pointerdown', handlePointerDown)
-      document.removeEventListener('keydown', handleKeyDown)
-    }
-  }, [])
 
   useEffect(() => {
     if (!isMobileNavOpen) return
@@ -86,6 +54,11 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
     }
   }, [isMobileNavOpen])
 
+  const openDriverLogin = () => {
+    onViewChange?.('driver')
+    setIsMobileNavOpen(false)
+  }
+
   return (
     <>
       <header className={isMobileNavOpen ? 'app-header mobile-nav-active' : 'app-header'}>
@@ -97,7 +70,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
           </div>
 
           <nav className="top-nav desktop-nav" aria-label="Main navigation">
-            <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
+            <a className="nav-link nav-link-pakyawan" href="/pakyawan">Book Pakyawan</a>
 
             <button
               type="button"
@@ -107,60 +80,17 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
               {primaryLabel}
             </button>
 
-            <div
-              className="explore-menu"
-              ref={exploreMenuRef}
-              onMouseEnter={() => setIsExploreOpen(true)}
-              onMouseLeave={() => setIsExploreOpen(false)}
+            <button
+              type="button"
+              className="nav-button"
+              onClick={openDriverLogin}
             >
-              <button
-                type="button"
-                className="nav-button explore-trigger"
-                aria-expanded={isExploreOpen}
-                aria-haspopup="true"
-                onClick={() => setIsExploreOpen((current) => !current)}
-              >
-                Explore Bislig <span className="explore-chevron" aria-hidden="true"></span>
-              </button>
+              Driver Login
+            </button>
 
-              <div
-                className={isExploreOpen ? 'explore-dropdown open' : 'explore-dropdown'}
-                role="menu"
-                aria-label="Explore Bislig categories"
-              >
-                <div className="discovery-list">
-                  {discoveryCategories.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      className="discovery-item"
-                      role="menuitem"
-                      onClick={() => setIsExploreOpen(false)}
-                    >
-                      {category}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
             <a className="nav-link" href="/contact">Contact</a>
 
-            <div className="desktop-role-divider" aria-hidden="true"></div>
-
-            <div className="desktop-role-switcher" aria-label="Role switcher">
-              {(['Rider', 'driver', 'admin'] as AppViewMode[]).map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  className={view === role ? 'role-btn active' : 'role-btn'}
-                  onClick={() => onViewChange?.(role)}
-                >
-                  {role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}
-                </button>
-              ))}
-            </div>
+            <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
           </nav>
 
           <button
@@ -205,26 +135,6 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
         </div>
 
         <div className="mobile-nav-scroll">
-          <div className="mobile-nav-group">
-            <p className="mobile-nav-section-label">Account / Role</p>
-            <div className="mobile-role-list">
-              {(['Rider', 'driver', 'admin'] as AppViewMode[]).map((role) => (
-                <button
-                  key={role}
-                  type="button"
-                  className={view === role ? 'mobile-role-row active' : 'mobile-role-row'}
-                  onClick={() => {
-                    onViewChange?.(role)
-                    setIsMobileNavOpen(false)
-                  }}
-                >
-                  <span>{role === 'Rider' ? 'Rider' : role === 'driver' ? 'Driver' : 'Admin'}</span>
-                  <span className="mobile-role-check" aria-hidden="true"></span>
-                </button>
-              ))}
-            </div>
-          </div>
-
           <div className="mobile-nav-divider" aria-hidden="true"></div>
 
           <nav className="mobile-nav-links" aria-label="Mobile navigation">
@@ -257,7 +167,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
               </span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2 1-2-1Z" />
+                  <path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2 1-2-1-2-1Z" />
                   <path d="M8 8h8" />
                   <path d="M8 12h8" />
                   <path d="M8 16h5" />
@@ -265,50 +175,19 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
               </span>
             </button>
 
-            <div className={isExploreOpen ? 'mobile-explore-group is-open' : 'mobile-explore-group'}>
-              <button
-                type="button"
-                className="mobile-nav-item mobile-explore-trigger"
-                aria-expanded={isExploreOpen}
-                aria-controls="mobile-explore-list"
-                onClick={() => setIsExploreOpen((current) => !current)}
-              >
-                <span className="mobile-nav-label">Explore Bislig</span>
-                <span className="mobile-nav-arrow mobile-explore-arrow" aria-hidden="true">
-                  <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10" />
-                    <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
-                  </svg>
-                </span>
-              </button>
-
-              <div
-                id="mobile-explore-list"
-                className="mobile-explore-list"
-                aria-hidden={!isExploreOpen}
-              >
-                <div className="mobile-explore-inner">
-                  {discoveryCategories.map((category) => (
-                    <button
-                      key={category}
-                      type="button"
-                      className="mobile-explore-item"
-                      onClick={() => {
-                        setIsExploreOpen(false)
-                        setIsMobileNavOpen(false)
-                      }}
-                    >
-                      <span>{category}</span>
-                      <span aria-hidden="true">
-                        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                          <path d="m9 18 6-6-6-6" />
-                        </svg>
-                      </span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
+            <button
+              type="button"
+              className="mobile-nav-item"
+              onClick={openDriverLogin}
+            >
+              <span className="mobile-nav-label">Driver Login</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+            </button>
 
             <a
               className="mobile-nav-item"

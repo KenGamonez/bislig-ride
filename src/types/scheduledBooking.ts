@@ -1,7 +1,7 @@
-export const scheduledBookingTripTypes = ['One Way', 'Round Trip', 'Whole Day / Private Hire'] as const
-export type ScheduledBookingTripType = (typeof scheduledBookingTripTypes)[number]
+export const pakyawanTripTypes = ['One Way', 'Round Trip', 'Whole Day / Private Hire'] as const
+export type PakyawanTripType = (typeof pakyawanTripTypes)[number]
 
-export type ScheduledBookingInsert = {
+export type PakyawanBookingInsert = {
   customer_id: string | null
   customer_name: string
   customer_phone: string
@@ -10,14 +10,14 @@ export type ScheduledBookingInsert = {
   pickup_location: string
   destination: string
   passengers: number
-  trip_type: ScheduledBookingTripType
+  trip_type: PakyawanTripType
+  estimated_hours: number | null
   special_requests: string | null
 }
 
-export type ScheduledBooking = ScheduledBookingInsert & {
+export type PakyawanBooking = PakyawanBookingInsert & {
   id: string
   status: 'pending' | 'quoted' | 'confirmed' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
-  quoted_fare: number | null
   driver_id: string | null
   vehicle_id: string | null
   created_at: string

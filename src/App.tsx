@@ -35,6 +35,7 @@ function App() {
   const isPakyawanPage = window.location.pathname === '/pakyawan'
   const isContactPage = window.location.pathname === '/contact'
   const isDriverResetPage = window.location.pathname === '/driver/reset-password'
+  const isAdminPage = window.location.pathname === '/admin'
 
   useEffect(() => {
     const checkDriverSession = async () => {
@@ -105,6 +106,21 @@ function App() {
 
   if (isDriverResetPage) {
     return <DriverPasswordReset />
+  }
+
+  if (isAdminPage) {
+    const goHome = () => {
+      window.history.pushState({}, '', '/')
+      window.location.reload()
+    }
+
+    return (
+      <AdminExperience
+        view="admin"
+        onViewChange={goHome}
+        onBack={goHome}
+      />
+    )
   }
 
   return (

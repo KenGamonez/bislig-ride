@@ -183,6 +183,7 @@ export function AdminExperience({
     rating: Number(driver.rating_average ?? 5),
     username: driver.username ?? '',
     authUserId: driver.auth_user_id ?? null,
+    canAcceptPakyawan: Boolean(driver.can_accept_pakyawan),
     recentRides: [],
   })
 
@@ -415,7 +416,6 @@ useEffect(() => {
     { label: 'Completed Rides', value: String(liveRides.filter((ride: any) => ride.status === 'completed').length) },
     { label: 'Cancelled Rides', value: String(liveRides.filter((ride: any) => ride.status === 'cancelled').length) },
     { label: 'Total Customers', value: String(liveCustomers.length) },
-    { label: "Today's Revenue", value: 'Not connected' },
   ]
 
   const handleDriverNameChange = (name: string) => {
@@ -614,6 +614,23 @@ useEffect(() => {
     }
   }
 
+  const handlePakyawanToggle = async (driver: AdminDriver) => {
+    const nextValue = !driver.canAcceptPakyawan
+
+    try {
+      setDriverError('')
+      const updated = await updateDriver(driver.id, { can_accept_pakyawan: nextValue })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((item) => item.id === driver.id ? mappedDriver : item),
+      )
+    } catch (error) {
+      console.error('Unable to update Pakyawan eligibility:', error)
+      setDriverError('Unable to update Pakyawan eligibility. Please try again.')
+    }
+  }
+
   const openManageAccount = (driver?: AdminDriver) => {
     const target = driver ?? selectedDriver
 
@@ -761,7 +778,7 @@ useEffect(() => {
           <path d="M19 12H5" />
           <path d="m12 19-7-7 7-7" />
         </svg>
-        Back to Rider
+        Back to Ride Booking
       </button>
 
       <header className="admin-header">
@@ -1060,9 +1077,10 @@ useEffect(() => {
                       <th>Phone</th>
                       <th>Vehicle</th>
                       <th>Plate</th>
-                      <th>Status</th>
-                      <th>Availability</th>
+                      <th>Account</th>
+                      <th>Presence</th>
                       <th>Login</th>
+                      <th>Pakyawan</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1091,6 +1109,7 @@ useEffect(() => {
                             className="inline-select"
                             value={driver.availability}
                             onChange={(event) => handleAvailabilityChange(driver.id, event.target.value as DriverAvailability)}
+                            aria-label={`Presence for ${driver.name}`}
                           >
                             <option value="Offline">Offline</option>
                             <option value="Online">Online</option>
@@ -1099,8 +1118,17 @@ useEffect(() => {
                         </td>
                         <td>
                           <span className={`status-pill ${driver.authUserId ? 'online' : 'offline'}`}>
-                            {driver.authUserId ? 'Active' : 'Not set'}
+                            {driver.authUserId ? 'Active' : 'No login'}
                           </span>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className={driver.canAcceptPakyawan ? 'pakyawan-toggle enabled' : 'pakyawan-toggle'}
+                            onClick={() => void handlePakyawanToggle(driver)}
+                          >
+                            {driver.canAcceptPakyawan ? 'Enabled' : 'Enable'}
+                          </button>
                         </td>
                         <td className="action-buttons-cell">
                           <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); openManageAccount(driver) }}>
@@ -1143,6 +1171,16 @@ useEffect(() => {
                   <div><span>Plate</span><strong>{selectedDriver.plateNumber}</strong></div>
                   <div><span>Status</span><strong>{selectedDriver.status}</strong></div>
                   <div><span>Availability</span><strong>{selectedDriver.availability}</strong></div>
+                  <div><span>Pakyawan</span><strong>
+                    {selectedDriver.canAcceptPakyawan ? 'Eligible' : 'Not enabled'}
+                    <button
+                      type="button"
+                      className={selectedDriver.canAcceptPakyawan ? 'pakyawan-toggle enabled' : 'pakyawan-toggle'}
+                      onClick={() => void handlePakyawanToggle(selectedDriver)}
+                    >
+                      {selectedDriver.canAcceptPakyawan ? 'Disable' : 'Enable'}
+                    </button>
+                  </strong></div>
                   <div><span>Recent rides</span><strong>{selectedDriver.recentRides.length}</strong></div>
                 </div>
 
@@ -1350,7 +1388,7 @@ useEffect(() => {
               <table className="admin-table">
                 <thead>
                   <tr>
-                    <th>Rider</th>
+                    <th>Passenger</th>
                     <th>Phone</th>
                     <th>Rides</th>
                     <th>Last ride</th>
@@ -1435,7 +1473,7 @@ useEffect(() => {
                 </div>
 
                 <div className="detail-grid">
-                  <div><span>Rider</span><strong>{selectedRide.Rider}</strong></div>
+                  <div><span>Passenger</span><strong>{selectedRide.Rider}</strong></div>
                   <div><span>Phone</span><strong>{selectedRide.customerPhone}</strong></div>
                   <div><span>Driver</span><strong>{selectedRide.driver}</strong></div>
                   <div><span>Passenger</span><strong>{selectedRide.passengerType}</strong></div>
@@ -1468,7 +1506,7 @@ useEffect(() => {
                 <thead>
                   <tr>
                     <th>Ride ID</th>
-                    <th>Rider</th>
+                    <th>Passenger</th>
                     <th>Driver</th>
                     <th>Pickup</th>
                     <th>Destination</th>
@@ -1507,7 +1545,7 @@ useEffect(() => {
                 onChange={(event) => setCancellationFilter(event.target.value as 'all' | 'rider' | 'driver')}
               >
                 <option value="all">All cancellations</option>
-                <option value="rider">Rider cancellations</option>
+                <option value="rider">Passenger cancellations</option>
                 <option value="driver">Driver cancellations</option>
               </select>
             </div>
@@ -1526,7 +1564,7 @@ useEffect(() => {
                     <tr>
                       <th>Date/Time</th>
                       <th>Ride ID</th>
-                      <th>Rider</th>
+                      <th>Passenger</th>
                       <th>Driver</th>
                       <th>Route</th>
                       <th>Cancelled by</th>
@@ -1545,7 +1583,7 @@ useEffect(() => {
                         <td>{cancellation.cancelledByName}</td>
                         <td>
                           <span className={cancellation.cancelled_by_role === 'driver' ? 'status-pill busy' : 'status-pill online'}>
-                            {cancellation.cancelled_by_role === 'driver' ? 'Driver' : 'Rider'}
+                            {cancellation.cancelled_by_role === 'driver' ? 'Driver' : 'Passenger'}
                           </span>
                         </td>
                         <td className="cancel-reason-cell">{cancellation.reason}</td>
@@ -1584,7 +1622,7 @@ useEffect(() => {
                 <thead>
                   <tr>
                     <th>Ride ID</th>
-                    <th>Rider</th>
+                    <th>Passenger</th>
                     <th>Amount</th>
                     <th>Method</th>
                     <th>Status</th>

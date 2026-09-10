@@ -19,6 +19,7 @@ export type AdminDriver = {
   rating: number
   username?: string
   authUserId: string | null
+  canAcceptPakyawan: boolean
   recentRides: Array<{ rideId: string; destination: string; status: AdminRideStatus; fare: string }>
 }
 
@@ -81,6 +82,7 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Online',
     rating: demoDriver.rating,
     authUserId: null,
+    canAcceptPakyawan: false,
     recentRides: [
       { rideId: 'BR-2048', destination: 'Barangay Mangagoy', status: 'completed', fare: 'â‚±180 DEMO' },
       { rideId: 'BR-2017', destination: 'City Plaza', status: 'in_progress', fare: 'â‚±120 DEMO' },
@@ -100,6 +102,7 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Busy',
     rating: 4.8,
     authUserId: null,
+    canAcceptPakyawan: true,
     recentRides: [
       { rideId: 'BR-2039', destination: 'Purok 3', status: 'arrived', fare: 'â‚±110 DEMO' },
       { rideId: 'BR-2012', destination: 'Talisay', status: 'completed', fare: 'â‚±170 DEMO' },
@@ -119,6 +122,7 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Offline',
     rating: 4.7,
     authUserId: null,
+    canAcceptPakyawan: false,
     recentRides: [
       { rideId: 'BR-1988', destination: 'Luna Street', status: 'completed', fare: 'â‚±260 DEMO' },
       { rideId: 'BR-1964', destination: 'Bislig Airport', status: 'completed', fare: 'â‚±320 DEMO' },
@@ -138,6 +142,7 @@ export const adminDrivers: AdminDriver[] = [
     availability: 'Offline',
     rating: 4.5,
     authUserId: null,
+    canAcceptPakyawan: false,
     recentRides: [
       { rideId: 'BR-1935', destination: 'Barangay Tabon', status: 'completed', fare: 'â‚±105 DEMO' },
       { rideId: 'BR-1902', destination: 'Market Center', status: 'completed', fare: 'â‚±140 DEMO' },
