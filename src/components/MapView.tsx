@@ -85,7 +85,7 @@ export function MapView({
       markerElement.style.width = '18px'
       markerElement.style.height = '18px'
       markerElement.style.borderRadius = '50%'
-      markerElement.style.backgroundColor = '#1f6feb'
+      markerElement.style.backgroundColor = '#16A34A'
       markerElement.style.border = '3px solid #ffffff'
       markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
 
@@ -127,7 +127,7 @@ export function MapView({
       markerElement.style.width = '18px'
       markerElement.style.height = '18px'
       markerElement.style.borderRadius = '50%'
-      markerElement.style.backgroundColor = '#d97706'
+      markerElement.style.backgroundColor = '#0A0A0A'
       markerElement.style.border = '3px solid #ffffff'
       markerElement.style.boxShadow = '0 2px 6px rgba(0, 0, 0, 0.3)'
 
