@@ -207,6 +207,20 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
 
             <a
               className="mobile-nav-item"
+              href="/admin"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Admin</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2 3 7v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7Z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </span>
+            </a>
+
+            <a
+              className="mobile-nav-item"
               href="/contact"
               onClick={() => setIsMobileNavOpen(false)}
             >
