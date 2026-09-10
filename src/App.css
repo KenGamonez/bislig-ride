@@ -5097,3 +5097,84 @@ a.secondary-action {
   color: var(--brand-orange);
   font-weight: 700;
 }
+
+/* Additional destination rows with per-row remove */
+.destination-stop {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: start;
+}
+
+.destination-stop-remove {
+  align-self: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.05rem;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background 160ms ease, color 160ms ease;
+}
+
+.destination-stop-remove:hover,
+.destination-stop-remove:focus-visible {
+  background: rgba(215, 25, 32, 0.08);
+  color: var(--brand-red);
+  outline: none;
+}
+
+.destination-stop-remove:active {
+  background: rgba(215, 25, 32, 0.14);
+}
+
+/* Accordion: preserved-value summaries + completion check */
+.accordion-titles small.accordion-value {
+  color: var(--graphite);
+  font-weight: 600;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  line-height: 1.35;
+}
+
+.accordion-check {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: rgba(30, 166, 114, 0.12);
+  color: var(--success);
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+@media (max-width: 767px) {
+  .destination-stop-remove {
+    width: 40px;
+    height: 40px;
+    margin-right: -4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .destination-stop {
+    gap: 6px;
+  }
+
+  .destination-stop-remove {
+    width: 38px;
+    height: 38px;
+  }
+}

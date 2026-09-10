@@ -241,6 +241,23 @@ phone: formData.phone.trim(),
     })
   }, [formValues.destination, formValues.passengerType, formData.destinationMode])
 
+  const pickupSummary = formData.pickup.trim() || (pickupLocation ? 'Current location set' : '')
+  const extraDropOffCount = extraDestinations
+    .map((stop) => stop.trim())
+    .filter(Boolean).length
+  const destinationSummary = formData.destination.trim()
+  const additionalDropOffsSummary =
+    extraDropOffCount > 0
+      ? ` + ${extraDropOffCount} additional drop-off${extraDropOffCount > 1 ? 's' : ''}`
+      : ''
+  const passengerSummary =
+    formatPassengerCount(formData.passengerCount) +
+    (formValues.name.trim() ? ` · ${formValues.name.trim()}` : '') +
+    (formValues.phone.trim() ? ` · ${formValues.phone.trim()}` : '')
+  const preferencesSummary = `${formValues.passengerType}${
+    formValues.passengerType === 'Regular' ? ' ride' : ''
+  }`
+
   const rideFareDisplay = (ride: Ride): { label: string; value: string } => {
     if (ride.destination_mode === 'multiple') {
       return { label: 'Fare', value: MULTIPLE_DESTINATIONS_FARE_NOTE }
@@ -284,13 +301,22 @@ phone: formData.phone.trim(),
         <div className="extra-destination-list">
           <span className="field-label">Drop-offs for the other riders</span>
           {extraDestinations.map((stop, index) => (
-            <LocationInput
-              key={index}
-              label={`Drop-off ${index + 2}`}
-              value={stop}
-              placeholder="Enter drop-off location"
-              onChange={(value) => handleExtraDestination(index, value)}
-            />
+            <div className="destination-stop" key={index}>
+              <LocationInput
+                label={`Drop-off ${index + 2}`}
+                value={stop}
+                placeholder="Enter drop-off location"
+                onChange={(value) => handleExtraDestination(index, value)}
+              />
+              <button
+                type="button"
+                className="destination-stop-remove"
+                aria-label={`Remove destination ${index + 2}`}
+                onClick={() => handleRemoveExtraDestination(index)}
+              >
+                ×
+              </button>
+            </div>
           ))}
           {extraDestinations.length < 4 ? (
             <button type="button" className="add-stop-action" onClick={handleAddExtraDestination}>
@@ -368,6 +394,18 @@ const handleInput = (field: keyof CustomerFormState, value: string) => {
 
   const handleAddExtraDestination = () => {
     setExtraDestinations((current) => (current.length < 4 ? [...current, ''] : current))
+  }
+
+  const handleRemoveExtraDestination = (index: number) => {
+    if (extraDestinations.length <= 1) {
+      setFormData((current) => ({ ...current, destinationMode: 'same' }))
+    }
+
+    setExtraDestinations((current) =>
+      current.length <= 1 ? [''] : current.filter((_, stopIndex) => stopIndex !== index),
+    )
+
+    setValidationErrors((current) => ({ ...current, destination: undefined }))
   }
 
 const validateForm = () => {
@@ -969,8 +1007,15 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
               <span className="accordion-number">01</span>
               <span className="accordion-titles">
                 <strong>Pickup</strong>
-                <small>Where should we pick you up?</small>
+                {pickupSummary ? (
+                  <small className="accordion-value">{pickupSummary}</small>
+                ) : (
+                  <small>Where should we pick you up?</small>
+                )}
               </span>
+              {pickupSummary ? (
+                <span className="accordion-check" aria-hidden="true">✓</span>
+              ) : null}
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
 
@@ -1014,8 +1059,18 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
               <span className="accordion-number">02</span>
               <span className="accordion-titles">
                 <strong>Destination</strong>
-                <small>Where are you going?</small>
+                {destinationSummary ? (
+                  <small className="accordion-value">
+                    {destinationSummary}
+                    {additionalDropOffsSummary}
+                  </small>
+                ) : (
+                  <small>Where are you going?</small>
+                )}
               </span>
+              {destinationSummary ? (
+                <span className="accordion-check" aria-hidden="true">✓</span>
+              ) : null}
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
 
@@ -1040,10 +1095,17 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
               onClick={() => toggleMobileSection('passenger')}
             >
 <span className="accordion-number">03</span>
-              <span className="accordion-titles">
+<span className="accordion-titles">
                 <strong>Passenger details</strong>
-                <small>Passenger name</small>
+                {formValues.name.trim() ? (
+                  <small className="accordion-value">{passengerSummary}</small>
+                ) : (
+                  <small>Passenger name</small>
+                )}
               </span>
+              {formValues.name.trim() ? (
+                <span className="accordion-check" aria-hidden="true">✓</span>
+              ) : null}
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
 
@@ -1068,10 +1130,17 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
               onClick={() => toggleMobileSection('preferences')}
             >
 <span className="accordion-number">04</span>
-              <span className="accordion-titles">
+<span className="accordion-titles">
                 <strong>Ride preferences</strong>
-                <small>Passengers, type &amp; fare</small>
+                {preferencesSummary ? (
+                  <small className="accordion-value">{preferencesSummary}</small>
+                ) : (
+                  <small>Passengers, type &amp; fare</small>
+                )}
               </span>
+              {preferencesSummary ? (
+                <span className="accordion-check" aria-hidden="true">✓</span>
+              ) : null}
               <span className="accordion-chevron" aria-hidden="true"></span>
             </button>
 
