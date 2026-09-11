@@ -15,6 +15,7 @@ export type DriverApplication = {
   email: string
   facebook_profile: string
   vehicle_number: string
+  vehicle_type: string
   plate_number: string | null
   driving_experience: number
   operating_area: string

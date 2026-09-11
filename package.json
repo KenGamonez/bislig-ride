@@ -10,6 +10,7 @@
     "test:fares": "node scripts/fare-check.ts",
     "test:driver-accounts": "node scripts/driver-accounts-check.ts",
     "test:driver-removal": "node scripts/driver-removal-check.ts",
+    "test:driver-application": "node scripts/application-vehicle-type-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

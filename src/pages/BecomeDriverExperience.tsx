@@ -15,6 +15,7 @@ type ApplicationForm = {
   barangay: string
   email: string
   facebook_profile: string
+  vehicle_type: string
   vehicle_number: string
   plate_number: string
   driving_experience: string
@@ -31,7 +32,7 @@ type FormErrors = Partial<Record<keyof ApplicationForm, string>>
 
 const initialForm: ApplicationForm = {
   full_name: '', mobile_number: '', barangay: '', email: '', facebook_profile: '',
-  vehicle_number: '', plate_number: '', driving_experience: '', operating_area: '',
+  vehicle_type: '', vehicle_number: '', plate_number: '', driving_experience: '', operating_area: '',
   preferred_schedule: '', reason: '',
 }
 
@@ -39,7 +40,7 @@ const initialFiles: ApplicationFileState = { driver_photo: null, drivers_license
 
 const requiredFields: Array<keyof ApplicationForm> = [
   'full_name', 'mobile_number', 'barangay', 'email', 'facebook_profile',
-  'vehicle_number', 'driving_experience', 'operating_area', 'preferred_schedule',
+  'vehicle_type', 'vehicle_number', 'driving_experience', 'operating_area', 'preferred_schedule',
 ]
 
 const fileLabels: Record<ApplicationFileField, string> = {
@@ -134,7 +135,7 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
       const application: DriverApplicationInsert = {
         full_name: form.full_name.trim(), mobile_number: form.mobile_number.trim(), barangay: form.barangay.trim(),
         email: form.email.trim(), facebook_profile: form.facebook_profile.trim(),
-        vehicle_number: form.vehicle_number.trim(), plate_number: form.plate_number.trim() || null,
+        vehicle_type: form.vehicle_type, vehicle_number: form.vehicle_number.trim(), plate_number: form.plate_number.trim() || null,
         driving_experience: Number(form.driving_experience), operating_area: form.operating_area.trim(),
         preferred_schedule: form.preferred_schedule, reason: form.reason.trim() || null,
         driver_photo_path: photoPath, drivers_license_path: licensePath,
@@ -198,7 +199,17 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
     </div>
     <form className="application-form" onSubmit={handleSubmit} noValidate>
       <section className="application-section"><div className="application-section-heading"><span className="application-section-number">01</span><h2>Personal Information</h2></div><div className="form-grid">{field('full_name', 'Full Name')}{field('mobile_number', 'Mobile Number', 'tel')}{field('barangay', 'Barangay')}{field('email', 'Email Address', 'email')}{field('facebook_profile', 'Facebook Account / Profile')}{fileField('driver_photo', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div><p className="application-note upload-privacy-note">Your uploaded documents are only used for driver application verification and review.</p></section>
-      <section className="application-section"><div className="application-section-heading"><span className="application-section-number">02</span><h2>Vehicle Information</h2></div><div className="form-grid">{field('vehicle_number', 'Vehicle / Body Number')}{field('plate_number', 'Plate Number', 'text', true)}{field('driving_experience', 'Years of Driving Experience', 'number')}{fileField('drivers_license', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div></section>
+      <section className="application-section"><div className="application-section-heading"><span className="application-section-number">02</span><h2>Vehicle Information</h2></div><div className="form-grid">
+          <label className="field-block"><span className="field-label">Vehicle Type</span>
+            <select className={`input-field${errors.vehicle_type ? ' has-error' : ''}`} value={form.vehicle_type} onChange={(event) => updateField('vehicle_type', event.target.value)}>
+              <option value="">Select a vehicle type</option>
+              <option value="Tricycle">Tricycle</option>
+              <option value="Motorcycle">Motorcycle</option>
+              <option value="Other">Other</option>
+            </select>
+            {errors.vehicle_type ? <span className="form-error-message">{errors.vehicle_type}</span> : null}
+          </label>
+          {field('vehicle_number', 'Vehicle / Body Number')}{field('plate_number', 'Plate Number', 'text', true)}{field('driving_experience', 'Years of Driving Experience', 'number')}{fileField('drivers_license', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div></section>
       <section className="application-section"><div className="application-section-heading"><span className="application-section-number">03</span><h2>Additional Information</h2></div><div className="form-grid"><label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
         <label className="field-block"><span className="field-label">Preferred Schedule</span><select className={`input-field${errors.preferred_schedule ? ' has-error' : ''}`} value={form.preferred_schedule} onChange={(event) => updateField('preferred_schedule', event.target.value)}><option value="">Select a schedule</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Flexible</option></select>{errors.preferred_schedule ? <span className="form-error-message">{errors.preferred_schedule}</span> : null}</label>
         <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label></div></section>

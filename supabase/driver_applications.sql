@@ -12,6 +12,7 @@ create table if not exists public.driver_applications (
   email text not null,
   facebook_profile text not null,
   vehicle_number text not null,
+  vehicle_type text,
   plate_number text,
   driving_experience integer not null check (driving_experience >= 0),
   operating_area text not null,
@@ -29,6 +30,12 @@ create table if not exists public.driver_applications (
 -- 1. Add the new required Facebook field (existing rows get an empty string).
 alter table public.driver_applications
   add column if not exists facebook_profile text not null default '';
+
+-- 1b. Vehicle Type (Become a Driver form). Plain text, nullable, matching the
+--     existing drivers.vehicle_type convention. See
+--     driver_applications_vehicle_type.sql for the full rationale.
+alter table public.driver_applications
+  add column if not exists vehicle_type text;
 
 -- 2. Remove the Contact Preference column completely (no longer part of the product).
 alter table public.driver_applications

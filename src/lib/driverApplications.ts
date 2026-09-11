@@ -40,6 +40,7 @@ function mapApplication(row: DatabaseDriverApplication): DriverApplication {
     email: row.email ?? '',
     facebook_profile: row.facebook_profile ?? '',
     vehicle_number: row.vehicle_number ?? row.vehicle_model ?? '',
+    vehicle_type: row.vehicle_type ?? '',
     plate_number: row.plate_number,
     driving_experience: row.driving_experience ?? 0,
     operating_area: row.operating_area ?? '',
