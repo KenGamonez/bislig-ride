@@ -663,6 +663,13 @@ useEffect(() => {
   const handleRemoveDriver = async () => {
     if (!driverToRemove) return
 
+    const currentDriver = drivers.find((driver) => driver.id === driverToRemove.id)
+
+    if (!currentDriver || currentDriver.status !== 'Active') {
+      setDriverToRemove(null)
+      return
+    }
+
     try {
       setDriverError('')
       setIsRemovingDriver(true)
@@ -1217,9 +1224,11 @@ useEffect(() => {
                           <button type="button" className="ghost-button" onClick={() => setSelectedDriverId(driver.id)}>
                             View
                           </button>
-                          <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
-                            Remove
-                          </button>
+                          {driver.status === 'Active' && (
+                            <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
+                              Remove
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
