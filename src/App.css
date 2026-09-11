@@ -8834,8 +8834,172 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     display: none;
   }
 
-  /* Map is secondary on mobile; the booking flow already provides location controls */
+/* Map is secondary on mobile; the booking flow already provides location controls */
   .customer-layout .map-panel {
     display: none;
+  }
+}
+
+/* --------------------------------------------------------
+   PASSENGER MOBILE — creative spacing & typography polish.
+   Hierarchy fix (hero → service selector → booking steps) plus
+   a consistent 12px gutter and generous, rhythmic card spacing.
+   -------------------------------------------------------- */
+@media (max-width: 767px) {
+  /* --- Ordering fix: hero stays on top; steps follow the selector --- */
+  .customer-layout .mobile-booking-flow {
+    order: 3;
+  }
+
+  .customer-layout .ride-form > .fare-box {
+    order: 4;
+  }
+
+  /* --- Shared page gutter for every stacked card --- */
+  .customer-layout .section-header,
+  .customer-layout .booking-mode-picker,
+  .customer-layout .mobile-location-action,
+  .customer-layout .booking-accordion,
+  .customer-layout .ride-form > .fare-box,
+  .customer-layout form > .submit-error,
+  .customer-layout .request-ride-action {
+    width: calc(100% - 24px);
+    margin-right: 12px;
+    margin-left: 12px;
+  }
+
+  /* --- 1. Hero --- */
+  .customer-layout .section-header {
+    margin-top: 0;
+    margin-bottom: 14px;
+    padding: 26px 22px 24px;
+  }
+
+  .customer-layout .section-header .eyebrow {
+    margin-bottom: 12px;
+    font-size: 0.66rem;
+    letter-spacing: 0.18em;
+  }
+
+  .customer-layout .section-header h1 {
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+
+  /* --- 2. Ride Now / Book Pakyawan segmented selector --- */
+  .customer-layout .booking-mode-picker {
+    gap: 6px;
+    margin-top: 0;
+    margin-bottom: 12px;
+    padding: 5px;
+    border-radius: 16px;
+  }
+
+  .customer-layout .booking-mode-card {
+    gap: 8px;
+    padding: 0 10px;
+  }
+
+  /* --- 3. Use my current location action --- */
+  .customer-layout .mobile-location-action {
+    margin-top: 0;
+    margin-bottom: 12px;
+    min-height: 48px;
+    padding: 0 18px;
+  }
+
+  /* --- 4. Booking accordion card --- */
+  .customer-layout .booking-accordion {
+    margin-top: 0;
+    margin-bottom: 0;
+  }
+
+  .accordion-trigger {
+    min-height: 54px;
+    padding: 8px 14px;
+    gap: 10px;
+  }
+
+  .accordion-number {
+    width: 24px;
+    font-size: 0.64rem;
+    letter-spacing: 0.1em;
+  }
+
+  .accordion-titles {
+    gap: 2px;
+  }
+
+  .accordion-titles strong {
+    font-size: 0.86rem;
+  }
+
+  .accordion-titles small {
+    font-size: 0.7rem;
+  }
+
+  .accordion-chevron {
+    margin-right: 12px;
+  }
+
+  .accordion-content {
+    padding: 0 14px;
+  }
+
+  .accordion-row.is-open .accordion-content {
+    padding-bottom: 14px;
+  }
+
+  .mobile-booking-flow .field-block {
+    gap: 6px;
+  }
+
+  .mobile-booking-flow .input-field {
+    min-height: 46px;
+    padding: 0 14px;
+    font-size: 0.86rem;
+  }
+
+  .passenger-fields {
+    gap: 10px;
+  }
+
+  /* --- 5. Fare box --- */
+  .customer-layout .ride-form > .fare-box {
+    margin-top: 10px;
+    padding: 14px 16px;
+    gap: 8px;
+    border-radius: 14px;
+  }
+
+  /* --- 6. Submit error --- */
+  .customer-layout form > .submit-error {
+    margin-top: 8px;
+    padding: 12px 14px;
+  }
+
+  /* --- 7. Request Ride --- */
+  .customer-layout .request-ride-action {
+    margin-top: 12px;
+    margin-bottom: 16px;
+    min-height: 54px;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+    border-radius: 14px;
+  }
+}
+
+/* Small phones — keep the polish from getting cramped */
+@media (max-width: 430px) {
+  .customer-layout .section-header {
+    padding: 22px 18px 20px;
+  }
+
+  .customer-layout .section-header h1 {
+    font-size: clamp(1.5rem, 7.5vw, 1.85rem);
+  }
+
+  .accordion-trigger {
+    padding: 8px 12px;
   }
 }
