@@ -668,11 +668,10 @@ useEffect(() => {
     try {
       setDriverError('')
       setIsRemovingDriver(true)
-      const updated = await updateDriver(driverToRemove.id, { status: 'inactive' })
-      const mappedDriver = mapDriverRecord(updated)
+      await updateDriver(driverToRemove.id, { status: 'inactive' })
 
       setDrivers((current) =>
-        current.map((driver) => driver.id === driverToRemove.id ? mappedDriver : driver),
+        current.filter((driver) => driver.id !== driverToRemove.id),
       )
       setDriverToRemove(null)
     } catch (error) {
