@@ -69,6 +69,18 @@ export async function sendDriverPasswordReset(identifier: string): Promise<void>
   }
 }
 
+export async function confirmDriverAuthEmail(authUserId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_confirm_driver_auth_email', {
+    p_auth_user_id: authUserId,
+  })
+
+  if (error) {
+    throw error
+  }
+
+  return data === true
+}
+
 export async function isDriverUsernameTaken(
   username: string,
   excludeDriverId?: string,

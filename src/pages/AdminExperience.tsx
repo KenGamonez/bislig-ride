@@ -14,7 +14,7 @@ import {
 } from '../lib/driverProfilePhotos'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
-import { createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
+import { confirmDriverAuthEmail, createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
 import {
   generateTemporaryPassword,
   isValidEmailLike,
@@ -559,12 +559,14 @@ useEffect(() => {
           auth_user_id: account.authUserId,
         })
 
+        const emailConfirmed = await confirmDriverAuthEmail(account.authUserId).catch(() => false)
+
         setCreatedAccount({
           name: created.full_name,
           email: account.email,
           username: created.username ?? storedUsername,
           initialPassword,
-          needsEmailConfirmation: account.needsEmailConfirmation,
+          needsEmailConfirmation: account.needsEmailConfirmation && !emailConfirmed,
         })
 
         const mappedDriver = mapDriverRecord(created)
@@ -796,6 +798,8 @@ useEffect(() => {
       })
       const mappedDriver = mapDriverRecord(updated)
 
+      const emailConfirmed = await confirmDriverAuthEmail(account.authUserId).catch(() => false)
+
       setDrivers((current) =>
         current.map((driver) => driver.id === mappedDriver.id ? mappedDriver : driver),
       )
@@ -805,7 +809,7 @@ useEffect(() => {
         email: account.email,
         username: normalizedUsername,
         initialPassword,
-        needsEmailConfirmation: account.needsEmailConfirmation,
+        needsEmailConfirmation: account.needsEmailConfirmation && !emailConfirmed,
       })
       setShowManageAccount(false)
       setManageMessage('')
