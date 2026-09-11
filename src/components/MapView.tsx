@@ -8,6 +8,7 @@ type MapViewProps = {
   pickupLatitude?: number | null
   pickupLongitude?: number | null
   className?: string
+  height?: number
 }
 
 export function MapView({
@@ -16,6 +17,7 @@ export function MapView({
   pickupLatitude = null,
   pickupLongitude = null,
   className,
+  height = 400,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement | null>(null)
   const mapRef = useRef<maplibregl.Map | null>(null)
@@ -140,7 +142,16 @@ export function MapView({
     }
 
     if (isNewPickupLocation) {
-      map.flyTo({ center: [pickupLongitude, pickupLatitude], essential: false })
+      const previous = pickupCameraLocationRef.current?.split(':').map(Number)
+      const jumped =
+        !previous ||
+        Math.abs(previous[0] - pickupLatitude) > 0.005 ||
+        Math.abs(previous[1] - pickupLongitude) > 0.005
+
+      if (jumped) {
+        map.flyTo({ center: [pickupLongitude, pickupLatitude], essential: false })
+      }
+
       pickupCameraLocationRef.current = pickupLocationKey
     }
   }, [pickupLatitude, pickupLongitude, mapReady])
@@ -153,8 +164,8 @@ export function MapView({
       style={{
         position: 'relative',
         width: '100%',
-        height: '400px',
-        minHeight: '400px',
+        height,
+        minHeight: height,
       }}
     />
   )

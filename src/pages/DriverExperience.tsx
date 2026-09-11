@@ -18,9 +18,11 @@ import {
 import {
   notificationPermission,
   playRequestChime,
+  playChatNotification,
   requestNotificationPermission,
   showBrowserNotification,
 } from '../lib/notifications'
+import { subscribeToPassengerLocation } from '../lib/passengerLocations'
 import {
   acceptRide,
   cancelRide,
@@ -202,6 +204,12 @@ export function DriverExperience({
   const [showStatusHint, setShowStatusHint] = useState(false)
   const [driverStatusBlocked, setDriverStatusBlocked] = useState(false)
   const statusHintTimerRef = useRef<number | null>(null)
+  const [passengerLocation, setPassengerLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [chatUnread, setChatUnread] = useState(0)
+  const [chatToast, setChatToast] = useState<{ id: string; from: string; preview: string } | null>(null)
+  const showChatRef = useRef(false)
+  const handledChatMessageIdsRef = useRef<Set<string>>(new Set())
+  const chatToastTimerRef = useRef<number | null>(null)
 
   const revealStatusHint = () => {
     if (statusHintTimerRef.current !== null) {
@@ -220,6 +228,18 @@ export function DriverExperience({
       statusHintTimerRef.current = null
     }
     setShowStatusHint(false)
+  }
+
+  const handleOpenChat = () => {
+    setChatUnread(0)
+    setChatToast(null)
+
+    if (chatToastTimerRef.current !== null) {
+      window.clearTimeout(chatToastTimerRef.current)
+      chatToastTimerRef.current = null
+    }
+
+    setShowChat(true)
   }
 
   useEffect(() => {
@@ -447,7 +467,7 @@ return () => {
     }
   }, [driverOnline, driverId])
 
-  useEffect(() => {
+useEffect(() => {
     if (!activeRide?.id || !driverAuthId) {
       return
     }
@@ -467,22 +487,75 @@ return () => {
             id?: string
             ride_id?: string
             sender_role?: string
+            message?: string
           }
 
           if (
-            incoming.ride_id === activeRide.id &&
-            incoming.sender_role === 'Rider'
+            incoming.ride_id !== activeRide.id ||
+            incoming.sender_role !== 'Rider' ||
+            !incoming.id
           ) {
-            setShowChat(true)
+            return
           }
+
+          if (handledChatMessageIdsRef.current.has(incoming.id)) {
+            return
+          }
+
+          handledChatMessageIdsRef.current.add(incoming.id)
+
+          playChatNotification()
+
+          if (showChatRef.current) {
+            return
+          }
+
+          setChatUnread((current) => current + 1)
+          setChatToast({
+            id: incoming.id,
+            from: activeRide.customer_name,
+            preview: incoming.message ?? 'New message',
+          })
+
+          if (chatToastTimerRef.current !== null) {
+            window.clearTimeout(chatToastTimerRef.current)
+          }
+
+          chatToastTimerRef.current = window.setTimeout(() => {
+            setChatToast(null)
+            chatToastTimerRef.current = null
+          }, 6000)
         },
       )
       .subscribe()
 
     return () => {
+      if (chatToastTimerRef.current !== null) {
+        window.clearTimeout(chatToastTimerRef.current)
+      }
+
+      setChatToast(null)
+      setChatUnread(0)
+
       void supabase.removeChannel(channel)
     }
-  }, [activeRide?.id, driverAuthId])
+  }, [activeRide?.id, driverAuthId, activeRide?.customer_name])
+
+  useEffect(() => {
+    showChatRef.current = showChat
+  }, [showChat])
+
+  useEffect(() => {
+    const activePhases: DriverPhase[] = ['heading_to_pickup', 'arrived', 'in_progress']
+
+    if (!activeRide?.id || !activePhases.includes(phase)) {
+      return
+    }
+
+    return subscribeToPassengerLocation(activeRide.id, (location) => {
+      setPassengerLocation({ latitude: location.latitude, longitude: location.longitude })
+    })
+  }, [activeRide?.id, phase])
 
   useEffect(() => {
     if (!activeRide?.id) {
@@ -1384,11 +1457,14 @@ const displayedDriver = driverProfile ?? demoDriver
         {renderPassengerReputationRow()}
       </div>
 
-      <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
+      <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
 
       <button type="button" className="primary-action" onClick={handleArrived} disabled={transitioning}>
@@ -1427,9 +1503,14 @@ const displayedDriver = driverProfile ?? demoDriver
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
       </div>
 
+      <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
+
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
 
       <button type="button" className="primary-action" onClick={handleStartRide} disabled={transitioning}>
@@ -1479,11 +1560,14 @@ const displayedDriver = driverProfile ?? demoDriver
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
       </div>
 
-      <div className="driver-map-panel"><MapView driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={activeRide?.pickup_lat} pickupLongitude={activeRide?.pickup_lng} /></div>
+      <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
 
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
-        <button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
 
       <button type="button" className="primary-action" onClick={handleCompleteRide} disabled={transitioning}>
@@ -1671,7 +1755,7 @@ const displayedDriver = driverProfile ?? demoDriver
       />
 
     <div className="driver-shell">
-      {showChat && activeRide?.id && (
+{showChat && activeRide?.id && (
         <RideChat
           rideId={activeRide.id}
           otherPartyName={activeRide.customer_name}
@@ -1681,6 +1765,18 @@ const displayedDriver = driverProfile ?? demoDriver
           onClose={() => setShowChat(false)}
         />
       )}
+
+      {chatToast ? (
+        <div className="chat-notification-toast" role="status" aria-live="polite">
+          <div className="chat-notification-copy">
+            <strong>{chatToast.from}</strong>
+            <span>{chatToast.preview}</span>
+          </div>
+          <button type="button" className="chat-notification-view" onClick={handleOpenChat}>
+            View
+          </button>
+        </div>
+      ) : null}
 
       <button type="button" className="secondary-action compact-button driver-back-button" onClick={onBack}>
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

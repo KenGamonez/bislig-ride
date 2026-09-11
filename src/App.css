@@ -9587,3 +9587,157 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   background: var(--color-red);
   text-decoration: none;
 }
+
+/* =========================================================
+   ACTIVE-RIDE MAP INSIDE STATE CARDS
+   Passenger sees their driver's marker on the accepted,
+   arrived and in-progress screens; driver sees the passenger's
+   live pickup marker on their active-ride screens.
+   ========================================================= */
+
+.ride-map-panel {
+  margin: 14px 0 16px;
+  border: 1px solid var(--color-border-dark);
+  border-radius: 14px;
+  background: var(--color-white);
+  overflow: hidden;
+}
+
+.ride-map-panel .ride-map {
+  display: block;
+}
+
+.ride-map-panel .maplibregl-ctrl,
+.ride-map-panel .maplibregl-ctrl-group {
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(10, 10, 10, 0.12);
+}
+
+.passenger-location-note {
+  margin: 0;
+  padding: 10px 14px;
+  border-top: 1px solid var(--color-border-dark);
+  background: var(--color-gray-50);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+/* =========================================================
+   CHAT NOTIFICATION — subtle toast + unread badge
+   Replaces the intrusive auto-open modal on incoming
+   messages. Sound is gated on a prior user interaction.
+   ========================================================= */
+
+.chat-button {
+  position: relative;
+}
+
+.chat-unread-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: var(--color-red);
+  color: var(--color-white);
+  font-size: 0.64rem;
+  font-weight: 800;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+}
+
+.chat-notification-toast {
+  position: fixed;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 24px;
+  z-index: 8000;
+  width: min(420px, calc(100% - 32px));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 14px 12px 18px;
+  background: var(--color-white);
+  border: 1px solid var(--color-border-dark);
+  border-left: 3px solid var(--color-green-deep);
+  border-radius: 14px;
+  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
+  animation: chat-notification-in 220ms ease-out;
+}
+
+.chat-notification-toast button {
+  font: inherit;
+}
+
+.chat-notification-copy {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.chat-notification-copy strong {
+  font-size: 0.78rem;
+  color: var(--color-black);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-notification-copy span {
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chat-notification-view {
+  flex: 0 0 auto;
+  min-height: 34px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 999px;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: background 160ms ease;
+}
+
+.chat-notification-view:hover,
+.chat-notification-view:focus-visible {
+  background: var(--color-green-deep);
+  outline: none;
+}
+
+@keyframes chat-notification-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 10px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .chat-notification-toast {
+    animation: none;
+  }
+}
+
+@media (max-width: 767px) {
+  .chat-notification-toast {
+    bottom: calc(132px + env(safe-area-inset-bottom));
+  }
+}

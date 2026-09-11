@@ -11,6 +11,7 @@ import { DriverPasswordReset } from './pages/DriverPasswordReset'
 import { AppHeader } from './components/AppHeader'
 import { AppFooter } from './components/AppFooter'
 import { supabase } from './lib/supabase'
+import { unlockNotificationAudio } from './lib/notifications'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
 
@@ -76,6 +77,20 @@ function App() {
 
     return () => {
       subscription.unsubscribe()
+    }
+  }, [])
+
+  useEffect(() => {
+    const unlock = () => unlockNotificationAudio()
+
+    window.addEventListener('pointerdown', unlock, { passive: true })
+    window.addEventListener('touchstart', unlock, { passive: true })
+    window.addEventListener('keydown', unlock)
+
+    return () => {
+      window.removeEventListener('pointerdown', unlock)
+      window.removeEventListener('touchstart', unlock)
+      window.removeEventListener('keydown', unlock)
     }
   }, [])
 

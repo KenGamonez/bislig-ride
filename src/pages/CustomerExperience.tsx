@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
 import { AppHeader } from '../components/AppHeader'
 import { CancelRideModal } from '../components/CancelRideModal'
@@ -19,6 +19,8 @@ import {
 import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
 import { subscribeToDriverLocation } from '../lib/driverLocations'
+import { updatePassengerLocation } from '../lib/passengerLocations'
+import { playChatNotification } from '../lib/notifications'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { cancelRide, createRide, fetchRideById, hasRatedRide, submitRideRating } from '../lib/rides'
@@ -172,6 +174,13 @@ const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const [extraDestinations, setExtraDestinations] = useState<string[]>([''])
   const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
+  const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [passengerLocationError, setPassengerLocationError] = useState('')
+  const [chatUnread, setChatUnread] = useState(0)
+  const [chatToast, setChatToast] = useState<{ id: string; from: string; preview: string } | null>(null)
+  const showChatRef = useRef(false)
+  const handledChatMessageIdsRef = useRef<Set<string>>(new Set())
+  const chatToastTimerRef = useRef<number | null>(null)
 
   const handleBottomNavChange = (tab: MobileBottomNavTab) => {
     setBottomNavTab(tab)
@@ -187,6 +196,18 @@ const [isSubmittingRating, setIsSubmittingRating] = useState(false)
     } else {
       setShowProfile(true)
     }
+  }
+
+  const handleOpenChat = () => {
+    setChatUnread(0)
+    setChatToast(null)
+
+    if (chatToastTimerRef.current !== null) {
+      window.clearTimeout(chatToastTimerRef.current)
+      chatToastTimerRef.current = null
+    }
+
+    setShowChat(true)
   }
 
   useEffect(() => {
@@ -651,6 +672,68 @@ void loadAssignedDriver()
   }, [ride.driver_id, ride.status])
 
   useEffect(() => {
+    showChatRef.current = showChat
+  }, [showChat])
+
+  useEffect(() => {
+    const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
+
+    if (!ride.id || !customerAuthId || !activeStatuses.includes(ride.status) || !navigator.geolocation) {
+      return
+    }
+
+    let mounted = true
+    let watchId = 0
+    let lastLatitude = 0
+    let lastLongitude = 0
+    let lastPublishedAt = 0
+
+    const onPosition = (position: GeolocationPosition) => {
+      const { latitude, longitude } = position.coords
+
+      if (!mounted) {
+        return
+      }
+
+      setPassengerLiveLocation({ latitude, longitude })
+      setPassengerLocationError('')
+
+      const now = Date.now()
+      const moved = Math.abs(latitude - lastLatitude) >= 0.00008 || Math.abs(longitude - lastLongitude) >= 0.00008
+
+      if (!moved || now - lastPublishedAt < 3000) {
+        return
+      }
+
+      lastLatitude = latitude
+      lastLongitude = longitude
+      lastPublishedAt = now
+
+      void updatePassengerLocation(ride.id, latitude, longitude).catch((error) => {
+        console.error('Unable to update passenger location:', error)
+      })
+    }
+
+    const onError = (error: GeolocationPositionError) => {
+      console.error('Unable to get passenger location:', error)
+
+      if (mounted) {
+        setPassengerLocationError('Live location is off. Your driver can still rely on your recorded pickup point.')
+      }
+    }
+
+    watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true })
+
+    return () => {
+      mounted = false
+
+      if (watchId !== 0) {
+        navigator.geolocation.clearWatch(watchId)
+      }
+    }
+  }, [ride.id, customerAuthId, ride.status])
+
+  useEffect(() => {
     if (!ride.id || !customerAuthId) {
       return
     }
@@ -670,22 +753,59 @@ void loadAssignedDriver()
             id?: string
             ride_id?: string
             sender_role?: string
+            message?: string
           }
 
           if (
-            incoming.ride_id === ride.id &&
-            incoming.sender_role === 'driver'
+            incoming.ride_id !== ride.id ||
+            incoming.sender_role !== 'driver' ||
+            !incoming.id
           ) {
-            setShowChat(true)
+            return
           }
+
+          if (handledChatMessageIdsRef.current.has(incoming.id)) {
+            return
+          }
+
+          handledChatMessageIdsRef.current.add(incoming.id)
+
+          playChatNotification()
+
+          if (showChatRef.current) {
+            return
+          }
+
+          setChatUnread((current) => current + 1)
+          setChatToast({
+            id: incoming.id,
+            from: assignedDriver?.full_name ?? 'Your driver',
+            preview: incoming.message ?? 'New message',
+          })
+
+          if (chatToastTimerRef.current !== null) {
+            window.clearTimeout(chatToastTimerRef.current)
+          }
+
+          chatToastTimerRef.current = window.setTimeout(() => {
+            setChatToast(null)
+            chatToastTimerRef.current = null
+          }, 6000)
         },
       )
       .subscribe()
 
-return () => {
+    return () => {
+      if (chatToastTimerRef.current !== null) {
+        window.clearTimeout(chatToastTimerRef.current)
+      }
+
+      setChatToast(null)
+      setChatUnread(0)
+
       void supabase.removeChannel(channel)
     }
-  }, [ride.id, customerAuthId])
+  }, [ride.id, customerAuthId, assignedDriver?.full_name])
 
   useEffect(() => {
     if (!ride.id || !['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)) {
@@ -1303,8 +1423,26 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
         </div>
       </div>
 
+      <div className="ride-map-panel">
+        <MapView
+          className="ride-map"
+          height={230}
+          driverLatitude={driverLocation?.latitude}
+          driverLongitude={driverLocation?.longitude}
+          pickupLatitude={passengerLiveLocation?.latitude ?? ride.pickup_lat}
+          pickupLongitude={passengerLiveLocation?.longitude ?? ride.pickup_lng}
+        />
+        {passengerLocationError ? (
+          <p className="passenger-location-note">{passengerLocationError}</p>
+        ) : null}
+      </div>
+
       <div className="action-row compact-actions">
-        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button><button type="button" className="secondary-action" onClick={() => setShowChat(true)}>Chat</button>
+        <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
       <p className="lead-paragraph">Your driver will update the ride status when they arrive.</p>
     </div>
@@ -1342,8 +1480,26 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
         </div>
       </div>
 
+      <div className="ride-map-panel">
+        <MapView
+          className="ride-map"
+          height={230}
+          driverLatitude={driverLocation?.latitude}
+          driverLongitude={driverLocation?.longitude}
+          pickupLatitude={passengerLiveLocation?.latitude ?? ride.pickup_lat}
+          pickupLongitude={passengerLiveLocation?.longitude ?? ride.pickup_lng}
+        />
+        {passengerLocationError ? (
+          <p className="passenger-location-note">{passengerLocationError}</p>
+        ) : null}
+      </div>
+
       <div className="action-row">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
       <p className="lead-paragraph">Your driver has arrived. The trip will begin when your driver starts the ride.</p>
     </div>
@@ -1392,8 +1548,26 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
         </div>
       </div>
 
+      <div className="ride-map-panel">
+        <MapView
+          className="ride-map"
+          height={230}
+          driverLatitude={driverLocation?.latitude}
+          driverLongitude={driverLocation?.longitude}
+          pickupLatitude={passengerLiveLocation?.latitude ?? ride.pickup_lat}
+          pickupLongitude={passengerLiveLocation?.longitude ?? ride.pickup_lng}
+        />
+        {passengerLocationError ? (
+          <p className="passenger-location-note">{passengerLocationError}</p>
+        ) : null}
+      </div>
+
       <div className="action-row">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
+        <button type="button" className="secondary-action chat-button" onClick={handleOpenChat}>
+          Chat
+          {chatUnread > 0 ? <span className="chat-unread-badge">{chatUnread}</span> : null}
+        </button>
       </div>
       <p className="lead-paragraph">Your ride is in progress. Your driver will complete the trip when you reach your destination.</p>
     </div>
@@ -1796,6 +1970,18 @@ onClick={() => setRating(star)}
           <WeatherWidget />
         </aside>
       </main>
+
+      {chatToast ? (
+        <div className="chat-notification-toast" role="status" aria-live="polite">
+          <div className="chat-notification-copy">
+            <strong>{chatToast.from}</strong>
+            <span>{chatToast.preview}</span>
+          </div>
+          <button type="button" className="chat-notification-view" onClick={handleOpenChat}>
+            View
+          </button>
+        </div>
+      ) : null}
 
       <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
       <AnnouncementTicker variant="fixed" />
