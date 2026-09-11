@@ -203,9 +203,9 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
           <label className="field-block"><span className="field-label">Vehicle Type</span>
             <select className={`input-field${errors.vehicle_type ? ' has-error' : ''}`} value={form.vehicle_type} onChange={(event) => updateField('vehicle_type', event.target.value)}>
               <option value="">Select a vehicle type</option>
-              <option value="Tricycle">Tricycle</option>
               <option value="Motorcycle">Motorcycle</option>
-              <option value="Other">Other</option>
+              <option value="Tricycle">Tricycle</option>
+              <option value="Umbak">Umbak</option>
             </select>
             {errors.vehicle_type ? <span className="form-error-message">{errors.vehicle_type}</span> : null}
           </label>

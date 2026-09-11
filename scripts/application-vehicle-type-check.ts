@@ -43,7 +43,7 @@ console.log('--- Applicant form ---')
 assert('form payload includes vehicle_type', /vehicle_type:\s*form\.vehicle_type/.test(form), true)
 assert('Tricycle option present', contains(form, 'Tricycle'), true)
 assert('Motorcycle option present', contains(form, 'Motorcycle'), true)
-assert('Other option present', contains(form, 'Other'), true)
+assert('Umbak option present', contains(form, 'Umbak'), true)
 assert('Vehicle Type is required', /\brequiredFields\b[\s\S]*\bvehicle_type\b/.test(form), true)
 
 console.log('--- Admin application detail ---')
