@@ -170,7 +170,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
               href="/"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Passenger</span>
+              <span className="mobile-nav-label">Home</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />

@@ -69,7 +69,7 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
           variant="primary"
           badge="Popular"
           title="Ride Now"
-          description="On-demand motorbike rides around Bislig City"
+          description="On-demand rides around Bislig City"
           icon={rideIcon}
           onSelect={onSelectRideNow}
         />
