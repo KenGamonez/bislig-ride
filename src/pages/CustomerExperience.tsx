@@ -7,6 +7,7 @@ import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { MobileBottomNav, type MobileBottomNavTab } from '../components/MobileBottomNav'
+import { AnnouncementTicker } from '../components/AnnouncementTicker'
 import { WeatherWidget } from '../components/WeatherWidget'
 import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import {
@@ -1797,17 +1798,7 @@ onClick={() => setRating(star)}
       </main>
 
       <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
-
-      <footer className="announcement-ticker" role="marquee" aria-label="Coming soon announcement">
-        <div className="ticker-track">
-          <span className="ticker-content">
-            BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span>
-          </span>
-          <span className="ticker-content" aria-hidden="true">
-            BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span> BISLIG RIDE - COMING SOON <span className="ticker-dot" aria-hidden="true"></span> WE'RE ONBOARDING OUR FOUNDING DRIVERS <span className="ticker-dot" aria-hidden="true"></span>
-          </span>
-        </div>
-      </footer>
+      <AnnouncementTicker variant="fixed" />
 
     </div>
   )

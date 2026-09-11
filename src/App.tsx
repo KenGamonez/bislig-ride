@@ -9,6 +9,7 @@ import { PakyawanExperience } from './pages/PakyawanExperience'
 import { ContactExperience } from './pages/ContactExperience'
 import { DriverPasswordReset } from './pages/DriverPasswordReset'
 import { AppHeader } from './components/AppHeader'
+import { AppFooter } from './components/AppFooter'
 import { supabase } from './lib/supabase'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
@@ -80,42 +81,58 @@ function App() {
 
   if (isBecomeDriverPage) {
     return (
-      <BecomeDriverExperience
-        view={view}
-        onViewChange={(nextView) => {
-          try {
-            window.sessionStorage.setItem(requestedViewKey, nextView)
-          } catch {
-            // sessionStorage unavailable — land on the default view
-          }
-          window.history.pushState({}, '', '/')
-          window.location.reload()
-        }}
-        onHome={() => {
-          window.history.pushState({}, '', '/')
-          window.location.reload()
-        }}
-      />
+      <>
+        <BecomeDriverExperience
+          view={view}
+          onViewChange={(nextView) => {
+            try {
+              window.sessionStorage.setItem(requestedViewKey, nextView)
+            } catch {
+              // sessionStorage unavailable — land on the default view
+            }
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+          onHome={() => {
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+        />
+        <AppFooter />
+      </>
     )
   }
 
   if (isContactPage) {
-    return <ContactExperience />
+    return (
+      <>
+        <ContactExperience />
+        <AppFooter />
+      </>
+    )
   }
 
   if (isPakyawanPage) {
     return (
-      <PakyawanExperience
-        onBack={() => {
-          window.history.pushState({}, '', '/')
-          window.location.reload()
-        }}
-      />
+      <>
+        <PakyawanExperience
+          onBack={() => {
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+        />
+        <AppFooter />
+      </>
     )
   }
 
   if (isDriverResetPage) {
-    return <DriverPasswordReset />
+    return (
+      <>
+        <DriverPasswordReset />
+        <AppFooter />
+      </>
+    )
   }
 
   if (isAdminPage) {
@@ -125,59 +142,71 @@ function App() {
     }
 
     return (
-      <AdminExperience
-        view="admin"
-        onViewChange={goHome}
-        onBack={goHome}
-      />
+      <>
+        <AdminExperience
+          view="admin"
+          onViewChange={goHome}
+          onBack={goHome}
+        />
+        <AppFooter showTicker={false} />
+      </>
     )
   }
 
   return (
-    <div className="app-stage">
-      {view === 'Rider' ? (
-        <CustomerExperience currentView={view} onSwitchView={setView} />
-      ) : view === 'driver' ? (
-        driverBlocked ? (
-          <>
-            <AppHeader
-              view="driver"
-              onViewChange={setView}
-              primaryLabel="My Rides"
-              onPrimaryAction={() => setView('Rider')}
-            />
-            <div className="auth-shell">
-              <div className="auth-card">
-                <div className="auth-header">
-                  <p className="eyebrow auth-eyebrow">Driver Access</p>
-                  <h2>Account inactive</h2>
+    <>
+      <div className="app-stage">
+        {view === 'Rider' ? (
+          <CustomerExperience currentView={view} onSwitchView={setView} />
+        ) : view === 'driver' ? (
+          driverBlocked ? (
+            <>
+              <AppHeader
+                view="driver"
+                onViewChange={setView}
+                primaryLabel="My Rides"
+                onPrimaryAction={() => setView('Rider')}
+              />
+              <div className="auth-shell">
+                <div className="auth-card">
+                  <div className="auth-header">
+                    <p className="eyebrow auth-eyebrow">Driver Access</p>
+                    <h2>Account inactive</h2>
+                  </div>
+                  <p className="muted-copy">
+                    Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+                  </p>
+                  <button type="button" className="primary-action request-ride-action" onClick={() => setView('Rider')}>
+                    Back to Ride Booking
+                  </button>
                 </div>
-                <p className="muted-copy">
-                  Your driver account is inactive. Please contact Bislig Ride to reactivate it.
-                </p>
-                <button type="button" className="primary-action request-ride-action" onClick={() => setView('Rider')}>
-                  Back to Ride Booking
-                </button>
               </div>
-            </div>
-          </>
-        ) : driverAuthenticated ? (
-          <DriverExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
+            </>
+          ) : driverAuthenticated ? (
+            <DriverExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
+          ) : (
+            <DriverLogin
+              view={view}
+              onViewChange={setView}
+              onLogin={() => {
+                setDriverAuthenticated(true)
+                setDriverBlocked(false)
+              }}
+              onBack={() => setView('Rider')}
+            />
+          )
         ) : (
-          <DriverLogin
-            view={view}
-            onViewChange={setView}
-            onLogin={() => {
-              setDriverAuthenticated(true)
-              setDriverBlocked(false)
-            }}
-            onBack={() => setView('Rider')}
-          />
-        )
+          <AdminExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
+        )}
+      </div>
+      {view === 'admin' ? (
+        <AppFooter showTicker={false} />
+      ) : view === 'Rider' ? (
+        <AppFooter className="app-footer-paired" />
       ) : (
-        <AdminExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
+        <AppFooter />
       )}
-    </div>
+    </>
   )
 }
 
