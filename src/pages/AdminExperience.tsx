@@ -13,7 +13,7 @@ import {
   validateDriverPhoto,
 } from '../lib/driverProfilePhotos'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
-import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
+import { createDriver, fetchDrivers, removeDriver, updateDriver, type DriverRecord } from '../lib/drivers'
 import { confirmDriverAuthEmail, createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
 import {
   generateTemporaryPassword,
@@ -96,6 +96,20 @@ const emptyManageDraft: ManageDraft = {
   initialPassword: '',
 }
 
+const driverRemovalErrorMessage = (error: unknown): string => {
+  const raw = error instanceof Error ? error.message : ''
+
+  if (raw) {
+    const trimmed = raw.replace(/\n.*$/s, '').trim()
+
+    if (trimmed && !/^\{/.test(trimmed)) {
+      return trimmed
+    }
+  }
+
+  return 'Unable to remove the driver. Please try again.'
+}
+
 const adminTabs: { key: AdminTab; label: string }[] = [
   { key: 'overview', label: 'Overview' },
   { key: 'drivers', label: 'Drivers' },
@@ -154,6 +168,7 @@ export function AdminExperience({
   } | null>(null)
   const [driverToRemove, setDriverToRemove] = useState<AdminDriver | null>(null)
   const [isRemovingDriver, setIsRemovingDriver] = useState(false)
+  const [driverSuccess, setDriverSuccess] = useState('')
   const [showManageAccount, setShowManageAccount] = useState(false)
   const [manageContextId, setManageContextId] = useState<string | null>(null)
   const [manageDraft, setManageDraft] = useState<ManageDraft>(emptyManageDraft)
@@ -663,26 +678,25 @@ useEffect(() => {
   const handleRemoveDriver = async () => {
     if (!driverToRemove) return
 
-    const currentDriver = drivers.find((driver) => driver.id === driverToRemove.id)
-
-    if (!currentDriver || currentDriver.status !== 'Active') {
-      setDriverToRemove(null)
-      return
-    }
-
     try {
       setDriverError('')
+      setDriverSuccess('')
       setIsRemovingDriver(true)
-      const updated = await updateDriver(driverToRemove.id, { status: 'inactive' })
-      const mappedDriver = mapDriverRecord(updated)
+      const removed = await removeDriver(driverToRemove.id)
 
-      setDrivers((current) =>
-        current.map((driver) => driver.id === driverToRemove.id ? mappedDriver : driver),
-      )
+      if (!removed) {
+        throw new Error('Unable to remove the driver account. Please try again.')
+      }
+
+      setDrivers((current) => current.filter((driver) => driver.id !== driverToRemove.id))
+      setSelectedDriverId((current) => (current === driverToRemove.id ? '' : current))
+      setShowManageAccount(false)
       setDriverToRemove(null)
+      setDriverSuccess('Driver removed successfully.')
     } catch (error) {
       console.error('Unable to remove driver:', error)
-      setDriverError('Unable to remove driver. Please try again.')
+      setDriverSuccess('')
+      setDriverError(driverRemovalErrorMessage(error))
     } finally {
       setIsRemovingDriver(false)
     }
@@ -938,6 +952,7 @@ useEffect(() => {
 
             {isLoadingDrivers ? <p className="muted-copy">Loading drivers...</p> : null}
             {driverError ? <p className="error-copy">{driverError}</p> : null}
+            {driverSuccess ? <p className="driver-password-success" role="status">{driverSuccess}</p> : null}
 
             {showAddDriver ? (
               <form className="driver-form panel-form" onSubmit={handleDriverSubmit}>
@@ -1218,17 +1233,17 @@ useEffect(() => {
                           <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); openManageAccount(driver) }}>
                             Manage
                           </button>
-                          <button type="button" className="ghost-button" onClick={() => handleStatusChange(driver.id, driver.status === 'Active' ? 'Inactive' : 'Active')}>
-                            {driver.status === 'Active' ? 'Deactivate' : 'Activate'}
-                          </button>
                           <button type="button" className="ghost-button" onClick={() => setSelectedDriverId(driver.id)}>
                             View
                           </button>
-                          {driver.status === 'Active' && (
-                            <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
-                              Remove
+                          {driver.status !== 'Active' && (
+                            <button type="button" className="ghost-button" onClick={() => handleStatusChange(driver.id, 'Active')}>
+                              Activate
                             </button>
                           )}
+                          <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
+                            Remove
+                          </button>
                         </td>
                       </tr>
                     ))}
@@ -1801,16 +1816,13 @@ useEffect(() => {
           className="remove-driver-dialog"
           onClick={(event) => event.stopPropagation()}
         >
-          <h3 id="remove-driver-title">Remove driver</h3>
+          <h3 id="remove-driver-title">Remove Driver?</h3>
           <p className="confirm-copy">
-            Are you sure you want to remove this driver?
+            Are you sure you want to permanently remove this driver from Bislig Ride? This will remove their driver account and access to the system.
           </p>
           <p className="confirm-driver">
             <strong>{driverToRemove.name}</strong>
             <span>{driverToRemove.phone}</span>
-          </p>
-          <p className="muted-copy confirm-note">
-            This deactivates the driver. Their ride history and ratings are preserved.
           </p>
           <div className="form-actions">
             <button

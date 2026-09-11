@@ -98,6 +98,16 @@ export type DriverProfileView = {
   total_ratings: number | null
 }
 
+export async function removeDriver(driverId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc('admin_remove_driver', {
+    p_driver_id: driverId,
+  })
+
+  if (error) throw error
+
+  return data === true
+}
+
 export async function fetchDriverById(driverId: string): Promise<DriverProfileView | null> {
   const { data, error } = await supabase
     .from('driver_profiles')
