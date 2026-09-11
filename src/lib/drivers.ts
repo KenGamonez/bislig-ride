@@ -24,7 +24,6 @@ export async function fetchDrivers() {
   const { data, error } = await supabase
     .from('drivers')
     .select('*')
-    .eq('status', 'active')
     .order('created_at', { ascending: false })
 
   if (error) throw error

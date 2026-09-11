@@ -135,6 +135,16 @@ export async function createDriverAuthUser(
       throw new Error('Unable to create the driver account. Please try again.')
     }
 
+    const registeredIdentities = data.user.identities ?? []
+
+    if (registeredIdentities.length === 0) {
+      const duplicate = new Error(
+        'An authentication account already exists for this email address. Choose a different email so the driver gets their own login.',
+      )
+      Object.assign(duplicate, { __duplicateSignup: true })
+      throw duplicate
+    }
+
     return {
       authUserId: data.user.id,
       email: data.user.email ?? email,
