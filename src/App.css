@@ -8263,7 +8263,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   /* Mobile bottom nav */
   .customer-layout {
-    padding-bottom: calc(96px + env(safe-area-inset-bottom));
+    padding-bottom: calc(112px + env(safe-area-inset-bottom));
   }
 
   .mobile-bottom-nav {
