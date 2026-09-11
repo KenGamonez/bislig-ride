@@ -9003,3 +9003,82 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     padding: 8px 12px;
   }
 }
+
+/* Admin — driver photo upload */
+.driver-photo-field .file-input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--text-primary);
+  font-size: 0.9rem;
+}
+
+.driver-photo-field .form-note {
+  display: block;
+  margin-top: 6px;
+}
+
+.driver-photo-preview {
+  display: block;
+  width: 88px;
+  height: 88px;
+  margin-top: 10px;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 1px solid var(--border);
+}
+
+/* Admin — remove driver confirmation */
+.remove-driver-dialog {
+  width: min(420px, 100%);
+  display: grid;
+  gap: 14px;
+  padding: 22px;
+  background: var(--color-white);
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+}
+
+.remove-driver-dialog h3 {
+  margin: 0;
+  font-size: 1.15rem;
+}
+
+.remove-driver-dialog .confirm-copy {
+  margin: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.remove-driver-dialog .confirm-driver {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+}
+
+.remove-driver-dialog .confirm-driver span {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+.remove-driver-dialog .confirm-note {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.danger-button {
+  color: var(--color-red);
+}
+
+.danger-button:hover {
+  color: var(--color-white);
+  background: var(--color-red);
+  text-decoration: none;
+}

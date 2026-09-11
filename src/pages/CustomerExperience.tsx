@@ -370,7 +370,6 @@ phone: formData.phone.trim(),
       <div className="fare-box">
         <span className="field-label">Fare</span>
         <strong>Fare handled traditionally with the driver.</strong>
-        <small>This destination is not yet in the official fare matrix.</small>
       </div>
     )
   }

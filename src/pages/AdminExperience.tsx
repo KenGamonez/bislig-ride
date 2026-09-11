@@ -7,6 +7,11 @@ import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverS
 import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
+import {
+  removeUploadedDriverPhoto,
+  uploadDriverPhoto,
+  validateDriverPhoto,
+} from '../lib/driverProfilePhotos'
 import { getContactMessages, updateContactMessageStatus } from '../lib/contactMessages'
 import { createDriver, fetchDrivers, updateDriver, type DriverRecord } from '../lib/drivers'
 import { createDriverAuthUser, isDriverUsernameTaken } from '../lib/driverAuth'
@@ -48,6 +53,8 @@ type DriverDraft = {
   username: string
   passwordMethod: 'generated' | 'custom'
   initialPassword: string
+  photo: File | null
+  photoPreviewUrl: string
 }
 
 type ManageDraft = {
@@ -78,6 +85,8 @@ const emptyDriverDraft: DriverDraft = {
   username: '',
   passwordMethod: 'generated',
   initialPassword: '',
+  photo: null,
+  photoPreviewUrl: '',
 }
 
 const emptyManageDraft: ManageDraft = {
@@ -144,6 +153,8 @@ export function AdminExperience({
     initialPassword: string
     needsEmailConfirmation: boolean
   } | null>(null)
+  const [driverToRemove, setDriverToRemove] = useState<AdminDriver | null>(null)
+  const [isRemovingDriver, setIsRemovingDriver] = useState(false)
   const [showManageAccount, setShowManageAccount] = useState(false)
   const [manageContextId, setManageContextId] = useState<string | null>(null)
   const [manageDraft, setManageDraft] = useState<ManageDraft>(emptyManageDraft)
@@ -430,6 +441,29 @@ useEffect(() => {
     })
   }
 
+  const handleDriverPhotoChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0] ?? null
+
+    setDriverDraft((current) => {
+      if (current.photoPreviewUrl) {
+        URL.revokeObjectURL(current.photoPreviewUrl)
+      }
+
+      if (!file) {
+        return { ...current, photo: null, photoPreviewUrl: '' }
+      }
+
+      const validation = validateDriverPhoto(file)
+
+      if (!validation.valid) {
+        setDriverError(validation.message ?? 'Choose a valid driver photo.')
+        return { ...current, photo: null, photoPreviewUrl: '' }
+      }
+
+      return { ...current, photo: file, photoPreviewUrl: URL.createObjectURL(file) }
+    })
+  }
+
   const handleCreateAccountToggle = (createAccount: boolean) => {
     setDriverDraft((current) => {
       const next = { ...current, createAccount }
@@ -459,8 +493,16 @@ useEffect(() => {
     setCreatedAccount(null)
 
     let account: Awaited<ReturnType<typeof createDriverAuthUser>> | null = null
+    let uploadedPhotoPath: string | null = null
+    let uploadedPhotoUrl: string | null = null
 
     try {
+      if (driverDraft.photo) {
+        const uploaded = await uploadDriverPhoto(driverDraft.photo)
+        uploadedPhotoPath = uploaded.path
+        uploadedPhotoUrl = uploaded.publicUrl
+      }
+
       if (driverDraft.createAccount) {
         const storedUsername = normalizeUsername(driverDraft.username)
 
@@ -502,9 +544,10 @@ useEffect(() => {
           vehicle_model: driverDraft.vehicleModel.trim(),
           plate_number: driverDraft.plateNumber.trim(),
           profile_photo_url:
-            driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
+            uploadedPhotoUrl ??
+            (driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
               ? sanjayPhoto
-              : null,
+              : null),
           status: driverDraft.status === 'Active' ? 'active' : 'inactive',
           availability:
             driverDraft.availability === 'Online'
@@ -541,9 +584,10 @@ useEffect(() => {
         vehicle_model: driverDraft.vehicleModel.trim(),
         plate_number: driverDraft.plateNumber.trim(),
         profile_photo_url:
-          driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
+          uploadedPhotoUrl ??
+          (driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
             ? sanjayPhoto
-            : null,
+            : null),
         status: driverDraft.status === 'Active' ? 'active' : 'inactive',
         availability:
           driverDraft.availability === 'Online'
@@ -561,6 +605,10 @@ useEffect(() => {
       setDriverDraft(emptyDriverDraft)
       setDriverFilter('all')
     } catch (error) {
+      if (uploadedPhotoPath) {
+        await removeUploadedDriverPhoto(uploadedPhotoPath).catch(() => undefined)
+      }
+
       console.error('Unable to create driver:', error)
 
       const isDuplicate = Boolean((error as { __duplicateSignup?: boolean })?.__duplicateSignup)
@@ -611,6 +659,27 @@ useEffect(() => {
     } catch (error) {
       console.error('Unable to update driver status:', error)
       setDriverError('Unable to update driver status. Please try again.')
+    }
+  }
+
+  const handleRemoveDriver = async () => {
+    if (!driverToRemove) return
+
+    try {
+      setDriverError('')
+      setIsRemovingDriver(true)
+      const updated = await updateDriver(driverToRemove.id, { status: 'inactive' })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((driver) => driver.id === driverToRemove.id ? mappedDriver : driver),
+      )
+      setDriverToRemove(null)
+    } catch (error) {
+      console.error('Unable to remove driver:', error)
+      setDriverError('Unable to remove driver. Please try again.')
+    } finally {
+      setIsRemovingDriver(false)
     }
   }
 
@@ -885,6 +954,24 @@ useEffect(() => {
                     />
                   </label>
 
+                  <label className="field-block driver-photo-field">
+                    <span className="field-label">Driver Photo</span>
+                    <input
+                      className="file-input"
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,image/gif"
+                      onChange={handleDriverPhotoChange}
+                    />
+                    <span className="muted-copy form-note">Optional. JPEG, PNG, WebP, or GIF up to 5 MB.</span>
+                    {driverDraft.photoPreviewUrl ? (
+                      <img
+                        src={driverDraft.photoPreviewUrl}
+                        alt="Driver photo preview"
+                        className="driver-photo-preview"
+                      />
+                    ) : null}
+                  </label>
+
                   <label className="field-block">
                     <span className="field-label">Phone</span>
                     <input
@@ -1139,6 +1226,9 @@ useEffect(() => {
                           </button>
                           <button type="button" className="ghost-button" onClick={() => setSelectedDriverId(driver.id)}>
                             View
+                          </button>
+                          <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
+                            Remove
                           </button>
                         </td>
                       </tr>
@@ -1698,6 +1788,52 @@ useEffect(() => {
         </section>
       ) : null}
     </div>
+
+    {driverToRemove ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isRemovingDriver ? undefined : () => setDriverToRemove(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="remove-driver-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="remove-driver-title">Remove driver</h3>
+          <p className="confirm-copy">
+            Are you sure you want to remove this driver?
+          </p>
+          <p className="confirm-driver">
+            <strong>{driverToRemove.name}</strong>
+            <span>{driverToRemove.phone}</span>
+          </p>
+          <p className="muted-copy confirm-note">
+            This deactivates the driver. Their ride history and ratings are preserved.
+          </p>
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isRemovingDriver}
+              onClick={() => setDriverToRemove(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-action danger-button"
+              disabled={isRemovingDriver}
+              onClick={() => void handleRemoveDriver()}
+            >
+              {isRemovingDriver ? 'Removing...' : 'Remove Driver'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
     </>
   )
 }
