@@ -30,6 +30,7 @@ function readRequestedView(): ViewMode {
 function App() {
   const [view, setView] = useState<ViewMode>(readRequestedView)
   const [driverAuthenticated, setDriverAuthenticated] = useState(false)
+  const [driverBlocked, setDriverBlocked] = useState(false)
 
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
   const isPakyawanPage = window.location.pathname === '/pakyawan'
@@ -43,16 +44,24 @@ function App() {
 
       if (!data.session?.user) {
         setDriverAuthenticated(false)
+        setDriverBlocked(false)
         return
       }
 
       const { data: driver } = await supabase
         .from('drivers')
-        .select('id')
+        .select('id, status')
         .eq('auth_user_id', data.session.user.id)
         .maybeSingle()
 
+      if (driver && driver.status === 'inactive') {
+        setDriverAuthenticated(false)
+        setDriverBlocked(true)
+        return
+      }
+
       setDriverAuthenticated(Boolean(driver))
+      setDriverBlocked(false)
     }
 
     void checkDriverSession()
@@ -128,7 +137,22 @@ function App() {
       {view === 'Rider' ? (
         <CustomerExperience currentView={view} onSwitchView={setView} />
       ) : view === 'driver' ? (
-        driverAuthenticated ? (
+        driverBlocked ? (
+          <div className="auth-shell">
+            <div className="auth-card">
+              <div className="auth-header">
+                <p className="section-label">Driver Access</p>
+                <h2>Account inactive</h2>
+              </div>
+              <p className="muted-copy">
+                Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+              </p>
+              <button type="button" className="primary-action" onClick={() => setView('Rider')}>
+                Back to Ride Booking
+              </button>
+            </div>
+          </div>
+        ) : driverAuthenticated ? (
           <DriverExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
         ) : (
           <DriverLogin
@@ -136,6 +160,7 @@ function App() {
             onViewChange={setView}
             onLogin={() => {
               setDriverAuthenticated(true)
+              setDriverBlocked(false)
             }}
             onBack={() => setView('Rider')}
           />

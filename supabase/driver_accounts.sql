@@ -21,8 +21,10 @@
 --      Riders read driver info through this view, never through public.drivers.
 --
 -- Manual (dashboard) steps — Authentication > Providers > Email:
---   * Turn OFF "Confirm email" if you want instant driver logins after the
---     admin creates an account; keep it ON to require email verification.
+--   * Keep "Confirm email" ON. Driver accounts provisioned by the admin are
+--     auto-confirmed by public.admin_confirm_driver_auth_email (see
+--     admin_confirm_driver_auth.sql), so the driver can log in immediately with
+--     the username + password the admin shares — no email verification needed.
 --   * "Redirect URLs" must include https://<site>/driver/reset-password so
 --     password-reset links land on the reset page.
 

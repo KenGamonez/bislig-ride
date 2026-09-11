@@ -200,6 +200,7 @@ export function DriverExperience({
   const [pakyawanError, setPakyawanError] = useState('')
   const [notificationPermissionState, setNotificationPermissionState] = useState<NotificationPermission>(() => notificationPermission())
   const [showStatusHint, setShowStatusHint] = useState(false)
+  const [driverStatusBlocked, setDriverStatusBlocked] = useState(false)
   const statusHintTimerRef = useRef<number | null>(null)
 
   const revealStatusHint = () => {
@@ -243,7 +244,7 @@ export function DriverExperience({
 
 const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
+        .select('id, status, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -252,7 +253,16 @@ const { data: driver, error: driverError } = await supabase
         return
       }
 
+      if (driver.status === 'inactive') {
+        if (mounted) {
+          setDriverProfile(null)
+          setDriverStatusBlocked(true)
+        }
+        return
+      }
+
       if (mounted) {
+        setDriverStatusBlocked(false)
         setDriverId(driver.id)
         setDriverAuthId(authUserId)
         setCanAcceptPakyawan(Boolean(driver.can_accept_pakyawan))
@@ -273,6 +283,7 @@ const { data: driver, error: driverError } = await supabase
 
 const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session?.user) {
+        setDriverStatusBlocked(false)
         setDriverAuthId(null)
         setDriverId(TEST_DRIVER_ID)
         setDriverProfile(null)
@@ -1622,6 +1633,33 @@ const displayedDriver = driverProfile ?? demoDriver
       </ul>
     </section>
   )
+
+  if (driverStatusBlocked) {
+    return (
+      <>
+        <AppHeader
+          view={view}
+          onViewChange={onViewChange}
+          primaryLabel="My Rides"
+          onPrimaryAction={() => onViewChange('Rider')}
+        />
+        <div className="auth-shell">
+          <div className="auth-card">
+            <div className="auth-header">
+              <p className="section-label">Driver Access</p>
+              <h2>Account inactive</h2>
+            </div>
+            <p className="muted-copy">
+              Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+            </p>
+            <button type="button" className="primary-action" onClick={onBack}>
+              Back to Ride Booking
+            </button>
+          </div>
+        </div>
+      </>
+    )
+  }
 
   return (
     <>
