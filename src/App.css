@@ -4537,6 +4537,11 @@ a.secondary-action {
   .header-inner {
     padding: 0 14px;
     height: 56px;
+    gap: 16px;
+  }
+
+  .beta-indicator {
+    margin-left: auto;
   }
 
   .brand-logo {
