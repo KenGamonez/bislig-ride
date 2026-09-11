@@ -9768,3 +9768,467 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     text-transform: uppercase;
   }
 }
+
+/* =========================================================
+   SERVICE LAUNCHER — app home (service dashboard + discovery)
+   Scoped to the launcher home only; booking layout untouched.
+   ========================================================= */
+
+.service-launcher-layout {
+  display: block;
+}
+
+.service-dashboard {
+  display: grid;
+  gap: 28px;
+}
+
+/* --- Compact greeting hero --- */
+.service-greeting {
+  position: relative;
+  overflow: hidden;
+  padding: 30px 28px 28px;
+  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
+  color: var(--color-white);
+}
+
+.service-greeting::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(0, 232, 138, 0.18);
+  box-shadow: 0 0 0 40px rgba(0, 232, 138, 0.04), 0 0 0 84px rgba(0, 232, 138, 0.03);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.service-greeting .eyebrow {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+  color: var(--color-green);
+  font-size: 0.7rem;
+  letter-spacing: 0.22em;
+}
+
+.service-greeting .eyebrow::after {
+  content: '';
+  width: 26px;
+  height: 1px;
+  background: rgba(0, 232, 138, 0.45);
+}
+
+.service-greeting h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  font-size: clamp(2rem, 4vw, 2.9rem);
+  line-height: 1.04;
+  letter-spacing: -0.045em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.service-greeting .hero-accent {
+  color: var(--color-green);
+  display: block;
+}
+
+.service-greeting .subtitle {
+  position: relative;
+  z-index: 1;
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.92rem;
+}
+
+/* --- Service dashboard grid --- */
+.service-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.service-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 16px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--text-primary);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition), background var(--transition);
+}
+
+.service-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.service-card:focus-visible,
+.discover-card:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+.service-card-icon {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+.service-card-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.service-card-copy strong {
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+}
+
+.service-card-copy small {
+  font-size: 0.72rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.service-card-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  color: var(--color-gray-400);
+  font-size: 1.15rem;
+  transition: transform var(--transition), color var(--transition);
+}
+
+.service-card:hover .service-card-arrow {
+  color: var(--color-gray-700);
+  transform: translateX(3px);
+}
+
+/* Primary — Ride Now */
+.service-card--primary {
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px;
+  background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
+  border: 1px solid var(--color-green);
+  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.28), 0 0 22px rgba(0, 232, 138, 0.16);
+}
+
+.service-card--primary:hover {
+  border-color: var(--color-green);
+}
+
+.service-card--primary .service-card-icon {
+  background: rgba(0, 232, 138, 0.14);
+  color: var(--color-green);
+  box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.35);
+}
+
+.service-card--primary .service-card-copy {
+  padding-right: 58px;
+}
+
+.service-card--primary .service-card-copy strong {
+  color: var(--color-white);
+  font-size: 1.05rem;
+}
+
+.service-card--primary .service-card-copy small {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.service-card--primary .service-card-arrow {
+  color: var(--color-green);
+}
+
+.service-card-badge {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(0, 232, 138, 0.16);
+  color: var(--color-green);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+/* --- Discover carousel --- */
+.discover-section {
+  display: grid;
+  gap: 14px;
+}
+
+.discover-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.discover-heading .eyebrow {
+  margin-bottom: 0;
+  color: var(--color-green-deep);
+}
+
+.discover-heading h2 {
+  margin: 0;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+}
+
+.discover-heading .hero-accent {
+  color: var(--color-green-deep);
+}
+
+.discover-carousel {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.discover-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.discover-card {
+  position: relative;
+  flex: 0 0 min(80vw, 320px);
+  scroll-snap-align: start;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 20px 18px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--text-primary);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.discover-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.discover-kicker {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-green-deep);
+}
+
+.discover-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.discover-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.discover-cta {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  margin-top: 6px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  color: var(--color-black-soft);
+}
+
+.discover-cta-arrow {
+  color: var(--color-green-deep);
+  transition: transform var(--transition);
+}
+
+.discover-card:hover .discover-cta-arrow {
+  transform: translateX(3px);
+}
+
+.carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 20px;
+}
+
+.carousel-dot {
+  width: 7px;
+  height: 7px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-pill);
+  background: var(--color-gray-300);
+  cursor: pointer;
+  transition: width var(--transition), background var(--transition);
+}
+
+.carousel-dot.is-active {
+  width: 20px;
+  background: var(--color-green-deep);
+}
+
+.carousel-dot:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+}
+
+/* --- Desktop — two-row service layout --- */
+@media (min-width: 768px) {
+  .service-dashboard {
+    gap: 32px;
+  }
+
+  .service-greeting,
+  .service-grid,
+  .discover-section {
+    margin: 0;
+  }
+
+  .service-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .service-card--primary {
+    grid-column: span 2;
+  }
+
+  .discover-carousel {
+    margin-left: -6px;
+    padding-left: 6px;
+  }
+}
+
+/* --- Mobile — app-first composition --- */
+@media (max-width: 767px) {
+  .service-launcher-layout {
+    padding-top: 12px;
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+
+  .service-dashboard {
+    gap: 20px;
+  }
+
+  .service-greeting {
+    margin: 0 12px;
+    padding: 20px 18px 18px;
+    border-radius: var(--radius-md);
+  }
+
+  .service-greeting .eyebrow {
+    margin-bottom: 8px;
+  }
+
+  .service-greeting h1 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  }
+
+  .service-greeting .subtitle {
+    font-size: 0.78rem;
+  }
+
+  .service-grid {
+    margin: 0 12px;
+    gap: 10px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .service-card {
+    gap: 10px;
+    padding: 14px 12px;
+  }
+
+  .service-card-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .service-card-copy strong {
+    font-size: 0.84rem;
+  }
+
+  .service-card-copy small {
+    font-size: 0.66rem;
+  }
+
+  .service-card--primary {
+    gap: 12px;
+    padding: 18px 16px;
+  }
+
+  .service-card--primary .service-card-copy {
+    padding-right: 52px;
+  }
+
+  .service-card--primary .service-card-copy strong {
+    font-size: 0.95rem;
+  }
+
+  .discover-section {
+    margin-left: 12px;
+    margin-right: 0;
+  }
+
+  .discover-card {
+    flex-basis: min(78vw, 320px);
+  }
+}
+
+@media (max-width: 420px) {
+  .service-greeting h1 {
+    font-size: clamp(1.25rem, 6.5vw, 1.5rem);
+  }
+
+  .service-card--primary .service-card-copy small {
+    display: none;
+  }
+
+  .service-card-copy small {
+    font-size: 0.62rem;
+  }
+}

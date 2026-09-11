@@ -7,6 +7,7 @@ import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { MobileBottomNav, type MobileBottomNavTab } from '../components/MobileBottomNav'
+import { ServiceDashboard } from '../components/ServiceDashboard'
 import { AnnouncementTicker } from '../components/AnnouncementTicker'
 import { WeatherWidget } from '../components/WeatherWidget'
 import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
@@ -174,6 +175,7 @@ const [isSubmittingRating, setIsSubmittingRating] = useState(false)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const [extraDestinations, setExtraDestinations] = useState<string[]>([''])
   const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
+  const [launcherView, setLauncherView] = useState(true)
   const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [passengerLocationError, setPassengerLocationError] = useState('')
   const [chatUnread, setChatUnread] = useState(0)
@@ -189,9 +191,11 @@ const [isSubmittingRating, setIsSubmittingRating] = useState(false)
       setShowProfile(false)
       if (phase !== 'request') {
         handleBackToHome()
+        return
       }
+      setLauncherView(true)
       window.requestAnimationFrame(() => {
-        document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        document.querySelector('.service-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       })
     } else {
       setShowProfile(true)
@@ -988,17 +992,20 @@ setRatingSubmitted(true)
     setRatingSubmitted(false)
     setRatingError('')
     setCancellation(null)
+    setLauncherView(true)
     resetForm()
   }
 
   const handleRideNowCtaClick = () => {
+    setLauncherView(false)
+    setOpenMobileSection('pickup')
+
     if (!window.matchMedia('(max-width: 767px)').matches) {
-      document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      window.requestAnimationFrame(() => {
+        document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      })
       return
     }
-
-    const pickupSectionWasOpen = openMobileSection === 'pickup'
-    setOpenMobileSection('pickup')
 
     const focusPickupInput = () => {
       const form = document.getElementById('ride-booking-form')
@@ -1014,16 +1021,13 @@ setRatingSubmitted(true)
       pickupInput.focus({ preventScroll: true })
     }
 
-    if (pickupSectionWasOpen) {
-      focusPickupInput()
-    } else {
-      window.setTimeout(focusPickupInput, 260)
-    }
+    window.setTimeout(focusPickupInput, 320)
   }
 
   const isRequesting = phase === 'request'
   const showCustomerForm = isRequesting && !showProfile
   const showDemoRideState = phase !== 'request' && !showProfile
+  const showRideLauncher = showCustomerForm && launcherView
 
 const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
     searching: 'Finding a driver',
@@ -1877,7 +1881,11 @@ onClick={() => setRating(star)}
         onPrimaryAction={() => setShowProfile((current) => !current)}
       />
 
-      <main className={openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
+      <main className={showRideLauncher ? 'customer-layout service-launcher-layout' : openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
+        {showRideLauncher ? (
+          <ServiceDashboard onSelectRideNow={handleRideNowCtaClick} />
+        ) : (
+        <>
         <section className="primary-panel">
           <div className="section-header">
             <p className="eyebrow">BISLIG CITY</p>
@@ -1999,6 +2007,8 @@ onClick={() => setRating(star)}
 
           <WeatherWidget />
         </aside>
+        </>
+        )}
       </main>
 
       {chatToast ? (

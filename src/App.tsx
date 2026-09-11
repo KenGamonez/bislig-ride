@@ -6,6 +6,9 @@ import { DriverExperience } from './pages/DriverExperience'
 import { AdminExperience } from './pages/AdminExperience'
 import { BecomeDriverExperience } from './pages/BecomeDriverExperience'
 import { PakyawanExperience } from './pages/PakyawanExperience'
+import { PasabuyExperience } from './pages/PasabuyExperience'
+import { CarRentalsExperience } from './pages/CarRentalsExperience'
+import { PaDeliverExperience } from './pages/PaDeliverExperience'
 import { ContactExperience } from './pages/ContactExperience'
 import { DriverPasswordReset } from './pages/DriverPasswordReset'
 import { AppHeader } from './components/AppHeader'
@@ -37,6 +40,9 @@ function App() {
 
   const isBecomeDriverPage = window.location.pathname === '/become-a-driver'
   const isPakyawanPage = window.location.pathname === '/pakyawan'
+  const isPasabuyPage = window.location.pathname === '/pasabuy'
+  const isCarRentalsPage = window.location.pathname === '/car-rentals'
+  const isPaDeliverPage = window.location.pathname === '/pa-deliver'
   const isContactPage = window.location.pathname === '/contact'
   const isDriverResetPage = window.location.pathname === '/driver/reset-password'
   const isAdminPage = window.location.pathname === '/admin'
@@ -131,6 +137,48 @@ function App() {
     return (
       <>
         <PakyawanExperience
+          onBack={() => {
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+        />
+        <AppFooter />
+      </>
+    )
+  }
+
+  if (isPasabuyPage) {
+    return (
+      <>
+        <PasabuyExperience
+          onBack={() => {
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+        />
+        <AppFooter />
+      </>
+    )
+  }
+
+  if (isCarRentalsPage) {
+    return (
+      <>
+        <CarRentalsExperience
+          onBack={() => {
+            window.history.pushState({}, '', '/')
+            window.location.reload()
+          }}
+        />
+        <AppFooter />
+      </>
+    )
+  }
+
+  if (isPaDeliverPage) {
+    return (
+      <>
+        <PaDeliverExperience
           onBack={() => {
             window.history.pushState({}, '', '/')
             window.location.reload()
