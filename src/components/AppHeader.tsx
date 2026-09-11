@@ -76,6 +76,10 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
             </a>
           </div>
 
+          <span className="beta-indicator" title="Bislig Ride is in beta">
+            <span className="beta-indicator-label">Beta</span>
+          </span>
+
           <nav className="top-nav desktop-nav" aria-label="Main navigation">
             {desktopNavItems ? (
               desktopNavItems.map((item) => (
