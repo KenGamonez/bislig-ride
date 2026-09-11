@@ -991,6 +991,36 @@ setRatingSubmitted(true)
     resetForm()
   }
 
+  const handleRideNowCtaClick = () => {
+    if (!window.matchMedia('(max-width: 767px)').matches) {
+      document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      return
+    }
+
+    const pickupSectionWasOpen = openMobileSection === 'pickup'
+    setOpenMobileSection('pickup')
+
+    const focusPickupInput = () => {
+      const form = document.getElementById('ride-booking-form')
+      const pickupInput = form?.querySelector<HTMLInputElement>(
+        '.mobile-booking-flow .accordion-row.is-open .input-field',
+      )
+
+      if (!pickupInput) {
+        return
+      }
+
+      pickupInput.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      pickupInput.focus({ preventScroll: true })
+    }
+
+    if (pickupSectionWasOpen) {
+      focusPickupInput()
+    } else {
+      window.setTimeout(focusPickupInput, 260)
+    }
+  }
+
   const isRequesting = phase === 'request'
   const showCustomerForm = isRequesting && !showProfile
   const showDemoRideState = phase !== 'request' && !showProfile
@@ -1860,7 +1890,7 @@ onClick={() => setRating(star)}
               <button
                 type="button"
                 className="booking-mode-card is-active"
-                onClick={() => document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+                onClick={handleRideNowCtaClick}
               >
                 <span className="booking-mode-icon" aria-hidden="true">
                   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M8 3 4 7l4 4" /><path d="M4 7h16" /><path d="m16 21 4-4-4-4" /><path d="M20 17H4" /></svg>

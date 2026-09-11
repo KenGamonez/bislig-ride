@@ -9741,3 +9741,30 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     bottom: calc(132px + env(safe-area-inset-bottom));
   }
 }
+
+/* =========================================================
+   DRIVER RIDE QUEUE — MOBILE LAYERING
+   Two intentional layers: live availability/status, then a
+   breathing gap into the Vehicle + Plate identity group.
+   Desktop layout untouched.
+   ========================================================= */
+
+@media (max-width: 767px) {
+  .waiting-state .availability-details {
+    margin-top: 22px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-gray-150);
+  }
+
+  .waiting-state .availability-details::before {
+    content: 'Your vehicle';
+    grid-column: 1 / -1;
+    margin-bottom: 12px;
+    color: var(--color-gray-500);
+    font-size: 0.62rem;
+    font-weight: 800;
+    letter-spacing: 0.14em;
+    line-height: 1;
+    text-transform: uppercase;
+  }
+}
