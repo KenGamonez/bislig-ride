@@ -111,17 +111,34 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
   return <>
     <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
-    <main className="scheduled-shell"><section className="scheduled-card">
-    <button type="button" className="back-link" onClick={onBack}>← Back to Ride Booking</button>
-    <div className="section-header"><p className="eyebrow">Private and scheduled transportation</p><h1>Pakyawan / Umbak</h1><p className="subtitle">Schedule a vehicle for your longer or out-of-town trip.</p><p className="scheduled-intro">Ideal for family trips, events, airport transfers, whole-day travel, and longer-distance bookings. This is a request for private transportation, not an automatic confirmation.</p></div>
-    <form className="scheduled-form" onSubmit={handleSubmit} noValidate>
-      <div className="scheduled-section"><div className="scheduled-section-heading"><span>01</span><h2>Trip schedule</h2></div><div className="form-grid">{field('booking_date', 'Trip Date', 'date')}{field('pickup_time', 'Pickup Time', 'time')}</div></div>
-      <div className="scheduled-section"><div className="scheduled-section-heading"><span>02</span><h2>Route and group</h2></div><div className="form-grid">{field('pickup_location', 'Pickup Location')}{field('destination', 'Destination')}{field('passengers', 'Number of Passengers', 'number')}<label className="field-block"><span className="field-label">Trip Type</span><select className={`input-field${errors.trip_type ? ' has-error' : ''}`} value={form.trip_type} onChange={(event) => updateField('trip_type', event.target.value)}><option value="">Select trip type</option>{pakyawanTripTypes.map((type) => <option key={type}>{type}</option>)}</select>{errors.trip_type ? <span className="field-error">{errors.trip_type}</span> : null}</label>{field('estimated_hours', 'Estimated Duration (hours, optional)', 'number')}</div></div>
-      <div className="scheduled-section"><div className="scheduled-section-heading"><span>03</span><h2>Additional details</h2></div><label className="field-block"><span className="field-label">Additional Stops or Special Requests (Optional)</span><textarea className="input-field textarea-field" placeholder="Example: Stop at another location, extra luggage, special event, etc." value={form.special_requests} onChange={(event) => updateField('special_requests', event.target.value)} /></label></div>
-      <div className="scheduled-section"><div className="scheduled-section-heading"><span>04</span><h2>Your contact information</h2></div><div className="form-grid">{field('customer_name', 'Full Name')}{field('customer_phone', 'Phone Number', 'tel')}</div></div>
-      <div className="scheduled-pricing-note"><strong>Pricing is confirmed after review.</strong><span>Final pricing will depend on your route, vehicle availability, trip type, duration, and special requirements.</span></div>
-      {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}<button type="submit" className="primary-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting request...' : 'Request Scheduled Booking'}</button>
-    </form>
-  </section></main>
+    <main className="scheduled-shell">
+      <section className="section-header scheduled-header">
+        <p className="eyebrow">Private and scheduled transportation</p>
+        <h1>Pakyawan <span className="hero-accent">/ Umbak</span></h1>
+        <p className="subtitle">Schedule a vehicle for your longer or out-of-town trip.</p>
+        <p className="scheduled-intro">Ideal for family trips, events, airport transfers, whole-day travel, and longer-distance bookings. This is a request for private transportation, not an automatic confirmation.</p>
+      </section>
+      <form className="scheduled-form" onSubmit={handleSubmit} noValidate>
+        <button type="button" className="back-link" onClick={onBack}>← Back to Ride Booking</button>
+        <section className="booking-section">
+          <div className="booking-section-heading"><span className="booking-section-number">01</span><div><strong>Trip schedule</strong><span>When should we pick you up?</span></div></div>
+          <div className="form-grid">{field('booking_date', 'Trip Date', 'date')}{field('pickup_time', 'Pickup Time', 'time')}</div>
+        </section>
+        <section className="booking-section">
+          <div className="booking-section-heading"><span className="booking-section-number">02</span><div><strong>Route and group</strong><span>Where to, and how many are riding?</span></div></div>
+          <div className="form-grid">{field('pickup_location', 'Pickup Location')}{field('destination', 'Destination')}{field('passengers', 'Number of Passengers', 'number')}<label className="field-block"><span className="field-label">Trip Type</span><select className={`input-field${errors.trip_type ? ' has-error' : ''}`} value={form.trip_type} onChange={(event) => updateField('trip_type', event.target.value)}><option value="">Select trip type</option>{pakyawanTripTypes.map((type) => <option key={type}>{type}</option>)}</select>{errors.trip_type ? <span className="field-error">{errors.trip_type}</span> : null}</label>{field('estimated_hours', 'Estimated Duration (hours, optional)', 'number')}</div>
+        </section>
+        <section className="booking-section">
+          <div className="booking-section-heading"><span className="booking-section-number">03</span><div><strong>Additional details</strong><span>Anything we should know?</span></div></div>
+          <label className="field-block"><span className="field-label">Additional Stops or Special Requests (Optional)</span><textarea className="input-field textarea-field" placeholder="Example: Stop at another location, extra luggage, special event, etc." value={form.special_requests} onChange={(event) => updateField('special_requests', event.target.value)} /></label>
+        </section>
+        <section className="booking-section">
+          <div className="booking-section-heading"><span className="booking-section-number">04</span><div><strong>Your contact information</strong><span>So we can confirm the booking with you</span></div></div>
+          <div className="form-grid">{field('customer_name', 'Full Name')}{field('customer_phone', 'Phone Number', 'tel')}</div>
+        </section>
+        <div className="scheduled-pricing-note"><strong>Pricing is confirmed after review.</strong><span>Final pricing will depend on your route, vehicle availability, trip type, duration, and special requirements.</span></div>
+        {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}<button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting request...' : 'Request Scheduled Booking'}</button>
+      </form>
+    </main>
   </>
 }
