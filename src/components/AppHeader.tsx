@@ -3,14 +3,21 @@ import bisligLogo from '../assets/Bislig Ride Logo.png'
 
 export type AppViewMode = 'Rider' | 'driver' | 'admin'
 
+export type AppHeaderDesktopNavItem = {
+  label: string
+  href: string
+  className?: string
+}
+
 type AppHeaderProps = {
   view: AppViewMode
   onViewChange?: (view: AppViewMode) => void
   primaryLabel: string
   onPrimaryAction: () => void
+  desktopNavItems?: AppHeaderDesktopNavItem[]
 }
 
-export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }: AppHeaderProps) {
+export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, desktopNavItems }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   useEffect(() => {
@@ -70,29 +77,43 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction }:
           </div>
 
           <nav className="top-nav desktop-nav" aria-label="Main navigation">
-            <a className={view === 'Rider' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
+            {desktopNavItems ? (
+              desktopNavItems.map((item) => (
+                <a
+                  key={`${item.href}:${item.label}`}
+                  className={item.className ?? 'nav-link'}
+                  href={item.href}
+                >
+                  {item.label}
+                </a>
+              ))
+            ) : (
+              <>
+                <a className={view === 'Rider' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
 
-            <a className="nav-link nav-link-pakyawan" href="/pakyawan">Book Pakyawan</a>
+                <a className="nav-link nav-link-pakyawan" href="/pakyawan">Book Pakyawan</a>
 
-            <button
-              type="button"
-              className="nav-button"
-              onClick={onPrimaryAction}
-            >
-              {primaryLabel}
-            </button>
+                <button
+                  type="button"
+                  className="nav-button"
+                  onClick={onPrimaryAction}
+                >
+                  {primaryLabel}
+                </button>
 
-            <button
-              type="button"
-              className="nav-button"
-              onClick={openDriverLogin}
-            >
-              Driver Login
-            </button>
+                <button
+                  type="button"
+                  className="nav-button"
+                  onClick={openDriverLogin}
+                >
+                  Driver Login
+                </button>
 
-            <a className="nav-link" href="/contact">Contact</a>
+                <a className="nav-link" href="/contact">Contact</a>
 
-            <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
+                <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
+              </>
+            )}
           </nav>
 
           <button

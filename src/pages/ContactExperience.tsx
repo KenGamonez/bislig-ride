@@ -1,8 +1,21 @@
 import { useState } from 'react'
 import type { FormEvent } from 'react'
-import bisligLogo from '../assets/Bislig Ride Logo.png'
+import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { createContactMessage } from '../lib/contactMessages'
 import type { ContactMessageInsert } from '../types/contactMessage'
+
+const goHome = () => {
+  window.location.href = '/'
+}
+
+const goToView = (nextView: AppViewMode) => {
+  try {
+    window.sessionStorage.setItem('bislig-ride-requested-view', nextView)
+  } catch {
+    // sessionStorage unavailable — land on the default view
+  }
+  window.location.href = '/'
+}
 
 export function ContactExperience() {
   const [submitted, setSubmitted] = useState(false)
@@ -36,25 +49,19 @@ export function ContactExperience() {
 
   return (
     <div className="contact-page">
-      <header className="app-header contact-header">
-        <div className="brand-block">
-          <a href="/" aria-label="Bislig Ride home">
-            <img
-              src={bisligLogo}
-              alt="Bislig Ride logo"
-              className="brand-logo"
-            />
-          </a>
-        </div>
-
-        <nav className="top-nav" aria-label="Main navigation">
-          <a className="nav-link" href="/pakyawan">Book Pakyawan</a>
-          <a className="nav-button" href="/">My Rides</a>
-          <a className="nav-button" href="/">Explore Bislig</a>
-          <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
-          <a className="nav-button active" href="/contact" aria-current="page">Contact</a>
-        </nav>
-      </header>
+      <AppHeader
+        view="Rider"
+        onViewChange={goToView}
+        primaryLabel="My Rides"
+        onPrimaryAction={goHome}
+        desktopNavItems={[
+          { label: 'Book Pakyawan', href: '/pakyawan', className: 'nav-link nav-link-pakyawan' },
+          { label: 'My Rides', href: '/', className: 'nav-button' },
+          { label: 'Explore Bislig', href: '/', className: 'nav-button' },
+          { label: 'Become a Driver', href: '/become-a-driver', className: 'nav-cta' },
+          { label: 'Contact', href: '/contact', className: 'nav-button active' },
+        ]}
+      />
 
       <main className="contact-shell">
         <section className="contact-intro">

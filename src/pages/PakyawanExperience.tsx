@@ -1,6 +1,17 @@
 import { useState } from 'react'
+import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { createPakyawanBooking } from '../lib/scheduledBookings'
 import { pakyawanTripTypes, type PakyawanTripType } from '../types/scheduledBooking'
+
+const routeToView = (nextView: AppViewMode) => {
+  try {
+    window.sessionStorage.setItem('bislig-ride-requested-view', nextView)
+  } catch {
+    // sessionStorage unavailable — the default view will be shown
+  }
+  window.history.pushState({}, '', '/')
+  window.location.reload()
+}
 
 type PakyawanBookingForm = {
   booking_date: string
@@ -83,19 +94,24 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     }
   }
 
-  if (submitted) return <main className="scheduled-shell"><section className="scheduled-card scheduled-success">
+  if (submitted) return <>
+    <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+    <main className="scheduled-shell"><section className="scheduled-card scheduled-success">
     <p className="eyebrow">Request received</p><h1>Booking Request Received</h1>
     <p>Your Pakyawan / Umbak request has been submitted.</p>
     <p>Our team will review your trip details, vehicle availability, and pricing. Final pricing will be confirmed before your booking is accepted.</p>
     <button type="button" className="primary-action" onClick={onBack}>Back to Ride Booking</button>
   </section></main>
+  </>
 
   const field = (name: keyof PakyawanBookingForm, label: string, type = 'text') => <label className="field-block" key={name}>
     <span className="field-label">{label}</span><input className={`input-field${errors[name] ? ' has-error' : ''}`} type={type} value={form[name]} min={name === 'booking_date' ? getToday() : undefined} onChange={(event) => updateField(name, event.target.value)} />
     {errors[name] ? <span className="field-error">{errors[name]}</span> : null}
   </label>
 
-  return <main className="scheduled-shell"><section className="scheduled-card">
+  return <>
+    <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+    <main className="scheduled-shell"><section className="scheduled-card">
     <button type="button" className="back-link" onClick={onBack}>← Back to Ride Booking</button>
     <div className="section-header"><p className="eyebrow">Private and scheduled transportation</p><h1>Pakyawan / Umbak</h1><p className="subtitle">Schedule a vehicle for your longer or out-of-town trip.</p><p className="scheduled-intro">Ideal for family trips, events, airport transfers, whole-day travel, and longer-distance bookings. This is a request for private transportation, not an automatic confirmation.</p></div>
     <form className="scheduled-form" onSubmit={handleSubmit} noValidate>
@@ -107,4 +123,5 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}<button type="submit" className="primary-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting request...' : 'Request Scheduled Booking'}</button>
     </form>
   </section></main>
+  </>
 }
