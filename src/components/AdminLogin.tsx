@@ -75,7 +75,7 @@ export function AdminLogin({ onLogin, onBack, view, onViewChange }: AdminLoginPr
         </button>
 
         <div className="auth-header">
-          <p className="section-label">Admin Access</p>
+          <p className="eyebrow auth-eyebrow">Admin Access</p>
           <h2>Operations login</h2>
         </div>
 
@@ -108,7 +108,7 @@ export function AdminLogin({ onLogin, onBack, view, onViewChange }: AdminLoginPr
 
           {error ? <p className="form-error-message">{error}</p> : null}
 
-          <button type="submit" className="primary-action" disabled={isSubmitting}>
+          <button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>
             {isSubmitting ? 'Signing in...' : 'Login to Dashboard'}
           </button>
         </form>

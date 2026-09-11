@@ -1646,13 +1646,13 @@ const displayedDriver = driverProfile ?? demoDriver
         <div className="auth-shell">
           <div className="auth-card">
             <div className="auth-header">
-              <p className="section-label">Driver Access</p>
+              <p className="eyebrow auth-eyebrow">Driver Access</p>
               <h2>Account inactive</h2>
             </div>
             <p className="muted-copy">
               Your driver account is inactive. Please contact Bislig Ride to reactivate it.
             </p>
-            <button type="button" className="primary-action" onClick={onBack}>
+            <button type="button" className="primary-action request-ride-action" onClick={onBack}>
               Back to Ride Booking
             </button>
           </div>

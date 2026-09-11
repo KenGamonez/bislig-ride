@@ -184,22 +184,30 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
   const header = <AppHeader view={view} onViewChange={onViewChange} primaryLabel="My Rides" onPrimaryAction={() => onViewChange('Rider')} />
 
   if (submitted) {
-    return <>{header}<main className="application-shell"><section className="application-card success-state">
-      <p className="section-label">Application received</p><h1>Thank you for your interest in Bislig Ride!</h1>
+    return <>{header}<main className="application-shell"><section className="application-card application-success">
+      <p className="eyebrow">Application received</p><h1>Thank you for your interest in Bislig Ride!</h1>
       <p>We've received your application. Our team will review your information and contact you regarding the next steps.</p>
       <button type="button" className="primary-action" onClick={onHome}>Return to Bislig Ride</button>
     </section></main></>
   }
 
-  return <>{header}<main className="application-shell"><section className="application-card">
-    <button type="button" className="back-link" onClick={onHome}>← Back to Bislig Ride</button>
-    <div className="section-header"><p className="eyebrow">Driver interest application</p><h1>Become a Bislig Ride Driver</h1>
+  return <>{header}<main className="application-shell">
+    <section className="section-header application-header">
+      <p className="eyebrow">Driver interest application</p>
+      <h1>Become a <span className="hero-accent">Bislig Ride Driver</span></h1>
       <p className="subtitle">Have a tricycle and want to be part of Bislig Ride? Submit your information below and we'll contact you about becoming a driver.</p>
-      <p className="application-note">Submitting this form is an expression of interest. It does not automatically create an account or guarantee acceptance.</p>
-    </div>
+      <p className="application-intro">Submitting this form is an expression of interest. It does not automatically create an account or guarantee acceptance.</p>
+    </section>
     <form className="application-form" onSubmit={handleSubmit} noValidate>
-      <section className="application-section"><div className="application-section-heading"><span className="application-section-number">01</span><h2>Personal Information</h2></div><div className="form-grid">{field('full_name', 'Full Name')}{field('mobile_number', 'Mobile Number', 'tel')}{field('barangay', 'Barangay')}{field('email', 'Email Address', 'email')}{field('facebook_profile', 'Facebook Account / Profile')}{fileField('driver_photo', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div><p className="application-note upload-privacy-note">Your uploaded documents are only used for driver application verification and review.</p></section>
-      <section className="application-section"><div className="application-section-heading"><span className="application-section-number">02</span><h2>Vehicle Information</h2></div><div className="form-grid">
+      <button type="button" className="back-link" onClick={onHome}>← Back to Bislig Ride</button>
+      <section className="booking-section">
+        <div className="booking-section-heading"><span className="booking-section-number">01</span><div><strong>Personal information</strong><span>Let's get to know you</span></div></div>
+        <div className="form-grid">{field('full_name', 'Full Name')}{field('mobile_number', 'Mobile Number', 'tel')}{field('barangay', 'Barangay')}{field('email', 'Email Address', 'email')}{field('facebook_profile', 'Facebook Account / Profile')}{fileField('driver_photo', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div>
+        <p className="application-note upload-privacy-note">Your uploaded documents are only used for driver application verification and review.</p>
+      </section>
+      <section className="booking-section">
+        <div className="booking-section-heading"><span className="booking-section-number">02</span><div><strong>Vehicle information</strong><span>Tell us about your vehicle</span></div></div>
+        <div className="form-grid">
           <label className="field-block"><span className="field-label">Vehicle Type</span>
             <select className={`input-field${errors.vehicle_type ? ' has-error' : ''}`} value={form.vehicle_type} onChange={(event) => updateField('vehicle_type', event.target.value)}>
               <option value="">Select a vehicle type</option>
@@ -209,11 +217,17 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
             </select>
             {errors.vehicle_type ? <span className="form-error-message">{errors.vehicle_type}</span> : null}
           </label>
-          {field('vehicle_number', 'Vehicle / Body Number')}{field('plate_number', 'Plate Number', 'text', true)}{field('driving_experience', 'Years of Driving Experience', 'number')}{fileField('drivers_license', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div></section>
-      <section className="application-section"><div className="application-section-heading"><span className="application-section-number">03</span><h2>Additional Information</h2></div><div className="form-grid"><label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
+          {field('vehicle_number', 'Vehicle / Body Number')}{field('plate_number', 'Plate Number', 'text', true)}{field('driving_experience', 'Years of Driving Experience', 'number')}{fileField('drivers_license', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}
+        </div>
+      </section>
+      <section className="booking-section">
+        <div className="booking-section-heading"><span className="booking-section-number">03</span><div><strong>Additional information</strong><span>Anything else we should know?</span></div></div>
+        <div className="form-grid"><label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
         <label className="field-block"><span className="field-label">Preferred Schedule</span><select className={`input-field${errors.preferred_schedule ? ' has-error' : ''}`} value={form.preferred_schedule} onChange={(event) => updateField('preferred_schedule', event.target.value)}><option value="">Select a schedule</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Flexible</option></select>{errors.preferred_schedule ? <span className="form-error-message">{errors.preferred_schedule}</span> : null}</label>
-        <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label></div></section>
-      {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}<button type="submit" className="primary-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting application...' : 'Submit application'}</button>
+        <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label></div>
+      </section>
+      {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}
+      <button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting application...' : 'Submit application'}</button>
     </form>
-  </section></main></>
+  </main></>
 }

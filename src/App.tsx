@@ -8,6 +8,7 @@ import { BecomeDriverExperience } from './pages/BecomeDriverExperience'
 import { PakyawanExperience } from './pages/PakyawanExperience'
 import { ContactExperience } from './pages/ContactExperience'
 import { DriverPasswordReset } from './pages/DriverPasswordReset'
+import { AppHeader } from './components/AppHeader'
 import { supabase } from './lib/supabase'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
@@ -138,20 +139,28 @@ function App() {
         <CustomerExperience currentView={view} onSwitchView={setView} />
       ) : view === 'driver' ? (
         driverBlocked ? (
-          <div className="auth-shell">
-            <div className="auth-card">
-              <div className="auth-header">
-                <p className="section-label">Driver Access</p>
-                <h2>Account inactive</h2>
+          <>
+            <AppHeader
+              view="driver"
+              onViewChange={setView}
+              primaryLabel="My Rides"
+              onPrimaryAction={() => setView('Rider')}
+            />
+            <div className="auth-shell">
+              <div className="auth-card">
+                <div className="auth-header">
+                  <p className="eyebrow auth-eyebrow">Driver Access</p>
+                  <h2>Account inactive</h2>
+                </div>
+                <p className="muted-copy">
+                  Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+                </p>
+                <button type="button" className="primary-action request-ride-action" onClick={() => setView('Rider')}>
+                  Back to Ride Booking
+                </button>
               </div>
-              <p className="muted-copy">
-                Your driver account is inactive. Please contact Bislig Ride to reactivate it.
-              </p>
-              <button type="button" className="primary-action" onClick={() => setView('Rider')}>
-                Back to Ride Booking
-              </button>
             </div>
-          </div>
+          </>
         ) : driverAuthenticated ? (
           <DriverExperience view={view} onViewChange={setView} onBack={() => setView('Rider')} />
         ) : (

@@ -116,7 +116,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
           </button>
 
           <div className="auth-header">
-            <p className="section-label">Driver Access</p>
+            <p className="eyebrow auth-eyebrow">Driver Access</p>
             <h2>{mode === 'login' ? 'Welcome back' : mode === 'forgot' ? 'Reset password' : 'Check your inbox'}</h2>
           </div>
 
@@ -163,7 +163,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
 
               <button
                 type="submit"
-                className="primary-action"
+                className="primary-action request-ride-action"
                 disabled={loading}
               >
                 {loading ? 'Signing in...' : 'Login'}
@@ -199,7 +199,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
                 />
               </label>
 
-              <button type="submit" className="primary-action" disabled={loading}>
+              <button type="submit" className="primary-action request-ride-action" disabled={loading}>
                 {loading ? 'Sending link...' : 'Send reset link'}
               </button>
 

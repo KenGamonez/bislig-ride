@@ -189,7 +189,7 @@ h4 {
 
 .brand-logo {
   display: block;
-  height: 45.6px;
+  height: 38px;
   width: auto;
   object-fit: contain;
 }
@@ -2627,388 +2627,75 @@ a.secondary-action {
 }
 
 /* =========================================================
-   APP FORM SHELLS — BOOK PAKYAWAN + BECOME A DRIVER
-   Mirrors the passenger homepage design language
-   (dark hero card + white booking card + green CTA)
+   SCHEDULED / PAKYAWAN
    ========================================================= */
 
-.scheduled-shell,
-.application-shell {
+.scheduled-shell {
   width: min(100%, 980px);
   margin: 0 auto;
   padding: 28px 20px 64px;
 }
 
-/* Hero — same premium dark card as the homepage's
-   "Bislig City / Where are you going?" header */
-.scheduled-shell .scheduled-header,
-.application-shell .application-header {
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 22px;
-  padding: 34px 32px 30px;
-  border: 1px solid var(--color-border-dark);
-  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
-  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
-  color: var(--color-white);
-}
-
-.scheduled-shell .scheduled-header::before,
-.scheduled-shell .scheduled-header::after,
-.application-shell .application-header::before,
-.application-shell .application-header::after {
-  content: '';
-  position: absolute;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: 50%;
-}
-
-.scheduled-shell .scheduled-header::before,
-.application-shell .application-header::before {
-  top: -120px;
-  right: -80px;
-  width: 260px;
-  height: 260px;
-  border: 1px solid rgba(0, 232, 138, 0.18);
-  box-shadow: 0 0 0 40px rgba(0, 232, 138, 0.04), 0 0 0 84px rgba(0, 232, 138, 0.03);
-}
-
-.scheduled-shell .scheduled-header::after,
-.application-shell .application-header::after {
-  bottom: -70px;
-  left: -60px;
-  width: 180px;
-  height: 180px;
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  box-shadow: 0 0 0 30px rgba(255, 255, 255, 0.02);
-}
-
-.scheduled-shell .scheduled-header > *,
-.application-shell .application-header > * {
-  position: relative;
-  z-index: 1;
-}
-
-.scheduled-shell .scheduled-header .eyebrow,
-.application-shell .application-header .eyebrow {
-  color: var(--color-green);
-  font-size: 0.7rem;
-  letter-spacing: 0.22em;
-}
-
-.scheduled-shell .scheduled-header h1,
-.application-shell .application-header h1 {
-  font-size: clamp(2rem, 4vw, 2.9rem);
-  line-height: 1.04;
-  letter-spacing: -0.045em;
-  text-transform: uppercase;
-  color: var(--color-white);
-  max-width: 15ch;
-}
-
-.scheduled-shell .scheduled-header .hero-accent,
-.application-shell .application-header .hero-accent {
-  display: block;
-  color: var(--color-green);
-}
-
-.scheduled-shell .scheduled-header .subtitle,
-.application-shell .application-header .subtitle {
-  margin-top: 10px;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 0.9rem;
-  line-height: 1.5;
-  max-width: 34rem;
-}
-
-.scheduled-shell .scheduled-intro,
-.application-shell .application-intro {
-  margin-top: 10px;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 0.82rem;
-  line-height: 1.55;
-  max-width: 34rem;
-}
-
-/* Form card — white premium surface like the homepage ride form */
-.scheduled-shell form.scheduled-form,
-.application-shell form.application-form {
-  display: grid;
-  gap: 0;
-  padding: 8px 24px 26px;
-  background: var(--color-white);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-soft);
-}
-
-.scheduled-shell form.scheduled-form .back-link,
-.application-shell form.application-form .back-link {
-  margin-bottom: 6px;
-}
-
-.scheduled-shell .booking-section,
-.application-shell .booking-section {
-  padding: 18px 0 20px;
-  border-top: 1px solid var(--color-gray-100);
-}
-
-.scheduled-shell .booking-section-heading strong,
-.application-shell .booking-section-heading strong {
-  font-size: 0.76rem;
-  font-weight: 800;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  color: var(--color-gray-900);
-}
-
-.scheduled-shell .booking-section-heading span:last-child,
-.application-shell .booking-section-heading span:last-child {
-  font-size: 0.76rem;
-}
-
-.scheduled-shell .booking-section-number,
-.application-shell .booking-section-number {
-  width: 20px;
-  height: 20px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 50%;
-  background: var(--color-gray-100);
-  color: var(--color-gray-700);
-  font-size: 0.62rem;
-}
-
-.scheduled-shell .field-label,
-.application-shell .field-label {
-  letter-spacing: 0.1em;
-}
-
-.scheduled-shell .input-field,
-.application-shell .input-field {
-  background: var(--color-white);
-  border-color: var(--color-gray-200);
-}
-
-.scheduled-shell .input-field:hover,
-.application-shell .input-field:hover {
-  border-color: var(--color-gray-400);
-}
-
-.scheduled-shell .input-field:focus,
-.application-shell .input-field:focus {
-  border-color: var(--color-green);
-  box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
-}
-
-/* Pricing note — premium inline summary like the homepage fare box */
-.scheduled-shell .scheduled-pricing-note {
-  display: grid;
-  gap: 4px;
-  margin: 4px 0 18px;
-  padding: 14px 16px;
-  border: 1px solid var(--color-gray-200);
-  border-left: 3px solid var(--color-black);
-  border-radius: var(--radius-md);
-  background: var(--color-gray-50);
-  color: var(--text-secondary);
-  font-size: 0.8rem;
-  line-height: 1.5;
-}
-
-.scheduled-shell .scheduled-pricing-note strong {
-  color: var(--text-primary);
-}
-
-/* Request CTA — black / green like the homepage's Request Ride */
-.scheduled-shell .request-ride-action,
-.application-shell .request-ride-action {
-  min-height: 54px;
-  background: var(--color-black);
-  border: 1px solid var(--color-black);
-  color: var(--color-green);
-  font-size: 0.96rem;
-  font-weight: 800;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  box-shadow: 0 4px 14px rgba(7, 16, 18, 0.22);
-}
-
-.scheduled-shell .request-ride-action:hover,
-.scheduled-shell .request-ride-action:focus-visible,
-.application-shell .request-ride-action:hover,
-.application-shell .request-ride-action:focus-visible {
-  background: var(--color-black-soft);
-  border-color: var(--color-green);
-}
-
-.scheduled-shell .request-ride-action:disabled:hover,
-.application-shell .request-ride-action:disabled:hover {
-  background: var(--color-black);
-  border-color: var(--color-black);
-}
-
-/* Success state card */
-.scheduled-card,
-.application-card {
+.scheduled-card {
   padding: 34px 38px 40px;
   border: 1px solid var(--border);
   border-radius: var(--radius-lg);
-  background: var(--color-white);
+  background: var(--surface);
   box-shadow: var(--shadow-card);
 }
 
-.scheduled-card.scheduled-success,
-.application-card.application-success {
-  display: grid;
-  gap: 14px;
-  max-width: 720px;
-  margin: 0 auto;
-}
-
-.scheduled-card.scheduled-success h1,
-.application-card.application-success h1 {
-  font-size: clamp(1.9rem, 4vw, 2.5rem);
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
-}
-
-.scheduled-card.scheduled-success p,
-.application-card.application-success p {
+.scheduled-intro {
+  max-width: 680px;
+  margin-top: 12px;
   color: var(--text-secondary);
   line-height: 1.55;
 }
 
-.scheduled-card.scheduled-success .eyebrow,
-.application-card.application-success .eyebrow {
-  color: var(--color-green);
-  letter-spacing: 0.22em;
+.scheduled-form {
+  display: grid;
+  gap: 0;
+  margin-top: 30px;
 }
 
-.scheduled-card.scheduled-success .primary-action,
-.application-card.application-success .primary-action {
-  margin-top: 8px;
+.scheduled-section {
+  display: grid;
+  gap: 18px;
+  padding: 24px 0 28px;
+  border-top: 1px solid var(--border);
 }
 
-/* Mobile — compact app rhythm matching the homepage */
-@media (max-width: 767px) {
-  .scheduled-shell,
-  .application-shell {
-    padding: 14px 12px calc(48px + env(safe-area-inset-bottom));
-  }
+.scheduled-section-heading {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+}
 
-  .scheduled-shell .scheduled-header,
-  .application-shell .application-header {
-    margin-bottom: 12px;
-    padding: 20px 18px 18px;
-    border-radius: var(--radius-md);
-  }
+.scheduled-section-heading span {
+  color: var(--color-gray-500);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
 
-  .scheduled-shell .scheduled-header h1,
-  .application-shell .application-header h1 {
-    font-size: clamp(1.55rem, 7.5vw, 1.9rem);
-    max-width: 13ch;
-  }
+.scheduled-section-heading h2 {
+  font-size: 1.2rem;
+  letter-spacing: -0.025em;
+}
 
-  .scheduled-shell .scheduled-header .eyebrow,
-  .application-shell .application-header .eyebrow {
-    margin-bottom: 6px;
-    font-size: 0.64rem;
-  }
+.scheduled-pricing-note {
+  display: grid;
+  gap: 3px;
+  margin: 4px 0 18px;
+  padding: 14px 16px;
+  border-left: 3px solid var(--color-black);
+  background: var(--color-gray-50);
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
 
-  .scheduled-shell .scheduled-header .subtitle,
-  .application-shell .application-header .subtitle {
-    margin-top: 8px;
-    font-size: 0.78rem;
-    max-width: 100%;
-  }
-
-  .scheduled-shell .scheduled-intro,
-  .application-shell .application-intro {
-    font-size: 0.74rem;
-  }
-
-  .scheduled-shell .scheduled-header::before,
-  .application-shell .application-header::before {
-    top: -100px;
-    right: -60px;
-    width: 190px;
-    height: 190px;
-  }
-
-  .scheduled-shell .scheduled-header::after,
-  .application-shell .application-header::after {
-    bottom: -50px;
-    left: -40px;
-    width: 120px;
-    height: 120px;
-  }
-
-  .scheduled-shell form.scheduled-form,
-  .application-shell form.application-form {
-    padding: 2px 16px 20px;
-  }
-
-  .scheduled-shell form.scheduled-form .back-link,
-  .application-shell form.application-form .back-link {
-    margin-bottom: 14px;
-  }
-
-  .scheduled-shell .booking-section,
-  .application-shell .booking-section {
-    padding: 14px 0 16px;
-  }
-
-  .scheduled-shell .booking-section-heading strong,
-  .application-shell .booking-section-heading strong {
-    font-size: 0.72rem;
-  }
-
-  .scheduled-shell .booking-section-heading span:last-child,
-  .application-shell .booking-section-heading span:last-child {
-    font-size: 0.7rem;
-  }
-
-  .scheduled-shell .form-grid,
-  .application-shell .form-grid {
-    gap: 12px;
-  }
-
-  .scheduled-shell .field-label,
-  .application-shell .field-label {
-    font-size: 0.66rem;
-  }
-
-  .scheduled-shell .input-field,
-  .application-shell .input-field {
-    min-height: 44px;
-    font-size: 0.85rem;
-  }
-
-  .scheduled-shell .scheduled-pricing-note {
-    margin: 4px 0 14px;
-    font-size: 0.76rem;
-  }
-
-  .scheduled-shell .request-ride-action,
-  .application-shell .request-ride-action {
-    min-height: 52px;
-    font-size: 0.86rem;
-    border-radius: var(--radius-md);
-    box-shadow: 0 8px 18px rgba(7, 16, 18, 0.24);
-  }
-
-  .scheduled-card,
-  .application-card {
-    padding: 26px 20px 28px;
-  }
-
-  .scheduled-card.scheduled-success,
-  .application-card.application-success {
-    max-width: 100%;
-  }
+.scheduled-pricing-note strong {
+  color: var(--text-primary);
 }
 
 /* =========================================================
@@ -4473,7 +4160,7 @@ a.secondary-action {
   }
 
   .brand-logo {
-    height: 38.4px;
+    height: 32px;
   }
 
   .desktop-nav {
@@ -4488,7 +4175,7 @@ a.secondary-action {
   .mobile-nav-panel {
     position: fixed;
     inset: 0;
-    z-index: 1600;
+    z-index: 1400;
     display: flex;
     flex-direction: column;
     background: var(--color-black);
@@ -8576,7 +8263,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   /* Mobile bottom nav */
   .customer-layout {
-    padding-bottom: calc(112px + env(safe-area-inset-bottom));
+    padding-bottom: calc(96px + env(safe-area-inset-bottom));
   }
 
   .mobile-bottom-nav {
@@ -8683,11 +8370,9 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
    ========================================================= */
 
 @media (max-width: 767px) {
-  /* Layout gutter — breathing room below the sticky header so the hero card
-     never sits tight against the fixed bottom navigation */
+  /* Layout gutter */
   .customer-layout {
-    padding-top: 14px;
-    padding-bottom: calc(92px + env(safe-area-inset-bottom));
+    padding-bottom: calc(84px + env(safe-area-inset-bottom));
   }
 
   /* Hero — tighter, taller headline-to-content ratio */
@@ -9044,35 +8729,136 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Passenger mobile hierarchy */
+/* BISLIG RIDE — PASSENGER MOBILE HIERARCHY FINAL */
 @media (max-width: 767px) {
+
+  /* Passenger page becomes a deliberate vertical information hierarchy */
   .customer-layout .primary-panel {
     display: flex;
     flex-direction: column;
   }
 
-  /* Bislig City → Where are you going? */
-  .customer-layout .section-header {
+  /* 01 — Service mode selector */
+  .customer-layout .booking-mode-picker {
     order: 1;
-    margin-bottom: 14px;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+    margin: 0 0 12px;
+    padding: 4px;
+    border-radius: 14px;
   }
 
-  .customer-layout .section-header h1 {
-    margin-bottom: 8px;
+  .customer-layout .booking-mode-card {
+    min-width: 0;
+    min-height: 50px;
+    height: 50px;
+    padding: 0 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy strong {
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  /* Compact selector: remove desktop explanatory text and controls */
+  .customer-layout .booking-mode-card .booking-mode-copy small,
+  .customer-layout .booking-mode-card .booking-mode-check,
+  .customer-layout .booking-mode-card .booking-mode-arrow {
+    display: none;
+  }
+
+  .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
+    content: " · Popular";
+    font-size: 9px;
+    font-weight: 700;
+    letter-spacing: 0;
+  }
+
+  /* 02 — Fare context */
+  .customer-layout .mobile-fare-context {
+    order: 2;
+    width: 100%;
+    margin: 0 0 12px;
+  }
+
+  /* 03 — Destination heading */
+  .customer-layout .section-header {
+    order: 3;
+    margin-bottom: 12px;
   }
 
   .customer-layout .section-header .subtitle {
     max-width: 34rem;
   }
 
-  /* Ride Now / Book Pakyawan */
+  /* 04 — Actual booking form */
+  .customer-layout .ride-form {
+    order: 4;
+  }
+
+  /* Preserve the canonical 01-04 mobile flow */
+  .customer-layout .desktop-booking-flow {
+    display: none;
+  }
+
+  .customer-layout .mobile-booking-flow {
+    display: block;
+  }
+
+  /* Request Ride follows the four-step flow */
+  .customer-layout .ride-form > .request-ride-action {
+    margin-top: 10px;
+  }
+
+  /* Map remains secondary content */
+  .customer-layout .map-panel {
+    order: 5;
+  }
+}
+
+/* BISLIG RIDE — PASSENGER MOBILE HIERARCHY FINAL */
+@media (max-width: 767px) {
+
+  .customer-layout .primary-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* SERVICE MODE — first passenger action */
   .customer-layout .booking-mode-picker {
-    order: 2;
+    order: 1;
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 6px;
     width: 100%;
-    margin: 0 0 16px;
+    margin: 0 0 18px;
     padding: 4px;
     border-radius: 14px;
   }
@@ -9122,12 +8908,25 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
     content: " · Popular";
-    margin-left: 3px;
     font-size: 9px;
     font-weight: 700;
   }
 
-  /* Four-step booking flow + Request Ride */
+  /* DESTINATION INTRO */
+  .customer-layout .section-header {
+    order: 2;
+    margin-bottom: 14px;
+  }
+
+  .customer-layout .section-header h1 {
+    margin-bottom: 8px;
+  }
+
+  .customer-layout .section-header .subtitle {
+    max-width: 34rem;
+  }
+
+  /* BOOKING FORM */
   .customer-layout .ride-form {
     order: 3;
   }
@@ -9140,260 +8939,19 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     display: block;
   }
 
+  /* REQUEST RIDE */
   .customer-layout .ride-form > .request-ride-action {
     margin-top: 10px;
   }
 
-  /* Keep supporting fare information out of the primary mobile journey */
+  /* FARE IS SUPPORTING INFORMATION */
   .customer-layout .mobile-fare-context {
-    display: none;
+    width: 100%;
+    margin-top: 14px;
   }
 
-/* Map is secondary on mobile; the booking flow already provides location controls */
+  /* MAP / SECONDARY INFORMATION */
   .customer-layout .map-panel {
-    display: none;
-  }
-}
-
-/* --------------------------------------------------------
-   PASSENGER MOBILE — creative spacing & typography polish.
-   Hierarchy fix (hero → service selector → booking steps) plus
-   a consistent 12px gutter and generous, rhythmic card spacing.
-   -------------------------------------------------------- */
-@media (max-width: 767px) {
-  /* --- Ordering fix: hero stays on top; steps follow the selector --- */
-  .customer-layout .mobile-booking-flow {
-    order: 3;
-  }
-
-  .customer-layout .ride-form > .fare-box {
     order: 4;
   }
-
-  /* --- Shared page gutter for every stacked card --- */
-  .customer-layout .section-header,
-  .customer-layout .booking-mode-picker,
-  .customer-layout .mobile-location-action,
-  .customer-layout .booking-accordion,
-  .customer-layout .ride-form > .fare-box,
-  .customer-layout form > .submit-error,
-  .customer-layout .request-ride-action {
-    width: calc(100% - 24px);
-    margin-right: 12px;
-    margin-left: 12px;
-  }
-
-  /* --- 1. Hero --- */
-  .customer-layout .section-header {
-    margin-top: 0;
-    margin-bottom: 14px;
-    padding: 26px 22px 24px;
-  }
-
-  .customer-layout .section-header .eyebrow {
-    margin-bottom: 12px;
-    font-size: 0.66rem;
-    letter-spacing: 0.18em;
-  }
-
-  .customer-layout .section-header h1 {
-    line-height: 1.04;
-    letter-spacing: -0.035em;
-  }
-
-  /* --- 2. Ride Now / Book Pakyawan segmented selector --- */
-  .customer-layout .booking-mode-picker {
-    gap: 6px;
-    margin-top: 0;
-    margin-bottom: 12px;
-    padding: 5px;
-    border-radius: 16px;
-  }
-
-  .customer-layout .booking-mode-card {
-    gap: 8px;
-    padding: 0 10px;
-  }
-
-  /* --- 3. Use my current location action --- */
-  .customer-layout .mobile-location-action {
-    margin-top: 0;
-    margin-bottom: 12px;
-    min-height: 48px;
-    padding: 0 18px;
-  }
-
-  /* --- 4. Booking accordion card --- */
-  .customer-layout .booking-accordion {
-    margin-top: 0;
-    margin-bottom: 0;
-  }
-
-  .accordion-trigger {
-    min-height: 54px;
-    padding: 8px 14px;
-    gap: 10px;
-  }
-
-  .accordion-number {
-    width: 24px;
-    font-size: 0.64rem;
-    letter-spacing: 0.1em;
-  }
-
-  .accordion-titles {
-    gap: 2px;
-  }
-
-  .accordion-titles strong {
-    font-size: 0.86rem;
-  }
-
-  .accordion-titles small {
-    font-size: 0.7rem;
-  }
-
-  .accordion-chevron {
-    margin-right: 12px;
-  }
-
-  .accordion-content {
-    padding: 0 14px;
-  }
-
-  .accordion-row.is-open .accordion-content {
-    padding-bottom: 14px;
-  }
-
-  .mobile-booking-flow .field-block {
-    gap: 6px;
-  }
-
-  .mobile-booking-flow .input-field {
-    min-height: 46px;
-    padding: 0 14px;
-    font-size: 0.86rem;
-  }
-
-  .passenger-fields {
-    gap: 10px;
-  }
-
-  /* --- 5. Fare box --- */
-  .customer-layout .ride-form > .fare-box {
-    margin-top: 10px;
-    padding: 14px 16px;
-    gap: 8px;
-    border-radius: 14px;
-  }
-
-  /* --- 6. Submit error --- */
-  .customer-layout form > .submit-error {
-    margin-top: 8px;
-    padding: 12px 14px;
-  }
-
-  /* --- 7. Request Ride --- */
-  .customer-layout .request-ride-action {
-    margin-top: 12px;
-    margin-bottom: 16px;
-    min-height: 54px;
-    font-size: 0.9rem;
-    letter-spacing: 0.05em;
-    border-radius: 14px;
-  }
-}
-
-/* Small phones — keep the polish from getting cramped */
-@media (max-width: 430px) {
-  .customer-layout .section-header {
-    padding: 22px 18px 20px;
-  }
-
-  .customer-layout .section-header h1 {
-    font-size: clamp(1.5rem, 7.5vw, 1.85rem);
-  }
-
-  .accordion-trigger {
-    padding: 8px 12px;
-  }
-}
-
-/* Admin — driver photo upload */
-.driver-photo-field .file-input {
-  width: 100%;
-  padding: 8px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--color-white);
-  color: var(--text-primary);
-  font-size: 0.9rem;
-}
-
-.driver-photo-field .form-note {
-  display: block;
-  margin-top: 6px;
-}
-
-.driver-photo-preview {
-  display: block;
-  width: 88px;
-  height: 88px;
-  margin-top: 10px;
-  object-fit: cover;
-  border-radius: 50%;
-  border: 1px solid var(--border);
-}
-
-/* Admin — remove driver confirmation */
-.remove-driver-dialog {
-  width: min(420px, 100%);
-  display: grid;
-  gap: 14px;
-  padding: 22px;
-  background: var(--color-white);
-  border-radius: 18px;
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-}
-
-.remove-driver-dialog h3 {
-  margin: 0;
-  font-size: 1.15rem;
-}
-
-.remove-driver-dialog .confirm-copy {
-  margin: 0;
-  font-size: 1rem;
-  line-height: 1.5;
-}
-
-.remove-driver-dialog .confirm-driver {
-  display: grid;
-  gap: 2px;
-  margin: 0;
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius-md);
-  background: var(--color-gray-50);
-}
-
-.remove-driver-dialog .confirm-driver span {
-  color: var(--text-muted);
-  font-size: 0.85rem;
-}
-
-.remove-driver-dialog .confirm-note {
-  margin: 0;
-  font-size: 0.85rem;
-  line-height: 1.5;
-}
-
-.danger-button {
-  color: var(--color-red);
-}
-
-.danger-button:hover {
-  color: var(--color-white);
-  background: var(--color-red);
-  text-decoration: none;
 }

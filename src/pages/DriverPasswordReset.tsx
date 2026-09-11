@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { supabase } from '../lib/supabase'
+import { AppHeader } from '../components/AppHeader'
 import { PASSWORD_HELP_TEXT, validatePasswordStrength } from '../lib/driverAccounts'
 
 const requestedViewKey = 'bislig-ride-requested-view'
@@ -123,20 +124,27 @@ export function DriverPasswordReset() {
   }
 
   return (
-    <div className="auth-shell">
-      <div className="auth-card">
-        <button type="button" className="secondary-action compact-button auth-back" onClick={goToDriverLogin}>
-          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-            <path d="M19 12H5" />
-            <path d="m12 19-7-7 7-7" />
-          </svg>
-          Back to driver login
-        </button>
+    <>
+      <AppHeader
+        view="driver"
+        onViewChange={goToDriverLogin}
+        primaryLabel="My Rides"
+        onPrimaryAction={goToDriverLogin}
+      />
+      <div className="auth-shell">
+        <div className="auth-card">
+          <button type="button" className="secondary-action compact-button auth-back" onClick={goToDriverLogin}>
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+              <path d="M19 12H5" />
+              <path d="m12 19-7-7 7-7" />
+            </svg>
+            Back to driver login
+          </button>
 
-        <div className="auth-header">
-          <p className="section-label">Driver Access</p>
-          <h2>Reset your password</h2>
-        </div>
+          <div className="auth-header">
+            <p className="eyebrow auth-eyebrow">Driver Access</p>
+            <h2>Reset your password</h2>
+          </div>
 
         {status === 'checking' ? (
           <p className="muted-copy">Validating your reset link...</p>
@@ -200,9 +208,9 @@ export function DriverPasswordReset() {
 
             {error ? <p className="auth-error" role="alert">{error}</p> : null}
 
-            <button type="submit" className="primary-action" disabled={status === 'resetting'}>
-              {status === 'resetting' ? 'Updating password...' : 'Update password'}
-            </button>
+<button type="submit" className="primary-action request-ride-action" disabled={status === 'resetting'}>
+            {status === 'resetting' ? 'Updating password...' : 'Update password'}
+          </button>
           </form>
         ) : null}
 
@@ -211,12 +219,13 @@ export function DriverPasswordReset() {
             <p className="muted-copy">
               Your password has been updated. Sign in with your new password.
             </p>
-            <button type="button" className="primary-action" onClick={goToDriverLogin}>
+            <button type="button" className="primary-action request-ride-action" onClick={goToDriverLogin}>
               Go to driver login
             </button>
           </div>
         ) : null}
       </div>
     </div>
+    </>
   )
 }
