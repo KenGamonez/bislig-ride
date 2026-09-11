@@ -133,7 +133,6 @@ export function AdminExperience({
       const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
   const [driverError, setDriverError] = useState('')
   const [driverSearch, setDriverSearch] = useState('')
-  const [driverFilter, setDriverFilter] = useState<'all' | DriverStatus>('all')
   const [customerSearch, setCustomerSearch] = useState('')
   const [rideSearch, setRideSearch] = useState('')
   const [paymentSearch, setPaymentSearch] = useState('')
@@ -309,15 +308,14 @@ useEffect(() => {
 
   const filteredDrivers = useMemo(() => {
     return drivers.filter((driver) => {
-      const matchesFilter = driverFilter === 'all' || driver.status === driverFilter
       const matchesSearch =
         driver.name.toLowerCase().includes(driverSearch.toLowerCase()) ||
         driver.phone.toLowerCase().includes(driverSearch.toLowerCase()) ||
         driver.vehicleModel.toLowerCase().includes(driverSearch.toLowerCase())
 
-      return matchesFilter && matchesSearch
+      return matchesSearch
     })
-  }, [drivers, driverFilter, driverSearch])
+  }, [drivers, driverSearch])
 
   const filteredCustomers = useMemo(() => {
     return liveCustomers.filter((Rider) => {
@@ -574,7 +572,6 @@ useEffect(() => {
         setSelectedDriverId(mappedDriver.id)
         setShowAddDriver(false)
         setDriverDraft(emptyDriverDraft)
-        setDriverFilter('all')
         return
       }
 
@@ -605,7 +602,6 @@ useEffect(() => {
       setSelectedDriverId(mappedDriver.id)
       setShowAddDriver(false)
       setDriverDraft(emptyDriverDraft)
-      setDriverFilter('all')
     } catch (error) {
       if (uploadedPhotoPath) {
         await removeUploadedDriverPhoto(uploadedPhotoPath).catch(() => undefined)
@@ -670,10 +666,11 @@ useEffect(() => {
     try {
       setDriverError('')
       setIsRemovingDriver(true)
-      await updateDriver(driverToRemove.id, { status: 'inactive' })
+      const updated = await updateDriver(driverToRemove.id, { status: 'inactive' })
+      const mappedDriver = mapDriverRecord(updated)
 
       setDrivers((current) =>
-        current.filter((driver) => driver.id !== driverToRemove.id),
+        current.map((driver) => driver.id === driverToRemove.id ? mappedDriver : driver),
       )
       setDriverToRemove(null)
     } catch (error) {
@@ -930,16 +927,6 @@ useEffect(() => {
                 onChange={(event) => setDriverSearch(event.target.value)}
                 placeholder="Search drivers"
               />
-
-              <select
-                className="input-field slim-input"
-                value={driverFilter}
-                onChange={(event) => setDriverFilter(event.target.value as 'all' | DriverStatus)}
-              >
-                <option value="all">All status</option>
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
             </div>
 
             {isLoadingDrivers ? <p className="muted-copy">Loading drivers...</p> : null}
