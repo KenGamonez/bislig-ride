@@ -1797,6 +1797,8 @@ onClick={() => setRating(star)}
         </aside>
       </main>
 
+      <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
+
       <footer className="announcement-ticker" role="marquee" aria-label="Coming soon announcement">
         <div className="ticker-track">
           <span className="ticker-content">
@@ -1808,7 +1810,6 @@ onClick={() => setRating(star)}
         </div>
       </footer>
 
-      <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
     </div>
   )
 }

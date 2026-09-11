@@ -8728,3 +8728,114 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     order: 9;
   }
 }
+
+/* Passenger mobile hierarchy */
+@media (max-width: 767px) {
+  .customer-layout .primary-panel {
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Bislig City → Where are you going? */
+  .customer-layout .section-header {
+    order: 1;
+    margin-bottom: 14px;
+  }
+
+  .customer-layout .section-header h1 {
+    margin-bottom: 8px;
+  }
+
+  .customer-layout .section-header .subtitle {
+    max-width: 34rem;
+  }
+
+  /* Ride Now / Book Pakyawan */
+  .customer-layout .booking-mode-picker {
+    order: 2;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 6px;
+    width: 100%;
+    margin: 0 0 16px;
+    padding: 4px;
+    border-radius: 14px;
+  }
+
+  .customer-layout .booking-mode-card {
+    min-width: 0;
+    min-height: 50px;
+    height: 50px;
+    padding: 0 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    border-radius: 10px;
+    box-shadow: none;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-icon {
+    width: 18px;
+    height: 18px;
+    flex: 0 0 18px;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-icon svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy strong {
+    font-size: 13px;
+    line-height: 1;
+    white-space: nowrap;
+  }
+
+  .customer-layout .booking-mode-card .booking-mode-copy small,
+  .customer-layout .booking-mode-card .booking-mode-check,
+  .customer-layout .booking-mode-card .booking-mode-arrow {
+    display: none;
+  }
+
+  .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
+    content: " · Popular";
+    margin-left: 3px;
+    font-size: 9px;
+    font-weight: 700;
+  }
+
+  /* Four-step booking flow + Request Ride */
+  .customer-layout .ride-form {
+    order: 3;
+  }
+
+  .customer-layout .desktop-booking-flow {
+    display: none;
+  }
+
+  .customer-layout .mobile-booking-flow {
+    display: block;
+  }
+
+  .customer-layout .ride-form > .request-ride-action {
+    margin-top: 10px;
+  }
+
+  /* Keep supporting fare information out of the primary mobile journey */
+  .customer-layout .mobile-fare-context {
+    display: none;
+  }
+
+  /* Map is secondary on mobile; the booking flow already provides location controls */
+  .customer-layout .map-panel {
+    display: none;
+  }
+}
