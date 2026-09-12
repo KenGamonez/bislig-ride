@@ -9701,6 +9701,55 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   line-height: 1.4;
 }
 
+.share-location-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px;
+  border-top: 1px solid var(--color-border-dark);
+  background: var(--color-gray-50);
+}
+
+.share-location-panel > span {
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.share-location-button {
+  align-self: flex-start;
+  border: 1px solid var(--color-green);
+  border-radius: 10px;
+  background: var(--color-green);
+  color: var(--color-black);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.03em;
+  padding: 11px 18px;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.share-location-button:hover,
+.share-location-button:focus-visible {
+  background: var(--color-green-deep);
+  border-color: var(--color-green-deep);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.18);
+}
+
+.share-location-button:active {
+  background: var(--color-green-deep);
+  border-color: var(--color-green-deep);
+  box-shadow: none;
+}
+
+.share-location-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
 /* =========================================================
    CHAT NOTIFICATION â€” subtle toast + unread badge
    Replaces the intrusive auto-open modal on incoming

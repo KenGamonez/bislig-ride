@@ -103,6 +103,7 @@ customer_auth_id: null,
 }
 
 const rideIdStorageKey = 'bislig-ride-last-ride-id'
+const passengerShareStorageKey = (rideId: string) => `bislig-ride-customer-share-${rideId}`
 
 const renderStars = (average: number) => (
   <span className="rating-stars-inline" aria-hidden="true">
@@ -182,6 +183,7 @@ const [rating, setRating] = useState(0)
   const [launcherView, setLauncherView] = useState(true)
   const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [passengerLocationError, setPassengerLocationError] = useState('')
+  const [passengerLocationShared, setPassengerLocationShared] = useState(false)
   const [chatUnread, setChatUnread] = useState(0)
   const [chatToast, setChatToast] = useState<{ id: string; from: string; preview: string } | null>(null)
   const showChatRef = useRef(false)
@@ -218,6 +220,15 @@ const [rating, setRating] = useState(0)
     setShowChat(true)
   }
 
+  const handleSharePassengerLocation = () => {
+    if (!ride.id) {
+      return
+    }
+
+    setPassengerLocationShared(true)
+    window.localStorage.setItem(passengerShareStorageKey(ride.id), '1')
+  }
+
   useEffect(() => {
     void getCustomerAuthId()
       .then(setCustomerAuthId)
@@ -239,6 +250,18 @@ const restoreRide = async () => {
 
         setRide(latestRide)
         setPhase(mapRideStatusToPhase(latestRide.status))
+
+        if (
+          latestRide.status === 'accepted' ||
+          latestRide.status === 'arrived' ||
+          latestRide.status === 'in_progress'
+        ) {
+          if (window.localStorage.getItem(passengerShareStorageKey(latestRide.id)) === '1') {
+            setPassengerLocationShared(true)
+          }
+        } else {
+          window.localStorage.removeItem(passengerShareStorageKey(latestRide.id))
+        }
 
         if (latestRide.status === 'cancelled') {
           const latestCancellation = await fetchLatestRideCancellation(latestRide.id)
@@ -703,7 +726,7 @@ void loadAssignedDriver()
   useEffect(() => {
     const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
 
-    if (!ride.id || !customerAuthId || !activeStatuses.includes(ride.status) || !navigator.geolocation) {
+    if (!ride.id || !customerAuthId || !activeStatuses.includes(ride.status) || !passengerLocationShared || !navigator.geolocation) {
       return
     }
 
@@ -756,7 +779,7 @@ void loadAssignedDriver()
         navigator.geolocation.clearWatch(watchId)
       }
     }
-  }, [ride.id, customerAuthId, ride.status])
+  }, [ride.id, customerAuthId, ride.status, passengerLocationShared])
 
   useEffect(() => {
     if (!ride.id || !customerAuthId) {
@@ -867,6 +890,11 @@ void loadAssignedDriver()
 
     setSubmitError('')
     setIsSubmitting(true)
+
+    setPassengerLocationShared(false)
+    setPassengerLiveLocation(null)
+    setPassengerLocationError('')
+    window.localStorage.removeItem(passengerShareStorageKey(ride.id || ''))
 
     try {
       const createdRide = await createRide({
@@ -1045,6 +1073,10 @@ setRatingSubmitted(true)
 
   const handleBackToHome = () => {
     window.localStorage.removeItem(rideIdStorageKey)
+    setPassengerLocationShared(false)
+    setPassengerLiveLocation(null)
+    setPassengerLocationError('')
+    window.localStorage.removeItem(passengerShareStorageKey(ride.id || ''))
     setRide(initialRide)
     setPhase('request')
     setPaymentMethod('Cash')
@@ -1589,7 +1621,14 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
         />
         {passengerLocationError ? (
           <p className="passenger-location-note">{passengerLocationError}</p>
-        ) : null}
+        ) : passengerLocationShared ? (
+          <p className="passenger-location-note">Sharing your live location with your driver.</p>
+        ) : (
+          <div className="share-location-panel">
+            <span>Share your live location so your driver can find you more easily.</span>
+            <button type="button" className="share-location-button" onClick={handleSharePassengerLocation}>Share my location</button>
+          </div>
+        )}
       </div>
 
       <div className="action-row compact-actions">
@@ -1646,7 +1685,14 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
         />
         {passengerLocationError ? (
           <p className="passenger-location-note">{passengerLocationError}</p>
-        ) : null}
+        ) : passengerLocationShared ? (
+          <p className="passenger-location-note">Sharing your live location with your driver.</p>
+        ) : (
+          <div className="share-location-panel">
+            <span>Share your live location so your driver can find you more easily.</span>
+            <button type="button" className="share-location-button" onClick={handleSharePassengerLocation}>Share my location</button>
+          </div>
+        )}
       </div>
 
       <div className="action-row">
@@ -1714,7 +1760,14 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
         />
         {passengerLocationError ? (
           <p className="passenger-location-note">{passengerLocationError}</p>
-        ) : null}
+        ) : passengerLocationShared ? (
+          <p className="passenger-location-note">Sharing your live location with your driver.</p>
+        ) : (
+          <div className="share-location-panel">
+            <span>Share your live location so your driver can find you more easily.</span>
+            <button type="button" className="share-location-button" onClick={handleSharePassengerLocation}>Share my location</button>
+          </div>
+        )}
       </div>
 
       <div className="action-row">
