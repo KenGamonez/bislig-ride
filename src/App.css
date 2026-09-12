@@ -10232,3 +10232,290 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     font-size: 0.62rem;
   }
 }
+
+/* --------------------------------------------------------
+   PASABUY EXPERIENCE — three-step service flow
+   -------------------------------------------------------- */
+
+.pasabuy-shell {
+  width: min(100%, 780px);
+}
+
+.pasabuy-hero .pasabuy-descriptor {
+  position: relative;
+  z-index: 1;
+  margin-top: 16px;
+  color: rgba(0, 232, 138, 0.55);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.34em;
+}
+
+.pasabuy-card {
+  padding: 24px 24px 28px;
+}
+
+.pasabuy-progress {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 0 18px;
+}
+
+.pasabuy-progress-step {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 34px;
+  height: 34px;
+  padding: 0 9px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--color-gray-500);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  transition: border-color var(--transition), background var(--transition), color var(--transition);
+}
+
+.pasabuy-progress-step.is-current {
+  border-color: var(--color-black);
+  background: var(--color-black);
+  color: var(--color-green);
+}
+
+.pasabuy-progress-step.is-done {
+  border-color: rgba(0, 232, 138, 0.4);
+  background: rgba(0, 232, 138, 0.12);
+  color: var(--color-green-deep);
+}
+
+.pasabuy-progress-line {
+  flex: 1;
+  height: 1px;
+  background: var(--color-gray-200);
+  transition: background var(--transition);
+}
+
+.pasabuy-progress-line.is-fill {
+  background: var(--color-green);
+}
+
+.pasabuy-step {
+  padding: 6px 0 2px;
+  animation: pasabuy-step-in 300ms var(--transition) both;
+}
+
+@keyframes pasabuy-step-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pasabuy-step {
+    animation: none;
+  }
+}
+
+.pasabuy-step-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding-bottom: 18px;
+  margin-bottom: 22px;
+  border-bottom: 1px solid var(--color-gray-100);
+}
+
+.pasabuy-step-number {
+  flex-shrink: 0;
+  font-size: clamp(2rem, 7vw, 2.7rem);
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: -0.06em;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--color-gray-300);
+}
+
+.pasabuy-step.is-last .pasabuy-step-number,
+.pasabuy-step.is-current .pasabuy-step-number {
+  -webkit-text-stroke: 1.5px rgba(0, 232, 138, 0.65);
+}
+
+.pasabuy-step-title {
+  display: grid;
+  gap: 6px;
+  padding-top: 2px;
+}
+
+.pasabuy-step-title h2 {
+  margin: 0;
+  font-size: clamp(1.4rem, 4.5vw, 1.8rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+}
+
+.pasabuy-step-title p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.pasabuy-fields {
+  display: grid;
+  gap: 16px;
+}
+
+.pasabuy-category-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.pasabuy-category {
+  position: relative;
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  padding: 14px 40px 14px 14px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition: border-color var(--transition), background var(--transition), box-shadow var(--transition), transform var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pasabuy-category:hover {
+  border-color: var(--color-gray-400);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-xs);
+}
+
+.pasabuy-category.is-selected {
+  border-color: var(--color-green-deep);
+  background: rgba(0, 232, 138, 0.08);
+  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.2);
+}
+
+.pasabuy-category-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  transition: background var(--transition), color var(--transition);
+}
+
+.pasabuy-category.is-selected .pasabuy-category-icon {
+  background: var(--color-green);
+  color: var(--color-black);
+}
+
+.pasabuy-category-label {
+  font-size: 0.92rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pasabuy-category-check {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 20px;
+  height: 20px;
+  border: 2px solid var(--color-gray-300);
+  border-radius: 50%;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.pasabuy-category.is-selected .pasabuy-category-check {
+  border-color: var(--color-green-deep);
+  background: var(--color-green);
+}
+
+.pasabuy-category.is-selected .pasabuy-category-check::after {
+  content: '\2713';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-black);
+  font-size: 0.62rem;
+  font-weight: 900;
+}
+
+.pasabuy-category-error {
+  display: block;
+  margin-top: 8px;
+}
+
+.pasabuy-notes {
+  min-height: 128px;
+}
+
+.pasabuy-date-group {
+  display: grid;
+  gap: 8px;
+}
+
+.pasabuy-date-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.pasabuy-actions {
+  display: grid;
+  gap: 10px;
+  margin-top: 24px;
+}
+
+.pasabuy-back {
+  width: 100%;
+  min-height: 44px;
+  border: 0;
+  background: transparent;
+  color: var(--text-secondary);
+  font-weight: 700;
+  font-size: 0.86rem;
+  text-align: center;
+  cursor: pointer;
+  transition: color var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.pasabuy-back:hover {
+  color: var(--text-primary);
+}
+
+.scheduled-shell .pasabuy-card .scheduled-pricing-note {
+  margin: 18px 0 2px;
+}
+
+@media (max-width: 520px) {
+  .pasabuy-date-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 768px) {
+  .pasabuy-category-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
