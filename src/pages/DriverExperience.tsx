@@ -1251,38 +1251,67 @@ const displayedDriver = driverProfile ?? demoDriver
     )
   }
 
-  const renderSummary = () => (
-    <section className="driver-card driver-overview">
-      <div className="driver-identity">
-        <img src={displayedDriver.profilePhoto ?? ''} alt={displayedDriver.name} className="driver-photo" />
-        <div className="driver-identity-copy">
-          <p className="section-label">DRIVER ACCOUNT</p>
-          <h3>{displayedDriver.name}</h3>
-<p className="driver-rating"><span className="rating-stars-inline">
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-            <svg viewBox="0 0 24 24" width="14" height="14" fill="currentColor" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" aria-hidden="true"><path d="M12 17.27 18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-</span> {displayedDriver.rating}</p>
-          <p className="driver-vehicle">{displayedDriver.vehicleType} · {displayedDriver.vehicleModel} · {displayedDriver.plateNumber}</p>
-          {driverProfile?.username ? <p className="driver-email">Signed in as: <strong>{driverProfile.username}</strong></p> : driverProfile?.email ? <p className="driver-email">Signed in as: <strong>{driverProfile.email}</strong></p> : null}
+const renderSummary = () => (
+    <section className="driver-hero" aria-label="Driver profile and statistics">
+      <div className="driver-hero-top">
+        <div className="driver-hero-profile">
+          <div className="driver-avatar">
+            {displayedDriver.profilePhoto ? (
+              <img src={displayedDriver.profilePhoto} alt="" className="driver-photo" />
+            ) : (
+              <span className="driver-photo driver-photo-fallback" aria-hidden="true">
+                {displayedDriver.name.charAt(0)}
+              </span>
+            )}
+            <span
+              className={driverOnline ? 'driver-avatar-dot is-online' : 'driver-avatar-dot is-offline'}
+              aria-hidden="true"
+            />
+          </div>
+
+          <div className="driver-hero-copy">
+            <p className="section-label">DRIVER PROFILE</p>
+            <h3>{displayedDriver.name}</h3>
+            <p className="driver-hero-rating">
+              {renderStarRating(displayedDriver.rating)}
+              <span> {displayedDriver.rating}</span>
+            </p>
+            <p className="driver-hero-vehicle">
+              {displayedDriver.vehicleType} · {displayedDriver.vehicleModel} · {displayedDriver.plateNumber}
+            </p>
+            {driverProfile?.username ? (
+              <p className="driver-hero-signed">Signed in as <strong>{driverProfile.username}</strong></p>
+            ) : driverProfile?.email ? (
+              <p className="driver-hero-signed">Signed in as <strong>{driverProfile.email}</strong></p>
+            ) : null}
+          </div>
+        </div>
+
+        <div className="driver-hero-availability">
+          <span
+            className={driverOnline ? 'driver-hero-avail-dot is-online' : 'driver-hero-avail-dot is-offline'}
+            aria-hidden="true"
+          />
+          <div>
+            <small>Availability</small>
+            <strong>{driverOnline ? 'Accepting ride requests' : 'Currently offline'}</strong>
+          </div>
         </div>
       </div>
 
-      <div className="driver-metrics">
-        <div className="metric-card">
-          <span>Completed rides</span>
+      <div className="driver-stat-grid">
+        <div className="driver-stat-tile">
+          <span className="driver-stat-label">Completed rides</span>
           <strong>{reputation ? reputation.completedRides : recentRides.length}</strong>
           <small>All-time trips</small>
         </div>
-        <div className="metric-card">
-          <span>Rating</span>
+        <div className="driver-stat-tile">
+          <span className="driver-stat-label">Rating</span>
           <strong>{reputation ? reputation.averageStars.toFixed(1) : String(demoDriver.rating)}</strong>
           <small>{reputation ? `${reputation.totalRatings} rating${reputation.totalRatings === 1 ? '' : 's'}` : 'Passenger feedback'}</small>
         </div>
-        <div className="metric-card">
-          <span>Cancellations</span>
+        <div className="driver-stat-tile">
+          <span className="driver-stat-label">Cancellations</span>
           <strong>{reputation ? `${reputation.cancelledRides} (${reputation.cancellationRate}%)` : '0'}</strong>
           <small>Of all completed rides</small>
         </div>
@@ -1290,30 +1319,33 @@ const displayedDriver = driverProfile ?? demoDriver
     </section>
   )
 
-  const renderOfflineState = () => (
-    <section className="driver-card work-state offline-state">
+const renderOfflineState = () => (
+    <section className="driver-card work-state work-offline">
       <div className="state-heading">
         <div>
           <p className="section-label">AVAILABILITY</p>
           <h3>You're currently offline</h3>
-          <p>You are not receiving new ride requests.</p>
+          <p>You are not receiving new ride requests. Go online to start getting matched with nearby passengers.</p>
         </div>
         <span className="state-badge offline-badge">OFFLINE</span>
       </div>
 
-      <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
-        Go Online
-      </button>
+      <div className="work-cta">
+        <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
+          Go Online
+        </button>
+        <p className="work-cta-hint">Nearby passengers will be able to request you as soon as you go online.</p>
+      </div>
     </section>
   )
 
-  const renderOnlineState = () => (
-    <section className="driver-card work-state waiting-state">
+const renderOnlineState = () => (
+    <section className="driver-card work-state work-waiting">
       <div className="state-heading">
         <div>
           <p className="section-label">RIDE QUEUE</p>
           <h3>Waiting for your next ride</h3>
-          <p>Your vehicle is available and ready.</p>
+          <p>Your vehicle is available and ready to serve passengers.</p>
         </div>
         <span className="state-badge online-badge">ONLINE</span>
       </div>
@@ -1362,7 +1394,7 @@ const displayedDriver = driverProfile ?? demoDriver
   }
 
   const renderIncomingRequest = () => (
-    <section className="driver-card work-state incoming-state">
+<section className="driver-card work-state work-request ride-focal">
       <div className="state-heading">
         <div>
           <p className="section-label">NEW RIDE REQUEST</p>
@@ -1372,7 +1404,7 @@ const displayedDriver = driverProfile ?? demoDriver
         <span className="state-badge request-badge">NEW</span>
       </div>
 
-<div className="fare-highlight">
+<div className="fare-highlight fare-highlight-focal">
         <span>{request?.destination_mode === 'multiple' ? 'FARE' : 'ESTIMATED FARE'}</span>
         <strong>{fareDisplayFor(request)}</strong>
       </div>
@@ -1410,8 +1442,8 @@ const displayedDriver = driverProfile ?? demoDriver
         {renderPassengerReputationRow()}
       </div>
 
-      <div className="action-row request-actions">
-        <button type="button" className="primary-action" onClick={handleAcceptRide} disabled={transitioning}>
+<div className="action-row request-actions">
+        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning}>
           Accept Ride
         </button>
         <button type="button" className="secondary-action" onClick={handleDecline} disabled={transitioning}>
@@ -1754,7 +1786,7 @@ const displayedDriver = driverProfile ?? demoDriver
         onPrimaryAction={() => onViewChange('Rider')}
       />
 
-    <div className="driver-shell">
+    <div className="driver-shell driver-dashboard">
 {showChat && activeRide?.id && (
         <RideChat
           rideId={activeRide.id}
@@ -1786,10 +1818,13 @@ const displayedDriver = driverProfile ?? demoDriver
         Back to Ride Booking
       </button>
 
-      <header className="driver-header">
-        <div>
+      <header className="driver-dash-header">
+        <div className="driver-dash-copy">
           <p className="driver-kicker">Bislig Ride</p>
           <h2>Driver Dashboard</h2>
+          <p className="driver-dash-subtitle">
+            {driverOnline ? 'You\u2019re online and ready to accept ride requests.' : 'Go online to start receiving ride requests.'}
+          </p>
         </div>
         <div className="driver-header-controls">
           <button
@@ -1871,13 +1906,15 @@ const displayedDriver = driverProfile ?? demoDriver
         </section>
       ) : null}
 
-      {phase === 'offline' ? renderOfflineState() : null}
-      {phase === 'online' ? renderOnlineState() : null}
-      {phase === 'incoming_request' ? renderIncomingRequest() : null}
-      {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
-      {phase === 'arrived' ? renderArrivedState() : null}
-      {phase === 'in_progress' ? renderInProgressState() : null}
-      {phase === 'completed' ? renderCompletedState() : null}
+      <div className="driver-operations">
+        {phase === 'offline' ? renderOfflineState() : null}
+        {phase === 'online' ? renderOnlineState() : null}
+        {phase === 'incoming_request' ? renderIncomingRequest() : null}
+        {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
+        {phase === 'arrived' ? renderArrivedState() : null}
+        {phase === 'in_progress' ? renderInProgressState() : null}
+        {phase === 'completed' ? renderCompletedState() : null}
+      </div>
 
       {cancellationNotice ? (
         <section className="ride-cancelled-notice" role="alert">

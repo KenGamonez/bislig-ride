@@ -10610,3 +10610,483 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     grid-template-columns: repeat(4, 1fr);
   }
 }
+
+/* =========================================================
+   DRIVER DASHBOARD — premium command center
+   Desktop container ~1160px, mobile-first, no overflow
+   ========================================================= */
+
+.driver-shell.driver-dashboard {
+  width: min(100%, 1160px);
+  padding-top: 20px;
+}
+
+.driver-dashboard .driver-back-button {
+  justify-self: flex-start;
+  margin-bottom: 2px;
+}
+
+/* Header banner */
+.driver-dash-header {
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 22px;
+  border-radius: var(--radius-lg);
+  background:
+    radial-gradient(900px 240px at 88% -40%, rgba(0, 232, 138, 0.16), transparent 60%),
+    var(--color-black-soft);
+  color: var(--color-white);
+}
+
+.driver-dash-header::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  width: 3px;
+  background: linear-gradient(var(--color-green), rgba(0, 232, 138, 0.2));
+}
+
+.driver-dash-header::after {
+  content: '';
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 34px;
+  height: 34px;
+  border-top: 1px solid rgba(255, 255, 255, 0.18);
+  border-right: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 0 8px 0 0;
+  pointer-events: none;
+}
+
+.driver-dash-copy {
+  position: relative;
+  z-index: 1;
+  min-width: 0;
+}
+
+.driver-dash-copy .driver-kicker {
+  margin-bottom: 6px;
+  color: var(--color-green);
+}
+
+.driver-dash-copy h2 {
+  margin: 0;
+  color: var(--color-white);
+  font-size: clamp(1.7rem, 4.2vw, 2.35rem);
+  letter-spacing: -0.02em;
+}
+
+.driver-dash-subtitle {
+  margin: 6px 0 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.driver-dash-header .driver-header-controls {
+  position: relative;
+  z-index: 2;
+}
+
+/* Profile hero */
+.driver-hero {
+  position: relative;
+  overflow: hidden;
+  padding: 22px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.driver-hero::after {
+  content: '';
+  position: absolute;
+  top: 18px;
+  right: 18px;
+  width: 38px;
+  height: 38px;
+  border-top: 1px solid var(--color-gray-200);
+  border-right: 1px solid var(--color-gray-200);
+  border-radius: 0 8px 0 0;
+  pointer-events: none;
+}
+
+.driver-hero-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.driver-hero-profile {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
+
+.driver-avatar {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.driver-avatar .driver-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+  box-shadow: 0 0 0 3px var(--color-white), 0 0 0 4px var(--color-gray-200);
+}
+
+.driver-avatar .driver-photo.driver-photo-fallback {
+  display: grid;
+  place-items: center;
+  width: 72px;
+  height: 72px;
+  background: linear-gradient(135deg, var(--color-black-soft), var(--color-black));
+  color: var(--color-green);
+  font-size: 1.6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.driver-avatar-dot {
+  position: absolute;
+  right: -2px;
+  bottom: 4px;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 3px solid var(--color-white);
+}
+
+.driver-avatar-dot.is-online {
+  background: var(--color-green);
+}
+
+.driver-avatar-dot.is-offline {
+  background: var(--color-red);
+}
+
+.driver-hero-copy {
+  min-width: 0;
+}
+
+.driver-hero-copy .section-label {
+  color: var(--color-green-deep);
+}
+
+.driver-hero-copy h3 {
+  margin: 4px 0 4px;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.driver-hero-rating {
+  margin: 0 0 3px;
+  color: var(--color-gray-700);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.driver-hero-rating .rating-stars-inline {
+  color: var(--color-green-deep);
+}
+
+.driver-hero-vehicle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.driver-hero-signed {
+  margin: 4px 0 0;
+  color: var(--color-gray-500);
+  font-size: 0.72rem;
+}
+
+.driver-hero-availability {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+}
+
+.driver-hero-availability small {
+  display: block;
+  color: var(--color-gray-500);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.driver-hero-availability strong {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.78rem;
+  line-height: 1.3;
+}
+
+.driver-hero-avail-dot {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 10px;
+  border-radius: 50%;
+}
+
+.driver-hero-avail-dot.is-online {
+  background: var(--color-green);
+  box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
+}
+
+.driver-hero-avail-dot.is-offline {
+  background: var(--color-red);
+  box-shadow: 0 0 0 4px rgba(220, 38, 38, 0.12);
+}
+
+/* Stats row */
+.driver-stat-grid {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.driver-stat-tile {
+  padding: 16px 18px;
+  border: 1px solid var(--color-gray-150);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition);
+}
+
+.driver-stat-tile:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.driver-stat-label {
+  display: block;
+  color: var(--color-gray-500);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.driver-stat-tile strong {
+  display: block;
+  margin-top: 5px;
+  font-size: 1.55rem;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  color: var(--color-black);
+}
+
+.driver-stat-tile small {
+  display: block;
+  margin-top: 4px;
+  color: var(--color-gray-400);
+  font-size: 0.68rem;
+}
+
+/* Operations region */
+.driver-operations {
+  display: grid;
+  gap: 18px;
+}
+
+.driver-dashboard .work-state {
+  padding: 22px;
+}
+
+.work-cta {
+  display: grid;
+  gap: 8px;
+}
+
+.work-cta-hint {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+/* New ride request — focal card */
+.driver-dashboard .work-request {
+  border: 1px solid rgba(0, 232, 138, 0.35);
+  box-shadow: 0 10px 30px rgba(0, 232, 138, 0.1), var(--shadow-soft);
+}
+
+.driver-dashboard .work-request .state-heading {
+  margin-bottom: 16px;
+}
+
+.driver-dashboard .work-request .state-heading h3 {
+  font-size: 1.3rem;
+}
+
+.driver-dashboard .work-request .state-heading p:not(.section-label) {
+  font-size: 0.84rem;
+}
+
+.fare-highlight-focal {
+  background: linear-gradient(90deg, rgba(0, 232, 138, 0.14), rgba(0, 232, 138, 0.05));
+  border-color: rgba(0, 232, 138, 0.3);
+  box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.08);
+}
+
+.fare-highlight-focal span {
+  color: var(--color-gray-500);
+}
+
+.fare-highlight-focal strong {
+  color: var(--color-black);
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+/* Accept CTA — dominant green */
+.driver-dashboard .work-state .accept-cta {
+  background: var(--color-green);
+  border: 1px solid var(--color-green);
+  color: var(--color-black);
+  box-shadow: 0 4px 14px rgba(0, 232, 138, 0.22);
+}
+
+.driver-dashboard .work-state .accept-cta:hover,
+.driver-dashboard .work-state .accept-cta:focus-visible {
+  background: var(--color-green-deep);
+  border-color: var(--color-green-deep);
+  color: var(--color-white);
+  box-shadow: 0 6px 18px rgba(0, 232, 138, 0.3);
+}
+
+/* Active ride states — restrained polish */
+.driver-dashboard .active-ride-state {
+  border-radius: var(--radius-lg);
+}
+
+.driver-dashboard .driver-map-panel {
+  overflow: hidden;
+  border-radius: var(--radius-md);
+}
+
+/* History card polish */
+.driver-dashboard .history-card {
+  padding: 22px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+}
+
+/* Account actions — quiet */
+.driver-dashboard .account-actions-row {
+  justify-content: flex-end;
+}
+
+.driver-dashboard .account-actions-row .secondary-action {
+  min-height: 40px;
+  color: var(--color-gray-500);
+  font-size: 0.74rem;
+}
+
+/* Pakyawan secondary section */
+.driver-dashboard .pakyawan-card {
+  padding: 22px;
+}
+
+/* Mobile adjustments */
+@media (max-width: 767px) {
+  .driver-dash-header {
+    padding: 18px 16px;
+    border-radius: var(--radius-md);
+  }
+
+  .driver-dash-header::after {
+    width: 24px;
+    height: 24px;
+    top: 10px;
+    right: 10px;
+  }
+
+  .driver-dash-subtitle {
+    display: none;
+  }
+
+  .driver-hero {
+    padding: 18px 16px;
+  }
+
+  .driver-hero-top {
+    align-items: flex-start;
+  }
+
+  .driver-hero-availability {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .driver-avatar .driver-photo,
+  .driver-avatar .driver-photo.driver-photo-fallback {
+    width: 60px;
+    height: 60px;
+  }
+
+  .driver-hero-profile {
+    gap: 12px;
+  }
+
+  .driver-stat-tile {
+    padding: 14px 16px;
+  }
+
+  .driver-stat-tile strong {
+    font-size: 1.35rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .driver-stat-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .driver-stat-tile:hover,
+  .driver-dash-header,
+  .driver-hero-availability {
+    transition: none !important;
+    transform: none !important;
+  }
+
+  .driver-dash-header::before,
+  .driver-dash-header::after {
+    transition: none !important;
+  }
+}
