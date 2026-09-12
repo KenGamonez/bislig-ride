@@ -1,9 +1,9 @@
-/* =========================================================
-   BISLIG RIDE — COMPLETE DESIGN SYSTEM
+﻿/* =========================================================
+   BISLIG RIDE â€” COMPLETE DESIGN SYSTEM
    ========================================================= */
 
 :root {
-  /* === BRAND COLOR TOKENS — BISLIG RIDE === */
+  /* === BRAND COLOR TOKENS â€” BISLIG RIDE === */
   --color-green: #00E88A;
   --color-green-bright: #2CF5A5;
   --color-green-deep: #05B472;
@@ -263,7 +263,7 @@ h4 {
 }
 
 /* --------------------------------------------------------
-   BETA INDICATOR — quiet product-status label (header)
+   BETA INDICATOR â€” quiet product-status label (header)
    -------------------------------------------------------- */
 
 .beta-indicator {
@@ -315,7 +315,7 @@ h4 {
   }
 }
 
-/* Desktop — hug the brand cluster, keep nav right-aligned */
+/* Desktop â€” hug the brand cluster, keep nav right-aligned */
 @media (min-width: 768px) {
   .beta-indicator {
     margin-right: auto;
@@ -638,7 +638,7 @@ h4 {
 }
 
 .pickup-check::before {
-  content: "✓";
+  content: "âœ“";
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1018,7 +1018,7 @@ a.secondary-action {
   }
 }
 
-/* Search dots — premium scanning animation */
+/* Search dots â€” premium scanning animation */
 .search-dots {
   display: flex;
   align-items: center;
@@ -1435,7 +1435,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   TICKER — MOBILE FIXED CLUSTER + SHARED FOOTER
+   TICKER â€” MOBILE FIXED CLUSTER + SHARED FOOTER
    -------------------------------------------------------- */
 
 /* Desktop: hide the fixed ticker (customer page only shows it on mobile) */
@@ -2792,7 +2792,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   APP FORM SHELLS — BOOK PAKYAWAN + BECOME A DRIVER
+   APP FORM SHELLS â€” BOOK PAKYAWAN + BECOME A DRIVER
    Mirrors the passenger homepage design language
    (dark hero card + white booking card + green CTA)
    ========================================================= */
@@ -2804,7 +2804,7 @@ a.secondary-action {
   padding: 28px 20px 64px;
 }
 
-/* Hero — same premium dark card as the homepage's
+/* Hero â€” same premium dark card as the homepage's
    "Bislig City / Where are you going?" header */
 .scheduled-shell .scheduled-header,
 .application-shell .application-header {
@@ -2896,7 +2896,7 @@ a.secondary-action {
   max-width: 34rem;
 }
 
-/* Form card — white premium surface like the homepage ride form */
+/* Form card â€” white premium surface like the homepage ride form */
 .scheduled-shell form.scheduled-form,
 .application-shell form.application-form {
   display: grid;
@@ -2968,7 +2968,7 @@ a.secondary-action {
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
 }
 
-/* Pricing note — premium inline summary like the homepage fare box */
+/* Pricing note â€” premium inline summary like the homepage fare box */
 .scheduled-shell .scheduled-pricing-note {
   display: grid;
   gap: 4px;
@@ -2987,7 +2987,7 @@ a.secondary-action {
   color: var(--text-primary);
 }
 
-/* Request CTA — black / green like the homepage's Request Ride */
+/* Request CTA â€” black / green like the homepage's Request Ride */
 .scheduled-shell .request-ride-action,
 .application-shell .request-ride-action {
   min-height: 54px;
@@ -3057,7 +3057,7 @@ a.secondary-action {
   margin-top: 8px;
 }
 
-/* Mobile — compact app rhythm matching the homepage */
+/* Mobile â€” compact app rhythm matching the homepage */
 @media (max-width: 767px) {
   .scheduled-shell,
   .application-shell {
@@ -3175,7 +3175,7 @@ a.secondary-action {
     max-width: 100%;
   }
 
-  /* Auth cards — app rhythm on mobile */
+  /* Auth cards â€” app rhythm on mobile */
   .auth-shell {
     padding: 14px 12px calc(48px + env(safe-area-inset-bottom));
   }
@@ -4483,7 +4483,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   RESPONSIVE — TABLET
+   RESPONSIVE â€” TABLET
    ========================================================= */
 
 @media (min-width: 720px) and (max-width: 1099px) {
@@ -4530,7 +4530,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   RESPONSIVE — LARGE DESKTOP
+   RESPONSIVE â€” LARGE DESKTOP
    ========================================================= */
 
 @media (min-width: 1100px) {
@@ -4646,7 +4646,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   RESPONSIVE — MOBILE
+   RESPONSIVE â€” MOBILE
    ========================================================= */
 
 @media (max-width: 767px) {
@@ -4674,7 +4674,7 @@ a.secondary-action {
     display: inline-flex;
   }
 
-  /* Mobile Nav Panel — full-screen navy menu */
+  /* Mobile Nav Panel â€” full-screen navy menu */
   .mobile-nav-panel {
     position: fixed;
     inset: 0;
@@ -5054,7 +5054,7 @@ a.secondary-action {
     }
   }
 
-  /* Mobile Layout — card-based booking flow */
+  /* Mobile Layout â€” card-based booking flow */
   .customer-layout {
     display: flex;
     flex-direction: column;
@@ -5167,7 +5167,7 @@ a.secondary-action {
     margin: 0;
   }
 
-  /* 3. Map — shown while Pickup is open */
+  /* 3. Map â€” shown while Pickup is open */
   .customer-layout .map-stage {
     order: 4;
     position: relative;
@@ -5211,7 +5211,7 @@ a.secondary-action {
     display: none;
   }
 
-  /* Weather — compact neutral card */
+  /* Weather â€” compact neutral card */
   .customer-layout .weather-widget {
     order: 9;
     width: calc(100% - 24px);
@@ -5414,7 +5414,7 @@ a.secondary-action {
     background: var(--color-black);
   }
 
-  /* Mobile form fields — compact, instruction only on focus */
+  /* Mobile form fields â€” compact, instruction only on focus */
   .mobile-booking-flow .field-block {
     gap: 5px;
   }
@@ -5538,7 +5538,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   RESPONSIVE — SMALL PHONES
+   RESPONSIVE â€” SMALL PHONES
    ========================================================= */
 
 @media (max-width: 420px) {
@@ -5565,7 +5565,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   RESPONSIVE — MOBILE NAV HIDDEN ON DESKTOP
+   RESPONSIVE â€” MOBILE NAV HIDDEN ON DESKTOP
    ========================================================= */
 
 @media (min-width: 768px) {
@@ -5576,7 +5576,7 @@ a.secondary-action {
 }
 
 /* =========================================================
-   BISLIG RIDE — ARTISTIC UI SYSTEM
+   BISLIG RIDE â€” ARTISTIC UI SYSTEM
    Premium monochrome + functional color design
    ========================================================= */
 
@@ -5584,7 +5584,7 @@ a.secondary-action {
    GEOMETRIC ART LANGUAGE
    -------------------------------------------------------- */
 
-/* Section header — editorial geometric accent */
+/* Section header â€” editorial geometric accent */
 .section-header {
   position: relative;
   padding-left: 16px;
@@ -5601,7 +5601,7 @@ a.secondary-action {
   border-radius: 1px;
 }
 
-/* Card geometric corner — subtle wayfinding mark */
+/* Card geometric corner â€” subtle wayfinding mark */
 .geo-card {
   position: relative;
   overflow: hidden;
@@ -5626,7 +5626,7 @@ a.secondary-action {
   opacity: 1;
 }
 
-/* Geometric dot accent — used for active/online indicators */
+/* Geometric dot accent â€” used for active/online indicators */
 .art-dot {
   position: relative;
 }
@@ -5644,7 +5644,7 @@ a.secondary-action {
   background: var(--color-red);
 }
 
-/* Crosshair mark — technical drawing feel */
+/* Crosshair mark â€” technical drawing feel */
 .art-crosshair {
   position: relative;
 }
@@ -5672,7 +5672,7 @@ a.secondary-action {
   transform: translate(-50%, -50%);
 }
 
-/* Ring accent — subtle orbit geometry */
+/* Ring accent â€” subtle orbit geometry */
 .art-ring {
   position: relative;
 }
@@ -5688,7 +5688,7 @@ a.secondary-action {
   transition: border-color var(--transition-medium);
 }
 
-/* Line accent — directional movement feel */
+/* Line accent â€” directional movement feel */
 .art-line-accent {
   position: relative;
 }
@@ -5709,7 +5709,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   HEADER — PREMIUM MONOCHROME
+   HEADER â€” PREMIUM MONOCHROME
    -------------------------------------------------------- */
 
 .app-header {
@@ -5733,7 +5733,7 @@ a.secondary-action {
   pointer-events: none;
 }
 
-/* Nav hover — growing underline */
+/* Nav hover â€” growing underline */
 .nav-link {
   position: relative;
   padding: 8px 12px;
@@ -5763,7 +5763,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   BUTTONS — PREMIUM ART DIRECTION
+   BUTTONS â€” PREMIUM ART DIRECTION
    -------------------------------------------------------- */
 
 .primary-action {
@@ -5828,7 +5828,7 @@ a.secondary-action {
   box-shadow: 0 4px 12px rgba(220,38,38,0.18);
 }
 
-/* Secondary action — refined outline */
+/* Secondary action â€” refined outline */
 .secondary-action {
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-md);
@@ -5848,7 +5848,7 @@ a.secondary-action {
   background: var(--color-gray-100);
 }
 
-/* Button with arrow — directional micro-interaction */
+/* Button with arrow â€” directional micro-interaction */
 .btn-with-arrow {
   display: inline-flex;
   align-items: center;
@@ -5866,7 +5866,7 @@ a.secondary-action {
   transform: translateX(3px);
 }
 
-/* Nav button — login/ghost style */
+/* Nav button â€” login/ghost style */
 .nav-button,
 .top-nav .nav-button {
   padding: 7px 14px;
@@ -5885,7 +5885,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   CARDS — SUBTLE ELEVATION
+   CARDS â€” SUBTLE ELEVATION
    -------------------------------------------------------- */
 
 .map-panel,
@@ -5913,7 +5913,7 @@ a.secondary-action {
   box-shadow: var(--shadow-soft);
 }
 
-/* Weather card — restrained presence */
+/* Weather card â€” restrained presence */
 .weather-card {
   background: var(--color-gray-50);
   border: 1px solid var(--color-gray-200);
@@ -5921,7 +5921,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   INPUTS — PREMIUM FORM SYSTEM
+   INPUTS â€” PREMIUM FORM SYSTEM
    -------------------------------------------------------- */
 
 .form-field input,
@@ -5977,24 +5977,24 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   STATUS INDICATORS — FUNCTIONAL COLOR
+   STATUS INDICATORS â€” FUNCTIONAL COLOR
    -------------------------------------------------------- */
 
-/* Online indicator — green pulse */
+/* Online indicator â€” green pulse */
 .status-online,
 .driver-online-dot,
 .is-online {
   color: var(--color-green);
 }
 
-/* Offline indicator — red */
+/* Offline indicator â€” red */
 .status-offline,
 .driver-offline-dot,
 .is-offline {
   color: var(--color-red);
 }
 
-/* Active ride — green */
+/* Active ride â€” green */
 .status-active {
   color: var(--color-green);
 }
@@ -6005,7 +6005,7 @@ a.secondary-action {
   color: var(--color-red);
 }
 
-/* Pending — monochrome */
+/* Pending â€” monochrome */
 .status-pending {
   color: var(--color-gray-500);
 }
@@ -6033,7 +6033,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   MICRO-INTERACTIONS — MOTION SYSTEM
+   MICRO-INTERACTIONS â€” MOTION SYSTEM
    -------------------------------------------------------- */
 
 /* Card lift on hover */
@@ -6070,7 +6070,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   NAVIGATION — EDITORIAL
+   NAVIGATION â€” EDITORIAL
    -------------------------------------------------------- */
 
 .top-nav a,
@@ -6087,7 +6087,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   BOOKING MODE CARDS — HIERARCHY
+   BOOKING MODE CARDS â€” HIERARCHY
    -------------------------------------------------------- */
 
 .booking-mode-card {
@@ -6118,7 +6118,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   PAYMENT OPTIONS — CLEAN SELECTION
+   PAYMENT OPTIONS â€” CLEAN SELECTION
    -------------------------------------------------------- */
 
 .payment-option {
@@ -6138,7 +6138,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   RIDE QUEUE — MONOCHROME STRUCTURE
+   RIDE QUEUE â€” MONOCHROME STRUCTURE
    -------------------------------------------------------- */
 
 .ride-request-card {
@@ -6152,20 +6152,20 @@ a.secondary-action {
   box-shadow: var(--shadow-soft);
 }
 
-/* Active ride card — green accent */
+/* Active ride card â€” green accent */
 .ride-active-card {
   border: 1px solid rgba(22,163,74,0.25);
   border-left: 3px solid var(--color-green);
 }
 
-/* Cancelled ride card — red accent */
+/* Cancelled ride card â€” red accent */
 .ride-cancelled-card {
   border: 1px solid rgba(220,38,38,0.2);
   border-left: 3px solid var(--color-red);
 }
 
 /* --------------------------------------------------------
-   DRIVER STATUS CHIP — COMPACT INDICATOR
+   DRIVER STATUS CHIP â€” COMPACT INDICATOR
    -------------------------------------------------------- */
 
 .driver-status-chip {
@@ -6186,11 +6186,11 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   SEARCH LOADER — green dots (already defined above)
+   SEARCH LOADER â€” green dots (already defined above)
    -------------------------------------------------------- */
 
 /* --------------------------------------------------------
-   TICKER — BRANDED SCROLL
+   TICKER â€” BRANDED SCROLL
    -------------------------------------------------------- */
 
 .ticker-track {
@@ -6206,7 +6206,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   NOTIFICATION PANEL — MONOCHROME
+   NOTIFICATION PANEL â€” MONOCHROME
    -------------------------------------------------------- */
 
 .notification-panel {
@@ -6233,7 +6233,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   PAKYAWAN SECTION — PREMIUM SECONDARY
+   PAKYAWAN SECTION â€” PREMIUM SECONDARY
    -------------------------------------------------------- */
 
 .pakyawan-section {
@@ -6255,7 +6255,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   CONTACT PAGE — GEOMETRIC ACCENTS
+   CONTACT PAGE â€” GEOMETRIC ACCENTS
    -------------------------------------------------------- */
 
 .contact-shell {
@@ -6311,7 +6311,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   WEATHER — RESTRAINED
+   WEATHER â€” RESTRAINED
    -------------------------------------------------------- */
 
 .weather-card {
@@ -6333,7 +6333,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   ADMIN TABLE — OPERATIONS CONSOLE
+   ADMIN TABLE â€” OPERATIONS CONSOLE
    -------------------------------------------------------- */
 
 .admin-table,
@@ -6365,7 +6365,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   RATING STARS — MONOCHROME
+   RATING STARS â€” MONOCHROME
    -------------------------------------------------------- */
 
 .rating-star {
@@ -6388,7 +6388,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   RIDE MODE TABS — CLEAN
+   RIDE MODE TABS â€” CLEAN
    -------------------------------------------------------- */
 
 .ride-mode-tab {
@@ -6410,7 +6410,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   RESPONSIVE ART — MOBILE TAP STATES
+   RESPONSIVE ART â€” MOBILE TAP STATES
    -------------------------------------------------------- */
 
 @media (hover: none) and (pointer: coarse) {
@@ -6468,7 +6468,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   GEOMETRIC BACKGROUND — EMPTY STATES
+   GEOMETRIC BACKGROUND â€” EMPTY STATES
    -------------------------------------------------------- */
 
 .empty-state,
@@ -6505,7 +6505,7 @@ a.secondary-action {
 }
 
 /* --------------------------------------------------------
-   GLOBAL LINK — refined hover
+   GLOBAL LINK â€” refined hover
    -------------------------------------------------------- */
 
 a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-action):not(.booking-mode-card):not(.driver-card):not(.pakyawan-card):hover {
@@ -6513,7 +6513,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   SCROLLBAR — MINIMAL
+   SCROLLBAR â€” MINIMAL
    -------------------------------------------------------- */
 
 ::-webkit-scrollbar {
@@ -6535,7 +6535,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   SELECTION — BRANDED
+   SELECTION â€” BRANDED
    -------------------------------------------------------- */
 
 ::selection {
@@ -6544,7 +6544,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   REDUCED MOTION — COMPLETE
+   REDUCED MOTION â€” COMPLETE
    -------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -6669,7 +6669,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .ride-stops-list li::before {
-  content: '·';
+  content: 'Â·';
   color: var(--color-black);
   font-weight: 700;
 }
@@ -6756,7 +6756,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   DRIVER ACCOUNTS — login, reset, change password, admin enrollment
+   DRIVER ACCOUNTS â€” login, reset, change password, admin enrollment
    ========================================================= */
 
 .driver-email {
@@ -7784,12 +7784,12 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   BISLIG RIDE — ART DIRECTION POLISH
+   BISLIG RIDE â€” ART DIRECTION POLISH
    Editorial treatment for key surfaces & states
    ========================================================= */
 
 /* --------------------------------------------------------
-   PRIMARY PANEL — wayfinding corner geometry
+   PRIMARY PANEL â€” wayfinding corner geometry
    -------------------------------------------------------- */
 
 .primary-panel {
@@ -7851,7 +7851,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   DRIVER DASHBOARD — premium account presentation
+   DRIVER DASHBOARD â€” premium account presentation
    -------------------------------------------------------- */
 
 .driver-overview {
@@ -7891,7 +7891,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   METRIC CARDS — restrained tiles
+   METRIC CARDS â€” restrained tiles
    -------------------------------------------------------- */
 
 .metric-card {
@@ -7914,7 +7914,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   ONLINE / OFFLINE STATUS — clear functional color
+   ONLINE / OFFLINE STATUS â€” clear functional color
    -------------------------------------------------------- */
 
 .online-dot,
@@ -7928,7 +7928,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   WAITING / SEARCHING — restrained activity
+   WAITING / SEARCHING â€” restrained activity
    -------------------------------------------------------- */
 
 .waiting-box {
@@ -7955,7 +7955,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   SEARCH LOADER — technical ring
+   SEARCH LOADER â€” technical ring
    -------------------------------------------------------- */
 
 .search-loader {
@@ -7969,7 +7969,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   WEATHER WIDGET — restrained editorial
+   WEATHER WIDGET â€” restrained editorial
    -------------------------------------------------------- */
 
 .weather-card {
@@ -7985,7 +7985,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MAP FRAME — connected to the system
+   MAP FRAME â€” connected to the system
    -------------------------------------------------------- */
 
 .map-panel {
@@ -8008,7 +8008,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   TICKER — refined scroll
+   TICKER â€” refined scroll
    -------------------------------------------------------- */
 
 .announcement-ticker {
@@ -8026,7 +8026,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   PAKYAWAN — premium secondary presentation
+   PAKYAWAN â€” premium secondary presentation
    -------------------------------------------------------- */
 
 .pakyawan-card {
@@ -8047,7 +8047,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   ROUTE DISPLAY — technical line
+   ROUTE DISPLAY â€” technical line
    -------------------------------------------------------- */
 
 .route-line {
@@ -8067,7 +8067,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   BUTTON — ARROW MICRO-MOTION
+   BUTTON â€” ARROW MICRO-MOTION
    -------------------------------------------------------- */
 
 .request-ride-action {
@@ -8076,7 +8076,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .request-ride-action::after {
-  content: '→';
+  content: 'â†’';
   position: absolute;
   right: 20px;
   top: 50%;
@@ -8091,7 +8091,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   ACTIVE / CANCELLED STATES — clear borders
+   ACTIVE / CANCELLED STATES â€” clear borders
    -------------------------------------------------------- */
 
 .active-ride-state {
@@ -8108,7 +8108,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   NOTIFICATION — status-led unread treatment
+   NOTIFICATION â€” status-led unread treatment
    -------------------------------------------------------- */
 
 .notification-item.unread {
@@ -8116,7 +8116,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   REDUCED MOTION — art polish guard
+   REDUCED MOTION â€” art polish guard
    -------------------------------------------------------- */
 
 @media (prefers-reduced-motion: reduce) {
@@ -8143,7 +8143,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MOBILE — geometric marks stay subtle
+   MOBILE â€” geometric marks stay subtle
    -------------------------------------------------------- */
 
 @media (max-width: 767px) {
@@ -8157,13 +8157,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   BISLIG RIDE — PREMIUM CUSTOMER HOME REDESIGN
+   BISLIG RIDE â€” PREMIUM CUSTOMER HOME REDESIGN
    Premium mobility product layer: dark/light split, green
    accents, editorial typography, restrained motion.
    ========================================================= */
 
 /* --------------------------------------------------------
-   HEADER — compact, green active navigation
+   HEADER â€” compact, green active navigation
    -------------------------------------------------------- */
 
 .app-header .nav-link.is-active {
@@ -8186,7 +8186,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   CUSTOMER PAGE — premium editorial hero
+   CUSTOMER PAGE â€” premium editorial hero
    -------------------------------------------------------- */
 
 .customer-layout .primary-panel {
@@ -8276,7 +8276,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   RIDE MODE SELECTOR — dark primary / light secondary
+   RIDE MODE SELECTOR â€” dark primary / light secondary
    -------------------------------------------------------- */
 
 .customer-layout .booking-mode-picker {
@@ -8414,7 +8414,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   RIDE FORM — premium white surface, editorial labels
+   RIDE FORM â€” premium white surface, editorial labels
    -------------------------------------------------------- */
 
 .customer-layout .ride-form {
@@ -8541,7 +8541,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   transform: translateY(-1px);
 }
 
-/* Destination mode tabs — dark selected */
+/* Destination mode tabs â€” dark selected */
 .customer-layout .ride-mode-tab.selected {
   background: var(--color-black);
   border-color: var(--color-black);
@@ -8556,7 +8556,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MAP PANEL — dark premium frame
+   MAP PANEL â€” dark premium frame
    -------------------------------------------------------- */
 
 .customer-layout .map-panel {
@@ -8619,7 +8619,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   WEATHER — dark editorial card
+   WEATHER â€” dark editorial card
    -------------------------------------------------------- */
 
 .customer-layout .map-panel .weather-widget {
@@ -8662,7 +8662,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MOBILE — premium ride-hailing composition
+   MOBILE â€” premium ride-hailing composition
    -------------------------------------------------------- */
 
 @media (max-width: 767px) {
@@ -8683,7 +8683,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     font-size: 0.86rem;
   }
 
-  /* Mode cards — equal width, compact */
+  /* Mode cards â€” equal width, compact */
   .customer-layout .booking-mode-picker {
     grid-template-columns: 1fr 1fr;
     gap: 10px;
@@ -8727,7 +8727,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     min-height: 56px;
   }
 
-  /* Weather — dark horizontal card */
+  /* Weather â€” dark horizontal card */
   .customer-layout .weather-widget {
     background: var(--color-surface-dark);
     border: 1px solid var(--color-border-dark);
@@ -8745,7 +8745,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     color: var(--color-white);
   }
 
-  /* Step accordion — green accents */
+  /* Step accordion â€” green accents */
   .accordion-trigger {
     min-height: 56px;
   }
@@ -8841,7 +8841,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Tablet refinement — keep map/form pair from breaking */
+/* Tablet refinement â€” keep map/form pair from breaking */
 @media (min-width: 768px) and (max-width: 1023px) {
   .customer-layout {
     grid-template-columns: 1fr;
@@ -8857,7 +8857,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Reduced motion — guard new premium motion */
+/* Reduced motion â€” guard new premium motion */
 @media (prefers-reduced-motion: reduce) {
   .customer-layout .request-ride-action::after,
   .cursor-area,
@@ -8868,19 +8868,19 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   MOBILE — COMPACT TIGHTENING
+   MOBILE â€” COMPACT TIGHTENING
    Cleaner vertical rhythm and denser touch clusters.
    ========================================================= */
 
 @media (max-width: 767px) {
-  /* Layout gutter — breathing room below the sticky header so the hero card
+  /* Layout gutter â€” breathing room below the sticky header so the hero card
      never sits tight against the fixed bottom navigation */
   .customer-layout {
     padding-top: 14px;
     padding-bottom: calc(120px + env(safe-area-inset-bottom));
   }
 
-  /* Hero — tighter, taller headline-to-content ratio */
+  /* Hero â€” tighter, taller headline-to-content ratio */
   .customer-layout .section-header {
     padding: 20px 18px 18px;
     border-radius: var(--radius-md);
@@ -8901,7 +8901,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     max-width: 96%;
   }
 
-  /* Hero decorative circles — softened on mobile */
+  /* Hero decorative circles â€” softened on mobile */
   .customer-layout .section-header::before {
     top: -100px;
     right: -60px;
@@ -8916,7 +8916,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     height: 120px;
   }
 
-  /* Mode cards — denser */
+  /* Mode cards â€” denser */
   .customer-layout .booking-mode-picker {
     gap: 8px;
   }
@@ -8955,14 +8955,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     right: 12px;
   }
 
-  /* Use my location — slimmer */
+  /* Use my location â€” slimmer */
   .customer-layout .mobile-location-action {
     min-height: 44px;
     margin: 0 12px 10px;
     font-size: 0.74rem;
   }
 
-  /* Ride request panel — tighter */
+  /* Ride request panel â€” tighter */
   .customer-layout .booking-accordion {
     margin: 10px 12px 0;
     border-radius: 14px;
@@ -9012,7 +9012,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     font-size: 0.74rem;
   }
 
-  /* Map strip — shorter on mobile */
+  /* Map strip â€” shorter on mobile */
   .customer-layout .map-stage,
   .customer-layout:not(.pickup-open) .map-stage {
     height: 156px;
@@ -9025,7 +9025,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     min-height: 156px !important;
   }
 
-  /* Submit + request action — denser stack */
+  /* Submit + request action â€” denser stack */
   .customer-layout form > .submit-error {
     margin: 6px 12px 0;
   }
@@ -9038,7 +9038,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     box-shadow: 0 8px 18px rgba(7, 16, 18, 0.24);
   }
 
-  /* Weather — compact dark strip */
+  /* Weather â€” compact dark strip */
   .customer-layout .weather-widget {
     margin: 12px 12px 2px;
     padding: 8px 12px;
@@ -9049,7 +9049,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     font-size: 1.15rem;
   }
 
-  /* Bottom nav — slimmer bar */
+  /* Bottom nav â€” slimmer bar */
   .mobile-bottom-nav {
     padding: 6px 6px calc(6px + env(safe-area-inset-bottom));
   }
@@ -9071,17 +9071,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MOBILE — ride-request hierarchy (restructure pass)
-   Explicit order: mode → fare → context → current location
-   → form → CTA → secondary. Hides duplicated copy.
+   MOBILE â€” ride-request hierarchy (restructure pass)
+   Explicit order: mode â†’ fare â†’ context â†’ current location
+   â†’ form â†’ CTA â†’ secondary. Hides duplicated copy.
    -------------------------------------------------------- */
 @media (max-width: 767px) {
-  /* Ride mode selection — lock to top */
+  /* Ride mode selection â€” lock to top */
   .customer-layout .booking-mode-picker {
     order: 1;
   }
 
-  /* Fare notice — concise contextual strip, straight after mode */
+  /* Fare notice â€” concise contextual strip, straight after mode */
   .customer-layout .ride-form > .fare-box {
     order: 2;
     width: calc(100% - 24px);
@@ -9090,7 +9090,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     border-radius: 12px;
   }
 
-  /* Eyebrow + headline — single intent, no secondary marketing copy */
+  /* Eyebrow + headline â€” single intent, no secondary marketing copy */
   .customer-layout .section-header {
     order: 3;
   }
@@ -9111,7 +9111,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     order: 5;
   }
 
-  /* Supporting content — only contextual while editing pickup */
+  /* Supporting content â€” only contextual while editing pickup */
   .customer-layout .map-stage {
     order: 6;
   }
@@ -9121,7 +9121,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Small phones — extra tightening */
+/* Small phones â€” extra tightening */
 @media (max-width: 420px) {
   .customer-layout .section-header {
     padding: 16px 14px 14px;
@@ -9150,9 +9150,9 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   MOBILE — compact segmented ride-mode selector + final
-   ride-request order (mode → fare → context → location →
-   steps → Request Ride → map → weather).
+   MOBILE â€” compact segmented ride-mode selector + final
+   ride-request order (mode â†’ fare â†’ context â†’ location â†’
+   steps â†’ Request Ride â†’ map â†’ weather).
    -------------------------------------------------------- */
 @media (max-width: 767px) {
   /* Segmented-control shell */
@@ -9211,7 +9211,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
-    content: ' · Popular';
+    content: ' Â· Popular';
     color: var(--color-green);
     font-weight: 700;
   }
@@ -9241,7 +9241,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     flex-direction: column;
   }
 
-  /* Bislig City → Where are you going? */
+  /* Bislig City â†’ Where are you going? */
   .customer-layout .section-header {
     order: 1;
     margin-bottom: 14px;
@@ -9311,7 +9311,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
-    content: " · Popular";
+    content: " Â· Popular";
     margin-left: 3px;
     font-size: 9px;
     font-weight: 700;
@@ -9346,8 +9346,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   PASSENGER MOBILE — creative spacing & typography polish.
-   Hierarchy fix (hero → service selector → booking steps) plus
+   PASSENGER MOBILE â€” creative spacing & typography polish.
+   Hierarchy fix (hero â†’ service selector â†’ booking steps) plus
    a consistent 12px gutter and generous, rhythmic card spacing.
    -------------------------------------------------------- */
 @media (max-width: 767px) {
@@ -9494,7 +9494,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Small phones — keep the polish from getting cramped */
+/* Small phones â€” keep the polish from getting cramped */
 @media (max-width: 430px) {
   .customer-layout .section-header {
     padding: 22px 18px 20px;
@@ -9509,7 +9509,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* Admin — driver photo upload */
+/* Admin â€” driver photo upload */
 .driver-photo-field .file-input {
   width: 100%;
   padding: 8px;
@@ -9535,7 +9535,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   border: 1px solid var(--border);
 }
 
-/* Admin — remove driver confirmation */
+/* Admin â€” remove driver confirmation */
 .remove-driver-dialog {
   width: min(420px, 100%);
   display: grid;
@@ -9625,7 +9625,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   CHAT NOTIFICATION — subtle toast + unread badge
+   CHAT NOTIFICATION â€” subtle toast + unread badge
    Replaces the intrusive auto-open modal on incoming
    messages. Sound is gated on a prior user interaction.
    ========================================================= */
@@ -9743,7 +9743,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   DRIVER RIDE QUEUE — MOBILE LAYERING
+   DRIVER RIDE QUEUE â€” MOBILE LAYERING
    Two intentional layers: live availability/status, then a
    breathing gap into the Vehicle + Plate identity group.
    Desktop layout untouched.
@@ -9770,7 +9770,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   SERVICE LAUNCHER — app home (service dashboard + discovery)
+   SERVICE LAUNCHER â€” app home (service dashboard + discovery)
    Scoped to the launcher home only; booking layout untouched.
    ========================================================= */
 
@@ -9928,7 +9928,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   transform: translateX(3px);
 }
 
-/* Primary — Ride Now */
+/* Primary â€” Ride Now */
 .service-card--primary {
   grid-column: 1 / -1;
   align-items: center;
@@ -10116,7 +10116,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   outline-offset: 2px;
 }
 
-/* --- Desktop — two-row service layout --- */
+/* --- Desktop â€” two-row service layout --- */
 @media (min-width: 768px) {
   .service-dashboard {
     gap: 32px;
@@ -10143,7 +10143,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 }
 
-/* --- Mobile — app-first composition --- */
+/* --- Mobile â€” app-first composition --- */
 @media (max-width: 767px) {
   .service-launcher-layout {
     padding-top: 12px;
@@ -10234,10 +10234,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* --------------------------------------------------------
-   PASABUY EXPERIENCE — three-step service flow
+   SERVICE STEP FLOW â€” shared three-step experience
+   (Pasabuy, Pakyawan / Umbak)
    -------------------------------------------------------- */
 
-.pasabuy-shell {
+.flow-shell {
   width: min(100%, 780px);
 }
 
@@ -10251,18 +10252,18 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   letter-spacing: 0.34em;
 }
 
-.pasabuy-card {
+.flow-card {
   padding: 24px 24px 28px;
 }
 
-.pasabuy-progress {
+.flow-progress {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 4px 0 18px;
 }
 
-.pasabuy-progress-step {
+.flow-progress-step {
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
@@ -10280,35 +10281,35 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   transition: border-color var(--transition), background var(--transition), color var(--transition);
 }
 
-.pasabuy-progress-step.is-current {
+.flow-progress-step.is-current {
   border-color: var(--color-black);
   background: var(--color-black);
   color: var(--color-green);
 }
 
-.pasabuy-progress-step.is-done {
+.flow-progress-step.is-done {
   border-color: rgba(0, 232, 138, 0.4);
   background: rgba(0, 232, 138, 0.12);
   color: var(--color-green-deep);
 }
 
-.pasabuy-progress-line {
+.flow-progress-line {
   flex: 1;
   height: 1px;
   background: var(--color-gray-200);
   transition: background var(--transition);
 }
 
-.pasabuy-progress-line.is-fill {
+.flow-progress-line.is-fill {
   background: var(--color-green);
 }
 
-.pasabuy-step {
+.flow-step {
   padding: 6px 0 2px;
-  animation: pasabuy-step-in 300ms var(--transition) both;
+  animation: flow-step-in 300ms var(--transition) both;
 }
 
-@keyframes pasabuy-step-in {
+@keyframes flow-step-in {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -10320,12 +10321,12 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .pasabuy-step {
+  .flow-step {
     animation: none;
   }
 }
 
-.pasabuy-step-heading {
+.flow-step-heading {
   display: flex;
   align-items: flex-start;
   gap: 16px;
@@ -10334,7 +10335,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   border-bottom: 1px solid var(--color-gray-100);
 }
 
-.pasabuy-step-number {
+.flow-step-number {
   flex-shrink: 0;
   font-size: clamp(2rem, 7vw, 2.7rem);
   font-weight: 800;
@@ -10344,18 +10345,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   -webkit-text-stroke: 1.5px var(--color-gray-300);
 }
 
-.pasabuy-step.is-last .pasabuy-step-number,
-.pasabuy-step.is-current .pasabuy-step-number {
+.flow-step.is-current .flow-step-number {
   -webkit-text-stroke: 1.5px rgba(0, 232, 138, 0.65);
 }
 
-.pasabuy-step-title {
+.flow-step-title {
   display: grid;
   gap: 6px;
   padding-top: 2px;
 }
 
-.pasabuy-step-title h2 {
+.flow-step-title h2 {
   margin: 0;
   font-size: clamp(1.4rem, 4.5vw, 1.8rem);
   font-weight: 800;
@@ -10363,16 +10363,96 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--text-primary);
 }
 
-.pasabuy-step-title p {
+.flow-step-title p {
   margin: 0;
   color: var(--text-secondary);
   font-size: 0.82rem;
   line-height: 1.5;
 }
 
-.pasabuy-fields {
+.flow-fields {
   display: grid;
   gap: 16px;
+}
+
+.flow-field-row {
+  display: grid;
+  gap: 16px;
+}
+
+.flow-stepper {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  background: var(--color-white);
+  overflow: hidden;
+  transition: border-color var(--transition), box-shadow var(--transition);
+}
+
+.flow-stepper.has-error {
+  border-color: rgba(220, 38, 38, 0.7);
+}
+
+.flow-stepper:focus-within {
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
+}
+
+.flow-stepper button {
+  border: 0;
+  background: var(--color-gray-50);
+  color: var(--color-gray-700);
+  font-size: 1.05rem;
+  font-weight: 700;
+  min-height: 48px;
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.flow-stepper button:hover {
+  background: var(--color-gray-100);
+  color: var(--color-black);
+}
+
+.flow-stepper input {
+  width: 100%;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--text-primary);
+  text-align: center;
+  font-size: 0.95rem;
+  font-weight: 800;
+  min-height: 48px;
+}
+
+.flow-stepper input:focus {
+  outline: none;
+}
+
+.flow-subgroup {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 2px 0;
+}
+
+.flow-subgroup::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--color-gray-100);
+}
+
+.flow-subgroup span {
+  flex-shrink: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gray-500);
 }
 
 .pasabuy-category-grid {
@@ -10465,28 +10545,28 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   margin-top: 8px;
 }
 
-.pasabuy-notes {
+.flow-notes {
   min-height: 128px;
 }
 
-.pasabuy-date-group {
+.flow-date-group {
   display: grid;
   gap: 8px;
 }
 
-.pasabuy-date-row {
+.flow-date-row {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
 }
 
-.pasabuy-actions {
+.flow-actions {
   display: grid;
   gap: 10px;
   margin-top: 24px;
 }
 
-.pasabuy-back {
+.flow-back {
   width: 100%;
   min-height: 44px;
   border: 0;
@@ -10500,17 +10580,28 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   -webkit-tap-highlight-color: transparent;
 }
 
-.pasabuy-back:hover {
+.flow-back:hover {
   color: var(--text-primary);
 }
 
-.scheduled-shell .pasabuy-card .scheduled-pricing-note {
+.scheduled-shell .flow-card .scheduled-pricing-note {
   margin: 18px 0 2px;
 }
 
 @media (max-width: 520px) {
-  .pasabuy-date-row {
+  .flow-date-row {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 600px) {
+  .flow-field-row {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .flow-field-row .field-block,
+  .flow-field-row .flow-stepper {
+    min-width: 0;
   }
 }
 

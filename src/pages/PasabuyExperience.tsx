@@ -1,11 +1,11 @@
-import { useRef, useState } from 'react'
+﻿import { useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 
 const routeToView = (nextView: AppViewMode) => {
   try {
     window.sessionStorage.setItem('bislig-ride-requested-view', nextView)
   } catch {
-    // sessionStorage unavailable — the default view will be shown
+    // sessionStorage unavailable â€” the default view will be shown
   }
   window.history.pushState({}, '', '/')
   window.location.reload()
@@ -178,12 +178,12 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
   const renderStep = () => {
     if (step === 2) {
       return (
-        <div className="pasabuy-fields">
+        <div className="flow-fields">
           {field('pickup_area', 'Shop at', 'text', 'Example: Bislig Public Market')}
           {field('delivery_address', 'Delivery Address')}
-          <div className="pasabuy-date-group">
+          <div className="flow-date-group">
             <span className="field-label">When do you need it?</span>
-            <div className="pasabuy-date-row">
+            <div className="flow-date-row">
               {field('preferred_date', 'Preferred Date', 'date', undefined, getToday())}
               {field('preferred_time', 'Preferred Time', 'time')}
             </div>
@@ -194,7 +194,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
 
     if (step === 3) {
       return (
-        <div className="pasabuy-fields">
+        <div className="flow-fields">
           {field('customer_name', 'Full Name')}
           {field('customer_phone', 'Phone Number', 'tel')}
         </div>
@@ -202,7 +202,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
     }
 
     return (
-      <div className="pasabuy-fields">
+      <div className="flow-fields">
         <div role="group" aria-label="Choose a category">
           <div className="pasabuy-category-grid">
             {categories.map((category) => {
@@ -231,7 +231,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
         <label className="field-block">
           <span className="field-label">Item details (Optional)</span>
           <textarea
-            className={`input-field textarea-field pasabuy-notes${errors.item_details ? ' has-error' : ''}`}
+            className={`input-field textarea-field flow-notes${errors.item_details ? ' has-error' : ''}`}
             placeholder="Example: 2 kilos of rice, bath soap, specific brand..."
             value={form.item_details}
             onChange={(event) => updateField('item_details', event.target.value)}
@@ -246,7 +246,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
-        <main className="scheduled-shell pasabuy-shell">
+        <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
             <p className="eyebrow">Request received</p>
             <h1>Pasabuy Request Received</h1>
@@ -269,7 +269,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
   return (
     <>
       <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
-      <main className="scheduled-shell pasabuy-shell">
+      <main className="scheduled-shell flow-shell">
         <section className="section-header scheduled-header pasabuy-hero">
           <p className="eyebrow">Pasabuy</p>
           <h1>
@@ -280,23 +280,23 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
           <p className="pasabuy-descriptor">Shop &middot; Buy &middot; Deliver</p>
         </section>
 
-        <form className="scheduled-form pasabuy-card" ref={cardRef} onSubmit={handleSubmit} noValidate>
-          <div className="pasabuy-progress" role="presentation" aria-label={`Pasabuy progress: step ${step} of 3`}>
+        <form className="scheduled-form flow-card" ref={cardRef} onSubmit={handleSubmit} noValidate>
+          <div className="flow-progress" role="presentation" aria-label={`Pasabuy progress: step ${step} of 3`}>
             {[1, 2, 3].map((number) =>
               step < number
                 ? [
-                    number > 1 ? <span key={`line-${number}`} className="pasabuy-progress-line" aria-hidden="true" /> : null,
-                    <span key={`step-${number}`} className="pasabuy-progress-step">
+                    number > 1 ? <span key={`line-${number}`} className="flow-progress-line" aria-hidden="true" /> : null,
+                    <span key={`step-${number}`} className="flow-progress-step">
                       0{number}
                     </span>,
                   ]
                 : [
                     number > 1 ? (
-                      <span key={`line-${number}`} className={`pasabuy-progress-line${step > number ? ' is-fill' : ''}`} aria-hidden="true" />
+                      <span key={`line-${number}`} className={`flow-progress-line${step > number ? ' is-fill' : ''}`} aria-hidden="true" />
                     ) : null,
                     <span
                       key={`step-${number}`}
-                      className={`pasabuy-progress-step${step === number ? ' is-current' : ''}${step > number ? ' is-done' : ''}`}
+                      className={`flow-progress-step${step === number ? ' is-current' : ''}${step > number ? ' is-done' : ''}`}
                       aria-current={step === number ? 'step' : undefined}
                     >
                       {step > number ? '\u2713' : `0${number}`}
@@ -305,12 +305,12 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
             )}
           </div>
 
-          <div className={`pasabuy-step${step === 3 ? ' is-last' : ''}`} key={step}>
-            <header className="pasabuy-step-heading">
-              <span className="pasabuy-step-number" aria-hidden="true">
+          <div className="flow-step is-current" key={step}>
+            <header className="flow-step-heading">
+              <span className="flow-step-number" aria-hidden="true">
                 0{step}
               </span>
-              <div className="pasabuy-step-title">
+              <div className="flow-step-title">
                 <h2>{stepTitles[step].title}</h2>
                 <p>{stepTitles[step].hint}</p>
               </div>
@@ -318,7 +318,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
 
             {renderStep()}
 
-            <div className="pasabuy-actions">
+            <div className="flow-actions">
               {step < 3 ? (
                 <button type="submit" className="primary-action request-ride-action">
                   Continue &rarr;
@@ -329,11 +329,11 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
                 </button>
               )}
               {step === 1 ? (
-                <button type="button" className="pasabuy-back" onClick={onBack}>
+                <button type="button" className="flow-back" onClick={onBack}>
                   &larr; Back to Home
                 </button>
               ) : (
-                <button type="button" className="pasabuy-back" onClick={() => goToStep(step - 1)}>
+                <button type="button" className="flow-back" onClick={() => goToStep(step - 1)}>
                   &larr; Back
                 </button>
               )}
@@ -341,7 +341,7 @@ export function PasabuyExperience({ onBack }: { onBack: () => void }) {
           </div>
 
           {step === 3 ? (
-            <div className="scheduled-pricing-note pasabuy-final-note">
+            <div className="scheduled-pricing-note flow-final-note">
               <strong>We confirm before we shop.</strong>
               <span>We'll contact you to confirm the request, estimated item cost, and delivery details.</span>
             </div>
