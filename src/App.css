@@ -11628,3 +11628,265 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     padding: 16px;
   }
 }
+
+/* =========================================================
+   CONTACT PAGE — PREMIUM VISUAL REFINEMENT
+   Editorial polish on top of the existing /contact structure
+   ========================================================= */
+
+/* --- Intro — clearer hierarchy, better rhythm --- */
+.contact-intro .eyebrow {
+  margin: 0 0 14px;
+  letter-spacing: 0.24em;
+}
+
+.contact-intro h1 {
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.contact-intro > p:last-child {
+  color: var(--color-gray-700);
+  line-height: 1.7;
+}
+
+/* --- Left panel — intentional information blocks --- */
+.contact-info-list {
+  margin: 44px 0;
+}
+
+.contact-info-item {
+  gap: 7px;
+  padding: 22px 4px;
+  border-top: 1px solid var(--color-gray-150);
+}
+
+.contact-info-item span {
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.contact-info-item strong {
+  font-size: 15px;
+  font-weight: 700;
+}
+
+/* --- "Explore Bislig" feature block — premium dark card --- */
+.contact-business-note {
+  position: relative;
+  overflow: hidden;
+  padding: 26px 26px 28px;
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-lg);
+}
+
+.contact-business-note::after {
+  content: '';
+  position: absolute;
+  right: -1px;
+  bottom: -1px;
+  width: 36px;
+  height: 36px;
+  border-bottom: 1px solid rgba(0, 232, 138, 0.4);
+  border-right: 1px solid rgba(0, 232, 138, 0.4);
+  border-radius: 0 0 var(--radius-lg) 0;
+  pointer-events: none;
+}
+
+.contact-business-note .contact-business-kicker {
+  color: var(--color-green);
+  letter-spacing: 0.18em;
+}
+
+.contact-business-note h3 {
+  font-weight: 800;
+}
+
+.contact-business-note p {
+  max-width: 340px;
+  color: var(--color-gray-300);
+}
+
+.contact-explore-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  color: var(--color-green);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.contact-explore-link::after {
+  content: '→';
+  font-size: 15px;
+  line-height: 1;
+  transition: transform var(--transition);
+}
+
+.contact-explore-link:hover {
+  color: var(--color-green-bright);
+}
+
+.contact-explore-link:hover::after {
+  transform: translateX(3px);
+}
+
+.contact-explore-link:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+/* --- Form panel — comfortable, premium inputs --- */
+.contact-form-heading {
+  margin-bottom: 6px;
+}
+
+.contact-field {
+  gap: 9px;
+}
+
+.contact-field > span {
+  letter-spacing: 0.01em;
+}
+
+.contact-field > span b {
+  font-weight: 800;
+}
+
+.contact-field input,
+.contact-field select,
+.contact-field textarea {
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-white);
+  box-shadow: inset 0 1px 2px rgba(7, 16, 18, 0.03);
+  transition: border-color var(--transition), box-shadow var(--transition), background-color var(--transition);
+}
+
+.contact-field input:hover:not(:focus),
+.contact-field textarea:hover:not(:focus) {
+  border-color: var(--color-gray-300);
+}
+
+.contact-field textarea {
+  min-height: 156px;
+  padding: 14px;
+  line-height: 1.6;
+  resize: vertical;
+}
+
+.contact-field select {
+  appearance: none;
+  -webkit-appearance: none;
+  padding-right: 42px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%2375868E' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 15px center;
+  background-size: 12px 8px;
+  cursor: pointer;
+}
+
+/* --- Green focus state — clear, restrained --- */
+.contact-field input:focus,
+.contact-field select:focus,
+.contact-field textarea:focus,
+.contact-field input:focus-visible,
+.contact-field select:focus-visible,
+.contact-field textarea:focus-visible {
+  outline: none;
+  border-color: var(--color-green-deep);
+  background-color: var(--color-white);
+  box-shadow: 0 0 0 3px rgba(5, 180, 114, 0.16);
+}
+
+/* --- Submit button — substantial primary action --- */
+.contact-submit {
+  font-size: 0.85rem;
+  letter-spacing: 0.05em;
+}
+
+.contact-submit:hover {
+  background: var(--color-gray-900);
+  box-shadow: var(--shadow-soft);
+}
+
+.contact-submit:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(5, 180, 114, 0.4);
+}
+
+/* --------------------------------------------------------
+   CONTACT — DESKTOP PROPORTIONS
+   Balanced composition, no oversized slabs, no wasted feel
+   -------------------------------------------------------- */
+
+@media (min-width: 768px) {
+  .contact-shell {
+    padding: 84px 0 104px;
+  }
+
+  .contact-intro {
+    margin-bottom: 48px;
+  }
+
+  .contact-intro > p:last-child {
+    margin-top: 26px;
+  }
+
+  .contact-grid {
+    gap: 28px;
+  }
+
+  .contact-info-card,
+  .contact-form-card {
+    min-height: 600px;
+  }
+
+  .contact-info-card {
+    gap: 30px;
+    padding: 40px;
+  }
+
+  .contact-form-card {
+    padding: 36px 40px;
+  }
+
+  .contact-form {
+    gap: 22px;
+  }
+
+  .contact-field-row {
+    gap: 18px;
+  }
+
+  .contact-submit {
+    min-height: 54px;
+  }
+}
+
+/* --------------------------------------------------------
+   CONTACT — REDUCED MOTION
+   -------------------------------------------------------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-field input,
+  .contact-field select,
+  .contact-field textarea,
+  .contact-submit,
+  .contact-explore-link::after,
+  .contact-info-card,
+  .contact-form-card {
+    transition: none;
+  }
+
+  .contact-explore-link:hover::after {
+    transform: none;
+  }
+}

@@ -109,6 +109,9 @@ export function ContactExperience() {
                 Tell us about your business and how you'd like to be part
                 of the growing Explore Bislig experience.
               </p>
+              <a className="contact-explore-link" href="/">
+                Explore Bislig
+              </a>
             </div>
           </div>
 
