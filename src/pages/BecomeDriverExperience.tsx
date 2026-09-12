@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { createDriverApplication } from '../lib/driverApplications'
 import {
@@ -48,6 +48,50 @@ const fileLabels: Record<ApplicationFileField, string> = {
   drivers_license: "Driver's License",
 }
 
+const applicationSteps = [
+  { number: '01', label: 'About You' },
+  { number: '02', label: 'Your Ride' },
+  { number: '03', label: 'Verification' },
+]
+
+const stepPlans: Array<{
+  fields: Array<keyof ApplicationForm>
+  files: ApplicationFileField[]
+  eyebrow: string
+  title: string
+  description: string
+}> = [
+  {
+    fields: ['full_name', 'mobile_number', 'barangay', 'email', 'facebook_profile'],
+    files: ['driver_photo'],
+    eyebrow: 'Step 01',
+    title: 'About You',
+    description: "Tell us who you are so we know who's driving.",
+  },
+  {
+    fields: ['vehicle_type', 'vehicle_number', 'plate_number', 'driving_experience'],
+    files: ['drivers_license'],
+    eyebrow: 'Step 02',
+    title: 'Your Ride',
+    description: "Share the details of the vehicle you'll drive on Bislig Ride.",
+  },
+  {
+    fields: ['operating_area', 'preferred_schedule', 'reason'],
+    files: [],
+    eyebrow: 'Step 03',
+    title: 'Verification',
+    description: 'A few final details so the team can review your application.',
+  },
+]
+
+const stepRequiredFields: Array<Array<keyof ApplicationForm>> = [
+  ['full_name', 'mobile_number', 'barangay', 'email', 'facebook_profile'],
+  ['vehicle_type', 'vehicle_number', 'driving_experience'],
+  ['operating_area', 'preferred_schedule'],
+]
+
+const stepRequiredFiles: ApplicationFileField[][] = [['driver_photo'], ['drivers_license'], []]
+
 type BecomeDriverExperienceProps = {
   view: AppViewMode
   onViewChange: (view: AppViewMode) => void
@@ -55,6 +99,7 @@ type BecomeDriverExperienceProps = {
 }
 
 export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDriverExperienceProps) {
+  const [step, setStep] = useState(0)
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [files, setFiles] = useState<ApplicationFileState>(initialFiles)
@@ -62,6 +107,11 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
   const [submitError, setSubmitError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const formRef = useRef<HTMLFormElement | null>(null)
+
+  const scrollFormIntoView = () => {
+    formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+  }
 
   const updateField = (field: keyof ApplicationForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -109,6 +159,55 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
     setFileErrors(nextFileErrors)
 
     return Object.keys(nextErrors).length === 0 && Object.keys(nextFileErrors).length === 0
+  }
+
+  const validateStep = (targetStep: number) => {
+    const nextErrors: FormErrors = {}
+    stepRequiredFields[targetStep].forEach((field) => {
+      if (!form[field].trim()) nextErrors[field] = 'This field is required.'
+    })
+    if (targetStep === 0 && form.email.trim() && !/^\S+@\S+\.\S+$/.test(form.email)) {
+      nextErrors.email = 'Enter a valid email address.'
+    }
+    if (
+      targetStep === 1 &&
+      form.driving_experience &&
+      (!/^\d+$/.test(form.driving_experience) || Number(form.driving_experience) < 0)
+    ) {
+      nextErrors.driving_experience = 'Enter a valid number of years.'
+    }
+    setErrors(nextErrors)
+
+    const nextFileErrors: ApplicationFileErrors = {}
+    stepRequiredFiles[targetStep].forEach((field) => {
+      const file = files[field]
+      if (!file) {
+        nextFileErrors[field] = 'This file is required.'
+        return
+      }
+      const validation = validateApplicationImage(file)
+      if (!validation.valid) nextFileErrors[field] = validation.message
+    })
+    setFileErrors(nextFileErrors)
+
+    return Object.keys(nextErrors).length === 0 && Object.keys(nextFileErrors).length === 0
+  }
+
+  const handleStepNext = () => {
+    if (!validateStep(step)) {
+      return
+    }
+    setStep((current) => Math.min(current + 1, applicationSteps.length - 1))
+    scrollFormIntoView()
+  }
+
+  const handleStepBack = () => {
+    if (step === 0) {
+      onHome()
+      return
+    }
+    setStep((current) => current - 1)
+    scrollFormIntoView()
   }
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
@@ -162,7 +261,7 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
   )
 
   const fileField = (name: ApplicationFileField, optional = false, helpText?: string) => (
-    <label className={`field-block file-upload-field${fileErrors[name] ? ' has-error' : ''}`} key={name}><span className="field-label">{fileLabels[name]}{optional ? ' (Optional)' : ''}</span>
+    <label className={`field-block file-upload-field${files[name] ? ' has-file' : ''}${fileErrors[name] ? ' has-error' : ''}`} key={name}><span className="field-label">{fileLabels[name]}{optional ? ' (Optional)' : ''}</span>
       <span className="file-upload-control">
         <input
           className="file-upload-input"
@@ -172,13 +271,102 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
           onChange={(event) => updateFile(name, event.target.files?.[0] ?? null)}
         />
         <span className="file-upload-label">
+          <span className="file-upload-icon" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 16V4" />
+              <path d="m6 10 6-6 6 6" />
+              <path d="M4 20h16" />
+            </svg>
+          </span>
+          <span className="file-upload-title">{files[name] ? 'File ready' : `Upload ${fileLabels[name]}`}</span>
+          <span className="file-upload-copy">{files[name] ? files[name].name : (helpText ?? 'PNG, JPG, WEBP, GIF or HEIC up to 5 MB.')}</span>
           <span className="file-upload-button">{files[name] ? 'Replace file' : 'Choose image'}</span>
-          <span className="file-upload-name">{files[name] ? files[name].name : 'No file selected'}</span>
         </span>
       </span>
-      {helpText ? <span className="field-note file-upload-help">{helpText}</span> : null}
       {fileErrors[name] ? <span className="form-error-message">{fileErrors[name]}</span> : null}
     </label>
+  )
+
+  const renderProgress = () => (
+    <ol className="application-progress" aria-label="Application steps">
+      {applicationSteps.map((item, index) => (
+        <li key={item.number} className={`application-progress-step${index === step ? ' is-active' : ''}${index < step ? ' is-complete' : ''}`}>
+          <span className="application-progress-marker">
+            {index < step ? (
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                <path d="m5 12 4 4L19 7" />
+              </svg>
+            ) : (
+              <span className="application-progress-number">{item.number}</span>
+            )}
+          </span>
+          <span className="application-progress-label">{item.label}</span>
+        </li>
+      ))}
+    </ol>
+  )
+
+  const renderAboutYouFields = () => (
+    <>
+      <div className="form-row">
+        {field('full_name', 'Full Name')}
+        {field('mobile_number', 'Mobile Number', 'tel')}
+      </div>
+      <div className="form-row">
+        {field('barangay', 'Barangay')}
+        {field('email', 'Email Address', 'email')}
+      </div>
+      {field('facebook_profile', 'Facebook Account / Profile')}
+      {fileField('driver_photo', false, 'PNG, JPG, WEBP, GIF or HEIC. Max 5 MB.')}
+    </>
+  )
+
+  const renderYourRideFields = () => (
+    <>
+      <div className="form-row">
+        <label className="field-block"><span className="field-label">Vehicle Type</span>
+          <select className={`input-field${errors.vehicle_type ? ' has-error' : ''}`} value={form.vehicle_type} onChange={(event) => updateField('vehicle_type', event.target.value)}>
+            <option value="">Select a vehicle type</option>
+            <option value="Motorcycle">Motorcycle</option>
+            <option value="Tricycle">Tricycle</option>
+            <option value="Umbak">Umbak</option>
+          </select>
+          {errors.vehicle_type ? <span className="form-error-message">{errors.vehicle_type}</span> : null}
+        </label>
+        {field('vehicle_number', 'Vehicle / Body Number')}
+      </div>
+      <div className="form-row">
+        {field('plate_number', 'Plate Number', 'text', true)}
+        {field('driving_experience', 'Years of Driving Experience', 'number')}
+      </div>
+      {fileField('drivers_license', false, 'PNG, JPG, WEBP, GIF or HEIC. Max 5 MB.')}
+    </>
+  )
+
+  const renderVerificationFields = () => (
+    <>
+      <div className="form-row">
+        <label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
+        <label className="field-block"><span className="field-label">Preferred Schedule</span><select className={`input-field${errors.preferred_schedule ? ' has-error' : ''}`} value={form.preferred_schedule} onChange={(event) => updateField('preferred_schedule', event.target.value)}><option value="">Select a schedule</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Flexible</option></select>{errors.preferred_schedule ? <span className="form-error-message">{errors.preferred_schedule}</span> : null}</label>
+      </div>
+      <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label>
+    </>
+  )
+
+  const renderStep = (index: number) => (
+    <section className="application-step" aria-labelledby={`application-step-${index}`}>
+      <div className="application-step-heading">
+        <p className="eyebrow">{stepPlans[index].eyebrow}</p>
+        <h2 id={`application-step-${index}`}>{stepPlans[index].title}</h2>
+        <p>{stepPlans[index].description}</p>
+      </div>
+      <div className="form-grid application-form-grid">
+        {index === 0 ? renderAboutYouFields() : null}
+        {index === 1 ? renderYourRideFields() : null}
+        {index === 2 ? renderVerificationFields() : null}
+      </div>
+      {index === 0 ? <p className="application-note upload-privacy-note">Your uploaded documents are only used for driver application verification and review.</p> : null}
+    </section>
   )
 
   const header = <AppHeader view={view} onViewChange={onViewChange} primaryLabel="My Rides" onPrimaryAction={() => onViewChange('Rider')} />
@@ -193,41 +381,25 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
 
   return <>{header}<main className="application-shell">
     <section className="section-header application-header">
-      <p className="eyebrow">Driver interest application</p>
+      <p className="eyebrow">Driver partnership</p>
       <h1>Become a <span className="hero-accent">Bislig Ride Driver</span></h1>
-      <p className="subtitle">Have a tricycle and want to be part of Bislig Ride? Submit your information below and we'll contact you about becoming a driver.</p>
+      <p className="subtitle">Join the drivers helping people move around Bislig City. Complete your application and we'll review your details.</p>
       <p className="application-intro">Submitting this form is an expression of interest. It does not automatically create an account or guarantee acceptance.</p>
+      <p className="application-steps-pill">Application — 3 steps</p>
     </section>
-    <form className="application-form" onSubmit={handleSubmit} noValidate>
-      <button type="button" className="back-link" onClick={onHome}>← Back to Bislig Ride</button>
-      <section className="booking-section">
-        <div className="booking-section-heading"><span className="booking-section-number">01</span><div><strong>Personal information</strong><span>Let's get to know you</span></div></div>
-        <div className="form-grid">{field('full_name', 'Full Name')}{field('mobile_number', 'Mobile Number', 'tel')}{field('barangay', 'Barangay')}{field('email', 'Email Address', 'email')}{field('facebook_profile', 'Facebook Account / Profile')}{fileField('driver_photo', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}</div>
-        <p className="application-note upload-privacy-note">Your uploaded documents are only used for driver application verification and review.</p>
-      </section>
-      <section className="booking-section">
-        <div className="booking-section-heading"><span className="booking-section-number">02</span><div><strong>Vehicle information</strong><span>Tell us about your vehicle</span></div></div>
-        <div className="form-grid">
-          <label className="field-block"><span className="field-label">Vehicle Type</span>
-            <select className={`input-field${errors.vehicle_type ? ' has-error' : ''}`} value={form.vehicle_type} onChange={(event) => updateField('vehicle_type', event.target.value)}>
-              <option value="">Select a vehicle type</option>
-              <option value="Motorcycle">Motorcycle</option>
-              <option value="Tricycle">Tricycle</option>
-              <option value="Umbak">Umbak</option>
-            </select>
-            {errors.vehicle_type ? <span className="form-error-message">{errors.vehicle_type}</span> : null}
-          </label>
-          {field('vehicle_number', 'Vehicle / Body Number')}{field('plate_number', 'Plate Number', 'text', true)}{field('driving_experience', 'Years of Driving Experience', 'number')}{fileField('drivers_license', false, 'Accepted image formats: JPG, PNG, WEBP, GIF, HEIC. Maximum 5 MB.')}
-        </div>
-      </section>
-      <section className="booking-section">
-        <div className="booking-section-heading"><span className="booking-section-number">03</span><div><strong>Additional information</strong><span>Anything else we should know?</span></div></div>
-        <div className="form-grid"><label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
-        <label className="field-block"><span className="field-label">Preferred Schedule</span><select className={`input-field${errors.preferred_schedule ? ' has-error' : ''}`} value={form.preferred_schedule} onChange={(event) => updateField('preferred_schedule', event.target.value)}><option value="">Select a schedule</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Flexible</option></select>{errors.preferred_schedule ? <span className="form-error-message">{errors.preferred_schedule}</span> : null}</label>
-        <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label></div>
-      </section>
+    <form className="application-form" onSubmit={handleSubmit} noValidate ref={formRef}>
+      {renderProgress()}
+      {renderStep(step)}
       {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}
-      <button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>{isSubmitting ? 'Submitting application...' : 'Submit application'}</button>
+      <div className="application-step-nav">
+        <button type="button" className="secondary-action application-back" onClick={handleStepBack}>{step === 0 ? '← Back to Bislig Ride' : '← Back'}</button>
+        {step === applicationSteps.length - 1 ? (
+          <button type="submit" className="primary-action request-ride-action application-submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting application...' : 'Submit Application'}</button>
+        ) : (
+          <button type="button" className="primary-action application-continue" onClick={handleStepNext}>Continue</button>
+        )}
+      </div>
+      {step === applicationSteps.length - 1 ? <p className="application-reassurance">Your application will be reviewed by the Bislig Ride team.</p> : null}
     </form>
   </main></>
 }

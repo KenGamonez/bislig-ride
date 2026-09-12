@@ -11273,3 +11273,358 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .pad-route-leg svg {
   flex-shrink: 0;
 }
+
+/* =========================================================
+   BECOME A DRIVER - 3-STEP PREMIUM ONBOARDING FLOW
+   ========================================================= */
+
+/* Hero detail pill */
+.application-steps-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 14px 0 0;
+  padding: 6px 13px;
+  border: 1px solid rgba(0, 232, 138, 0.28);
+  border-radius: var(--radius-pill);
+  background: rgba(0, 232, 138, 0.06);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.application-steps-pill::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-green);
+}
+
+/* Form card rhythm for the step flow */
+.application-shell form.application-form {
+  padding: 26px 28px 30px;
+  scroll-margin-top: 18px;
+}
+
+/* Progress header */
+.application-progress {
+  display: flex;
+  align-items: flex-start;
+  margin: 6px 0 26px;
+  padding: 0;
+  list-style: none;
+}
+
+.application-progress-step {
+  position: relative;
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.application-progress-step + .application-progress-step::before {
+  content: '';
+  position: absolute;
+  top: 13px;
+  left: 0;
+  right: 50%;
+  height: 2px;
+  background: var(--color-gray-150);
+  z-index: 0;
+}
+
+.application-progress-step.is-complete::before,
+.application-progress-step.is-active::before {
+  background: var(--color-green);
+}
+
+.application-progress-marker {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-gray-400);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.application-progress-step.is-active .application-progress-marker {
+  border-color: var(--color-green);
+  color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.14);
+}
+
+.application-progress-step.is-complete .application-progress-marker {
+  border-color: var(--color-green);
+  background: var(--color-green);
+  color: var(--color-black);
+}
+
+.application-progress-step.is-complete .application-progress-marker svg {
+  display: block;
+}
+
+.application-progress-label {
+  color: var(--text-muted);
+  font-size: 0.66rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.application-progress-step.is-active .application-progress-label {
+  color: var(--color-gray-900);
+}
+
+.application-progress-step.is-complete .application-progress-label {
+  color: var(--color-gray-700);
+}
+
+/* Step content */
+.application-step {
+  display: grid;
+  gap: 20px;
+}
+
+.application-step-heading .eyebrow {
+  color: var(--color-green-deep);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.application-step-heading h2 {
+  margin: 2px 0 6px;
+  font-size: clamp(1.4rem, 3vw, 1.7rem);
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--color-gray-900);
+}
+
+.application-step-heading > p:last-child {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.86rem;
+  line-height: 1.55;
+  max-width: 46ch;
+}
+
+.application-form-grid {
+  gap: 20px;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+}
+
+/* Premium upload / drop zones */
+.file-upload-field.has-file .file-upload-control {
+  border-color: var(--color-green);
+  background: rgba(0, 232, 138, 0.05);
+}
+
+.file-upload-field.has-file .file-upload-icon {
+  color: var(--color-green);
+  border-color: var(--color-green);
+}
+
+.file-upload-field.has-file .file-upload-title {
+  color: var(--color-green-deep);
+}
+
+.file-upload-field.has-error .file-upload-control {
+  border-color: rgba(220, 38, 38, 0.7);
+  background: rgba(220, 38, 38, 0.04);
+}
+
+.file-upload-control {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 132px;
+  padding: 18px 20px;
+  border: 1.5px dashed var(--color-gray-300);
+  border-radius: var(--radius-md);
+  background: var(--color-gray-50);
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.file-upload-control:hover,
+.file-upload-control:focus-within {
+  border-color: var(--color-gray-400);
+  background: var(--color-white);
+}
+
+.file-upload-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+  z-index: 2;
+}
+
+.file-upload-input:focus-visible ~ .file-upload-label {
+  outline: 2px solid var(--color-green);
+  outline-offset: 2px;
+  border-radius: 8px;
+}
+
+.file-upload-label {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  min-width: 0;
+  width: 100%;
+  pointer-events: none;
+}
+
+.file-upload-icon {
+  display: grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  margin-bottom: 2px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: 50%;
+  background: var(--color-white);
+  color: var(--color-gray-500);
+}
+
+.file-upload-title {
+  color: var(--color-gray-900);
+  font-size: 0.76rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.file-upload-copy {
+  max-width: 36ch;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
+.file-upload-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  margin-top: 4px;
+  padding: 0 16px;
+  border-radius: 8px;
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 0.72rem;
+  font-weight: 700;
+  transition: background var(--transition), transform var(--transition);
+}
+
+.file-upload-button:hover {
+  background: var(--color-gray-900);
+  transform: translateY(-1px);
+}
+
+/* Step navigation */
+.application-step-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-top: 6px;
+  padding-top: 22px;
+  border-top: 1px solid var(--color-gray-100);
+}
+
+.application-step-nav .secondary-action.application-back {
+  min-height: 50px;
+}
+
+.application-continue,
+.application-submit {
+  min-width: 190px;
+  min-height: 50px;
+}
+
+.application-reassurance {
+  margin: 10px 0 0;
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  line-height: 1.5;
+}
+
+/* Mobile — step flow */
+@media (max-width: 767px) {
+  .application-shell form.application-form {
+    padding: 20px 16px 24px;
+  }
+
+  .application-progress {
+    margin: 2px 0 22px;
+  }
+
+  .application-progress-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.06em;
+  }
+
+  .application-progress-marker {
+    width: 26px;
+    height: 26px;
+  }
+
+  .application-progress-step + .application-progress-step::before {
+    top: 12px;
+  }
+
+  .form-row {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 18px;
+  }
+
+  .application-form-grid {
+    gap: 18px;
+  }
+
+  .application-step-nav {
+    flex-wrap: wrap;
+  }
+
+  .application-step-nav .application-continue,
+  .application-step-nav .application-submit {
+    flex: 1 1 100%;
+    min-width: 0;
+    order: -1;
+  }
+
+  .application-reassurance {
+    text-align: center;
+  }
+
+  .file-upload-control {
+    min-height: 118px;
+    padding: 16px;
+  }
+}
