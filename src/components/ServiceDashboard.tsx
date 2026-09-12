@@ -56,120 +56,50 @@ type ServiceDashboardProps = {
 }
 
 export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
-  const handleExploreServices = (event: React.MouseEvent<HTMLAnchorElement>) => {
-    event.preventDefault()
-    const section = document.getElementById('services')
-    if (!section) return
-    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
-  }
-
   return (
-    <section className="service-dashboard" aria-label="Bislig Ride home">
-      <section className="home-hero" aria-labelledby="home-hero-heading">
+    <section className="service-dashboard" aria-label="Bislig Ride services">
+      <header className="service-greeting">
         <p className="eyebrow">Bislig Ride</p>
-        <h1 id="home-hero-heading">
-          Get around Bislig.
-          <span className="hero-accent">Your way.</span>
-        </h1>
-        <p className="subtitle">Rides, deliveries, Pasabuy, Pakyawan, and car rentals — all in one place.</p>
+        <h1>What do you need <span className="hero-accent">today?</span></h1>
+        <p className="subtitle">Choose a service and get started.</p>
+      </header>
 
-        <div className="home-hero-actions">
-          <button type="button" className="primary-action home-primary-cta" onClick={onSelectRideNow}>
-            Request a Ride &rarr;
-          </button>
-          <a className="home-secondary-link" href="#services" onClick={handleExploreServices}>
-            Explore Services &rarr;
-          </a>
-        </div>
-      </section>
-
-      <section className="home-services" id="services" aria-labelledby="services-heading">
-        <header className="home-section-heading">
-          <p className="eyebrow">Available services</p>
-          <h2 id="services-heading">
-            Everything you need to get around
-            <span className="hero-accent"> and get things done.</span>
-          </h2>
-        </header>
-
-        <div className="service-grid home-service-grid">
-          <ServiceCard
-            variant="primary"
-            title="Ride Now"
-            description="On-demand rides around Bislig City"
-            icon={rideIcon}
-            cta="Ride Now"
-            onSelect={onSelectRideNow}
-          />
-          <ServiceCard
-            href="/pasabuy"
-            title="Pasabuy"
-            description="We shop and bring it to you"
-            icon={pasabuyIcon}
-            cta="Pasabuy"
-          />
-          <ServiceCard
-            href="/pakyawan"
-            title="Pakyawan"
-            description="Private &amp; scheduled transportation"
-            icon={pakyawanIcon}
-            cta="Pakyawan"
-          />
-          <ServiceCard
-            href="/car-rentals"
-            title="Car Rentals"
-            description="Self-drive cars &amp; vans by the day"
-            icon={carRentalIcon}
-            cta="Car Rentals"
-          />
-          <ServiceCard
-            href="/pa-deliver"
-            title="Pa-deliver"
-            description="Send packages across Bislig"
-            icon={deliverIcon}
-            cta="Pa-deliver"
-          />
-        </div>
-      </section>
+      <div className="service-grid">
+        <ServiceCard
+          variant="primary"
+          badge="Popular"
+          title="Ride Now"
+          description="On-demand rides around Bislig City"
+          icon={rideIcon}
+          onSelect={onSelectRideNow}
+        />
+        <ServiceCard
+          href="/pasabuy"
+          title="Pasabuy"
+          description="We shop and hand over your items"
+          icon={pasabuyIcon}
+        />
+        <ServiceCard
+          href="/pakyawan"
+          title="Pakyawan"
+          description="Scheduled private & whole-day trips"
+          icon={pakyawanIcon}
+        />
+        <ServiceCard
+          href="/car-rentals"
+          title="Car Rentals"
+          description="Self-drive cars & vans by the day"
+          icon={carRentalIcon}
+        />
+        <ServiceCard
+          href="/pa-deliver"
+          title="Pa-deliver"
+          description="Send packages across Bislig"
+          icon={deliverIcon}
+        />
+      </div>
 
       <ServiceCarousel onSelectRideNow={onSelectRideNow} />
-
-      <section className="home-local" aria-labelledby="home-local-heading">
-        <p className="eyebrow">Built for Bislig</p>
-        <h2 id="home-local-heading">
-          One local platform connecting passengers, drivers, and local service partners.
-        </h2>
-        <ul className="home-local-badges">
-          <li>Beta</li>
-          <li>Local</li>
-          <li>Growing</li>
-        </ul>
-      </section>
-
-      <section className="home-final-cta" aria-labelledby="home-cta-heading">
-        <h2 id="home-cta-heading">Where do you need to go?</h2>
-        <p>Start with a ride or explore everything Bislig Ride can do.</p>
-
-        <div className="home-final-actions">
-          <button type="button" className="primary-action home-primary-cta" onClick={onSelectRideNow}>
-            Request a Ride &rarr;
-          </button>
-          <a
-            className="home-secondary-link"
-            href="#services"
-            onClick={(event) => {
-              event.preventDefault()
-              const section = document.getElementById('services')
-              if (!section) return
-              const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches
-              section.scrollIntoView({ behavior: reduced ? 'auto' : 'smooth', block: 'start' })
-            }}
-          >
-            Explore Services &rarr;
-          </a>
-        </div>
-      </section>
     </section>
   )
 }

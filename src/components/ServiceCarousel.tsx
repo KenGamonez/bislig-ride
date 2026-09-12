@@ -13,39 +13,39 @@ type DiscoveryItem = {
 const discoveryItems: DiscoveryItem[] = [
   {
     key: 'city',
-    kicker: 'City hops, anytime',
-    title: 'Ride Now',
+    kicker: 'Everyday trips',
+    title: 'City hops, anytime',
     description: 'Quick on-demand motorbike rides across Bislig City and nearby barangays.',
     cta: 'Ride Now',
   },
   {
     key: 'trips',
-    kicker: 'Family trips & events',
-    title: 'Pakyawan',
-    description: 'Private transportation for out-of-town trips, airport transfers, and gatherings.',
+    kicker: 'Whole-day trips',
+    title: 'Family trips & events',
+    description: 'A private Pakyawan vehicle for out-of-town trips, airport transfers, and gatherings.',
     cta: 'Book Pakyawan',
     href: '/pakyawan',
   },
   {
     key: 'groceries',
-    kicker: 'Groceries to your door',
-    title: 'Pasabuy',
-    description: 'Let a trusted rider handle your Palengke and grocery runs.',
+    kicker: 'Shop for you',
+    title: 'Groceries to your door',
+    description: 'Let a trusted runner handle your palengke and grocery runs around town.',
     cta: 'Try Pasabuy',
     href: '/pasabuy',
   },
   {
     key: 'deliver',
-    kicker: 'Packages across Bislig',
-    title: 'Pa-deliver',
-    description: 'Send documents, parcels, and small packages around the city.',
+    kicker: 'Same-day sending',
+    title: 'Packages across Bislig',
+    description: 'Send documents, parcels, and small items to any barangay in the city.',
     cta: 'Pa-deliver',
     href: '/pa-deliver',
   },
   {
     key: 'cars',
-    kicker: 'Cars for the day',
-    title: 'Car Rentals',
+    kicker: 'Ride in comfort',
+    title: 'Cars for the day',
     description: 'Rent a sedan, SUV, or van for your errands — self-drive or with a driver.',
     cta: 'Car Rentals',
     href: '/car-rentals',
@@ -92,12 +92,9 @@ export function ServiceCarousel({ onSelectRideNow }: { onSelectRideNow: () => vo
 
   return (
     <section className="discover-section" aria-labelledby="discover-heading">
-      <div className="home-section-heading">
-        <p className="eyebrow">More than a ride</p>
-        <h2 id="discover-heading">
-          One local platform for getting around,
-          <span className="hero-accent"> sending things &amp; getting things done.</span>
-        </h2>
+      <div className="discover-heading">
+        <p className="eyebrow">Also available</p>
+        <h2 id="discover-heading">Discover <span className="hero-accent">Bislig Ride</span></h2>
       </div>
 
       <div
