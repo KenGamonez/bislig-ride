@@ -4051,6 +4051,11 @@ a.secondary-action {
   color: var(--color-red);
 }
 
+.paused-badge {
+  background: var(--color-gray-200);
+  color: var(--color-gray-700);
+}
+
 .live-badge {
   background: var(--color-green-soft);
   color: var(--color-green);
@@ -4109,6 +4114,78 @@ a.secondary-action {
   font-size: 0.78rem;
   line-height: 1.35;
   overflow-wrap: anywhere;
+}
+
+.presence-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+  margin: 14px 0;
+}
+
+.presence-control {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-gray-100);
+}
+
+.presence-label {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  color: var(--color-gray-500);
+  font-size: 0.67rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.presence-control .secondary-action {
+  border: 1px solid var(--color-gray-200);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.7rem;
+}
+
+.presence-control .secondary-action.is-active {
+  border-color: var(--color-green);
+  background: var(--color-green-soft);
+  color: var(--color-green);
+}
+
+.presence-location-status {
+  text-transform: none;
+  letter-spacing: normal;
+  font-weight: 600;
+}
+
+.presence-location-status.is-active {
+  color: var(--color-green);
+}
+
+.presence-location-status.is-stale {
+  color: var(--color-gray-700);
+}
+
+.presence-location-status.is-lost {
+  color: var(--color-red);
+}
+
+.offer-countdown {
+  margin: 10px 0;
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+  font-size: 0.74rem;
+  font-weight: 600;
+  text-align: center;
 }
 
 .passenger-reputation {

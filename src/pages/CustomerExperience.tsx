@@ -25,6 +25,7 @@ import { playChatNotification } from '../lib/notifications'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { cancelRide, createRide, fetchRideById, hasRatedRide, submitRideRating } from '../lib/rides'
+import { dispatchRide } from '../lib/dispatch'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
 import type { Ride, RideCancellation } from '../types/ride'
 
@@ -44,7 +45,7 @@ type CustomerFormState = {
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
 
-type RidePhase = 'request' | 'searching' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'
+type RidePhase = 'request' | 'searching' | 'no_driver' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'
 
 type PaymentMethod = 'Cash' | 'GCash'
 
@@ -60,7 +61,7 @@ const initialFormState: CustomerFormState = {
   destinationMode: 'same',
 }
 
-const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'>, string> = {
+const rideStatusToLabel: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'>, string> = {
   searching: 'SEARCHING',
   accepted: 'DRIVER ON THE WAY',
   arrived: 'ARRIVED',
@@ -127,6 +128,8 @@ const mapRideStatusToPhase = (status: Ride['status']): RidePhase => {
   switch (status) {
     case 'requested':
       return 'searching'
+    case 'no_driver':
+      return 'no_driver'
     case 'accepted':
       return 'accepted'
     case 'arrived':
@@ -167,7 +170,8 @@ const [rating, setRating] = useState(0)
   const [ratingComment, setRatingComment] = useState('')
   const [ratingSubmitted, setRatingSubmitted] = useState(false)
   const [ratingError, setRatingError] = useState('')
-const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false)
+  const [retryingDispatch, setRetryingDispatch] = useState(false)
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelSubmitting, setCancelSubmitting] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -611,9 +615,26 @@ const syncRideStatus = async () => {
       void syncRideStatus()
     }, 5000)
 
+    const channel = supabase
+      .channel(`passenger-ride-status-${ride.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'rides',
+          filter: `id=eq.${ride.id}`,
+        },
+        () => {
+          void syncRideStatus()
+        },
+      )
+      .subscribe()
+
     return () => {
       isMounted = false
       window.clearInterval(timer)
+      void supabase.removeChannel(channel)
     }
   }, [ride.id, phase])
 
@@ -872,6 +893,16 @@ destination_address: formValues.destination,
       setRide(createdRide)
       window.localStorage.setItem(rideIdStorageKey, String(createdRide.id))
       setPhase('searching')
+
+      try {
+        const result = await dispatchRide(createdRide.id)
+
+        if (result.ride_status === 'no_driver') {
+          setPhase('no_driver')
+        }
+      } catch (error) {
+        console.error('Unable to dispatch ride:', error)
+      }
     } catch (error) {
       console.error('Unable to create ride:', error)
 
@@ -885,6 +916,36 @@ destination_address: formValues.destination,
       setSubmitError(message)
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const handleRetryDispatch = async () => {
+    if (!ride.id || retryingDispatch) {
+      return
+    }
+
+    setRetryingDispatch(true)
+    setSubmitError('')
+
+    try {
+      const result = await dispatchRide(ride.id)
+
+      if (result.ride_status === 'no_driver') {
+        setPhase('no_driver')
+      } else {
+        setPhase('searching')
+      }
+    } catch (error) {
+      console.error('Unable to dispatch ride again:', error)
+
+      const message =
+        error instanceof Error
+          ? error.message
+          : 'Unable to find a driver right now. Please try again.'
+
+      setSubmitError(message)
+    } finally {
+      setRetryingDispatch(false)
     }
   }
 
@@ -1029,7 +1090,7 @@ setRatingSubmitted(true)
   const showDemoRideState = phase !== 'request' && !showProfile
   const showRideLauncher = showCustomerForm && launcherView
 
-const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_confirmed'>, string> = {
+const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' | 'payment_confirmed'>, string> = {
     searching: 'Finding a driver',
     accepted: 'Driver accepted',
     arrived: 'Your driver has arrived',
@@ -1399,6 +1460,66 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'payment' | 'payment_con
 
       <div className="action-row">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
+      </div>
+    </div>
+  )
+
+  const renderNoDriverScreen = () => (
+    <div className="demo-state-card">
+      <div className="status-stack">
+        <span className="demo-status-badge">NO DRIVER</span>
+        <div className="search-loader" aria-label="No driver available" />
+      </div>
+
+      <h2>No driver available right now</h2>
+      <p>We could not find an available driver for this trip at the moment. Try dispatching your ride again or cancel it.</p>
+
+      <div className="ride-summary compact">
+        <div>
+          <dt>Pickup</dt>
+          <dd>{ride.pickup_address}</dd>
+        </div>
+        <div>
+          <dt>Destination</dt>
+          <dd>{ride.destination_address}</dd>
+        </div>
+        <div>
+          <dt>Passengers</dt>
+          <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
+        </div>
+        <div>
+          <dt>Passenger Type</dt>
+          <dd>{formValues.passengerType}</dd>
+        </div>
+        <div>
+          <dt>Fare</dt>
+          <dd>{rideFareDisplay(ride).value}</dd>
+        </div>
+      </div>
+
+      {submitError ? (
+        <p className="form-error-message" role="alert">
+          {submitError}
+        </p>
+      ) : null}
+
+      <div className="action-row">
+        <button
+          type="button"
+          className="primary-action"
+          onClick={() => void handleRetryDispatch()}
+          disabled={retryingDispatch}
+        >
+          {retryingDispatch ? 'Finding a driver...' : 'Try Again'}
+        </button>
+        <button
+          type="button"
+          className="secondary-action cancel-action"
+          onClick={() => setShowCancelModal(true)}
+          disabled={retryingDispatch}
+        >
+          Cancel Ride
+        </button>
       </div>
     </div>
   )
@@ -1930,6 +2051,8 @@ onClick={() => setRating(star)}
           ) : showDemoRideState ? (
             phase === 'searching' ? (
               renderSearchingScreen()
+            ) : phase === 'no_driver' ? (
+              renderNoDriverScreen()
             ) : phase === 'accepted' ? (
               renderDriverFoundScreen()
             ) : phase === 'arrived' ? (

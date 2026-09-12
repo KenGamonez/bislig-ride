@@ -84,37 +84,13 @@ export async function fetchRideById(rideId: string): Promise<Ride | null> {
   return (data as Ride | null) ?? null
 }
 
-export async function acceptRide(rideId: string, driverId: string): Promise<Ride> {
+export async function updateRideStatus(rideId: string, status: RideStatus): Promise<Ride> {
   const { data, error } = await supabase
-    .from('rides')
-    .update({
-      driver_id: driverId,
-      status: 'accepted',
+    .rpc('advance_ride_status', {
+      p_ride_id: rideId,
+      p_status: status,
     })
-    .eq('id', rideId)
-    .eq('status', 'requested')
-    .is('driver_id', null)
-    .select()
     .single()
-
-  if (error) {
-    throw error
-  }
-
-  return data as Ride
-}
-
-export async function updateRideStatus(rideId: string, status: RideStatus, driverId?: string): Promise<Ride> {
-  let query = supabase
-    .from('rides')
-    .update({ status })
-    .eq('id', rideId)
-
-  if (driverId) {
-    query = query.eq('driver_id', driverId)
-  }
-
-  const { data, error } = await query.select().single()
 
   if (error) {
     throw error
@@ -144,34 +120,19 @@ export async function submitRideRating(rideId: string, rating: number, comment?:
     throw new Error('This ride is not eligible for rating.')
   }
 
-  const { error: ratingError } = await supabase.from('ride_ratings').insert({
-    ride_id: ride.id,
-    rater_id: ride.customer_auth_id,
-    rated_user_id: ride.driver_id,
-    stars: rating,
-    comment: comment?.trim() || null,
-  })
-
-  if (ratingError) {
-    throw ratingError
-  }
-
   const { data, error } = await supabase
-    .from('rides')
-    .update({
-      rating,
-      rating_comment: comment?.trim() || null,
+    .rpc('save_ride_rating', {
+      p_ride_id: rideId,
+      p_stars: rating,
+      p_comment: comment?.trim() || null,
     })
-    .eq('id', rideId)
-    .select()
-    .maybeSingle()
+    .single()
 
   if (error) {
-    console.warn('Unable to backfill rating onto the ride record (non-fatal):', error.message)
-    return ride
+    throw error
   }
 
-  return (data ?? ride) as Ride
+  return data as Ride
 }
 
 export async function submitPassengerRating(

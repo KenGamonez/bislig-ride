@@ -8,13 +8,9 @@ import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
 import { PASSWORD_HELP_TEXT, validatePasswordStrength } from '../lib/driverAccounts'
 import { formatCentavos, MULTIPLE_DESTINATIONS_FARE_NOTE } from '../lib/fare'
-import { updateDriverLocation } from '../lib/driverLocations'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
-import {
-  acceptPakyawanBooking,
-  fetchAvailablePakyawanBookings,
-} from '../lib/scheduledBookings'
+import { acceptPakyawanBooking, fetchAvailablePakyawanBookings } from '../lib/scheduledBookings'
 import {
   notificationPermission,
   playRequestChime,
@@ -23,17 +19,31 @@ import {
   showBrowserNotification,
 } from '../lib/notifications'
 import { subscribeToPassengerLocation } from '../lib/passengerLocations'
+import { updateDriverLocation } from '../lib/driverLocations'
 import {
-  acceptRide,
+  acceptRideOffer,
+  declineRideOffer,
+  fetchPendingOffer,
+  setDriverPresence,
+  subscribeToDriverOffers,
+} from '../lib/dispatch'
+import {
+  driverLocationStatus,
+  hasGeolocation,
+  persistOfflineBestEffort,
+  requestFirstFix,
+  startDriverLocationTracking,
+} from '../lib/driverPresence'
+import {
   cancelRide,
   fetchAssignedRidesForDriver,
-  fetchPendingRides,
   fetchRideById,
   hasRatedRide,
   submitPassengerRating,
   updateRideStatus,
 } from '../lib/rides'
 import type { Ride, RideCancellation } from '../types/ride'
+import type { PendingOffer } from '../types/dispatch'
 import type { PakyawanBooking } from '../types/scheduledBooking'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
@@ -177,6 +187,20 @@ export function DriverExperience({
   const [showPasswordFields, setShowPasswordFields] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
   const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null)
+  const [driverIsAvailable, setDriverIsAvailable] = useState(true)
+  const [driverAutoAccept, setDriverAutoAccept] = useState(false)
+  const [presenceError, setPresenceError] = useState('')
+  const [requestError, setRequestError] = useState('')
+  const [lastLocationFixIso, setLastLocationFixIso] = useState<string | null>(null)
+  const [, setLocationTick] = useState(0)
+  const [offerSecondsLeft, setOfferSecondsLeft] = useState(0)
+
+  const locationStatus = !driverOnline ? 'lost' : driverLocationStatus(lastLocationFixIso)
+
+  const offerExpired = phase === 'incoming_request' && Boolean(pendingOffer) && offerSecondsLeft === 0
+  const stopTrackingRef = useRef<(() => void) | null>(null)
+  const handledOfferIdsRef = useRef<Set<string>>(new Set())
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelSubmitting, setCancelSubmitting] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -190,7 +214,6 @@ export function DriverExperience({
   const [passengerRatingError, setPassengerRatingError] = useState('')
   const lastActiveRideIdRef = useRef<string | null>(null)
   const completedRideIdRef = useRef<string | null>(null)
-  const notifiedRequestIdsRef = useRef<Set<string>>(new Set())
   const phaseRef = useRef<DriverPhase>('offline')
   const activeRideRef = useRef<Ride | null>(null)
   const [notifications, setNotifications] = useState<DriverNotificationItem[]>([])
@@ -361,45 +384,51 @@ return () => {
     }
   }, [request?.customer_auth_id, activeRide?.customer_auth_id])
 
-  useEffect(() => {
-    if (!driverOnline || !navigator.geolocation) {
+useEffect(() => {
+    if (!driverOnline) {
       return
     }
 
-    const watchId = navigator.geolocation.watchPosition(
-      (position) => {
-        setDriverLocation({ latitude: position.coords.latitude, longitude: position.coords.longitude })
-        void updateDriverLocation(driverId, position.coords.latitude, position.coords.longitude).catch((error) => {
-          console.error('Unable to update driver location:', error)
-        })
-      },
-      (error) => {
-        console.error('Unable to get driver location:', error)
-      },
-      { enableHighAccuracy: true },
-    )
+    const timer = window.setInterval(() => {
+      setLocationTick((tick) => tick + 1)
+    }, 10000)
 
     return () => {
-      navigator.geolocation.clearWatch(watchId)
+      window.clearInterval(timer)
     }
-  }, [driverOnline, driverId])
+  }, [driverOnline])
+
+  useEffect(() => {
+    const onPageHide = () => {
+      if (driverOnline) {
+        persistOfflineBestEffort()
+      }
+    }
+
+    window.addEventListener('pagehide', onPageHide)
+
+    return () => {
+      window.removeEventListener('pagehide', onPageHide)
+    }
+  }, [driverOnline])
 
   useEffect(() => {
     let mounted = true
 
     const refreshRides = async () => {
       try {
-        const [pendingRides, assignedRides] = await Promise.all([
-          fetchPendingRides(),
-          fetchAssignedRidesForDriver(driverId),
-        ])
-
         if (!driverOnline) {
-          setRequest(pendingRides[0] ?? null)
           setActiveRide(null)
+          setPendingOffer(null)
+          setRequest(null)
           setPhase('offline')
           return
         }
+
+        const [assignedRides, pendingOfferResult] = await Promise.all([
+          fetchAssignedRidesForDriver(driverId),
+          fetchPendingOffer(driverId),
+        ])
 
         const activeAssignedRide = assignedRides[0] ?? null
         const previousActiveRideId = lastActiveRideIdRef.current
@@ -407,6 +436,7 @@ return () => {
         if (activeAssignedRide) {
           lastActiveRideIdRef.current = activeAssignedRide.id
           setActiveRide(activeAssignedRide)
+          setPendingOffer(null)
           setRequest(null)
 
           if (activeAssignedRide.status === 'accepted') {
@@ -420,9 +450,8 @@ return () => {
         }
 
         setActiveRide(null)
-        setRequest(null)
 
-        if (previousActiveRideId && !pendingRides.some((ride) => ride.id === previousActiveRideId)) {
+        if (previousActiveRideId) {
           try {
             const previous = await fetchRideById(previousActiveRideId)
 
@@ -448,11 +477,20 @@ return () => {
         completedRideIdRef.current = null
         lastActiveRideIdRef.current = null
 
-        const nextRequest = pendingRides[0] ?? null
-        setRequest(nextRequest)
-        setPhase(nextRequest ? 'incoming_request' : 'online')
+        if (pendingOfferResult) {
+          handledOfferIdsRef.current.add(pendingOfferResult.offer.id)
+          setPendingOffer((current) =>
+            current?.offer.id === pendingOfferResult.offer.id ? current : pendingOfferResult,
+          )
+          setRequest(pendingOfferResult.ride)
+          setPhase('incoming_request')
+        } else {
+          setPendingOffer(null)
+          setRequest(null)
+          setPhase('online')
+        }
       } catch (error) {
-        console.error('Unable to load pending rides:', error)
+        console.error('Unable to load driver ride state:', error)
       }
     }
 
@@ -584,62 +622,75 @@ return unsubscribe
   }, [phase, activeRide])
 
   useEffect(() => {
-    if (!driverAuthId) {
+    if (!driverAuthId || !driverOnline) {
       return
     }
 
-    const channel = supabase
-      .channel('driver-ride-requests')
-      .on(
-        'postgres_changes',
+    const unsubscribe = subscribeToDriverOffers(driverId, (pending) => {
+      if (handledOfferIdsRef.current.has(pending.offer.id)) {
+        return
+      }
+
+      handledOfferIdsRef.current.add(pending.offer.id)
+      setRequestError('')
+      setPendingOffer((current) => (current?.offer.id === pending.offer.id ? current : pending))
+      setRequest(pending.ride)
+
+      const pickupAddress = pending.ride.pickup_address ?? 'Pickup'
+      const destinationAddress = pending.ride.destination_address ?? 'Destination'
+
+      setNotifications((current) => [
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'rides',
-          filter: 'status=eq.requested',
+          id: `offer-${pending.offer.id}`,
+          kind: 'ride',
+          rideId: pending.ride.id,
+          title: 'New ride offer',
+          subtitle: `${pickupAddress} → ${destinationAddress}`,
+          seen: false,
+          createdAt: Date.now(),
         },
-        (payload) => {
-          const incoming = (payload.new ?? {}) as Partial<Ride>
+        ...current,
+      ])
 
-          if (!incoming.id || notifiedRequestIdsRef.current.has(incoming.id)) {
-            return
-          }
+      if (driverOnline) {
+        playRequestChime()
+        showBrowserNotification('New ride offer', `${pickupAddress} → ${destinationAddress}`)
+      }
 
-          notifiedRequestIdsRef.current.add(incoming.id)
-
-          const pickupAddress = incoming.pickup_address ?? 'Pickup'
-          const destinationAddress = incoming.destination_address ?? 'Destination'
-
-          setNotifications((current) => [
-            {
-              id: incoming.id!,
-              kind: 'ride',
-              rideId: incoming.id!,
-              title: 'New ride request',
-              subtitle: `${pickupAddress} → ${destinationAddress}`,
-              seen: false,
-              createdAt: Date.now(),
-            },
-            ...current,
-          ])
-
-          if (driverOnline) {
-            playRequestChime()
-            showBrowserNotification('New ride request', `${pickupAddress} → ${destinationAddress}`)
-          }
-
-          if (driverOnline && !activeRideRef.current && phaseRef.current === 'online') {
-            setRequest(incoming as Ride)
-            setPhase('incoming_request')
-          }
-        },
-      )
-      .subscribe()
+      if (!activeRideRef.current && phaseRef.current !== 'incoming_request') {
+        setPhase('incoming_request')
+      }
+    })
 
     return () => {
-      void supabase.removeChannel(channel)
+      unsubscribe()
     }
-  }, [driverAuthId, driverOnline])
+  }, [driverAuthId, driverId, driverOnline])
+
+  useEffect(() => {
+    if (phase !== 'incoming_request' || !pendingOffer) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      const remaining = Math.max(
+        0,
+        Math.ceil((new Date(pendingOffer.offer.expires_at).getTime() - Date.now()) / 1000),
+      )
+
+      setOfferSecondsLeft(remaining)
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [phase, pendingOffer])
+
+  useEffect(() => {
+    return () => {
+      stopTrackingRef.current?.()
+    }
+  }, [])
 
   useEffect(() => {
     if (!driverAuthId || !canAcceptPakyawan) {
@@ -715,59 +766,166 @@ return unsubscribe
     }
   }, [driverAuthId, canAcceptPakyawan, driverOnline])
 
-  const handleToggleOnline = () => {
+const handleToggleOnline = async () => {
     if (transitioning) {
       return
     }
 
-    const nextOnline = !driverOnline
     setTransitioning(true)
-    completedRideIdRef.current = null
-    lastActiveRideIdRef.current = null
-    setDriverOnline(nextOnline)
+    setPresenceError('')
 
-    if (nextOnline) {
-      setRequest(null)
-      setActiveRide(null)
-      setPhase('online')
-    } else {
-      setRequest(null)
-      setActiveRide(null)
-      setPhase('offline')
+    try {
+      if (!driverOnline) {
+        if (!hasGeolocation()) {
+          setPresenceError(
+            'Location services are required to go online. Enable precise location for this browser and try again.',
+          )
+          return
+        }
+
+        const fix = await requestFirstFix()
+        setDriverLocation({ latitude: fix.latitude, longitude: fix.longitude })
+        setLastLocationFixIso(new Date().toISOString())
+
+        // Publish the first fix BEFORE enabling presence: set_driver_presence
+        // requires an existing driver_locations row with a fresh position, so a
+        // brand-new driver (or one with a stale row) must have a live fix on
+        // record before the dispatch engine can consider them eligible.
+        await updateDriverLocation(driverId, fix.latitude, fix.longitude)
+
+        const presence = await setDriverPresence(true, driverIsAvailable, driverAutoAccept)
+        setDriverIsAvailable(presence.is_available)
+        setDriverAutoAccept(presence.auto_accept)
+
+        stopTrackingRef.current = startDriverLocationTracking(driverId, {
+          onPosition: (position) => {
+            setDriverLocation(position)
+            setLastLocationFixIso(new Date().toISOString())
+          },
+        })
+
+        completedRideIdRef.current = null
+        lastActiveRideIdRef.current = null
+        setRequest(null)
+        setPendingOffer(null)
+        setActiveRide(null)
+        setDriverOnline(true)
+        setPhase('online')
+      } else {
+        await setDriverPresence(false, false, driverAutoAccept)
+        stopTrackingRef.current?.()
+        stopTrackingRef.current = null
+        completedRideIdRef.current = null
+        lastActiveRideIdRef.current = null
+        setRequest(null)
+        setPendingOffer(null)
+        setActiveRide(null)
+        setDriverOnline(false)
+        setPhase('offline')
+      }
+    } catch (error) {
+      console.error('Unable to toggle driver presence:', error)
+      setPresenceError(
+        driverOnline
+          ? 'Unable to go offline right now. Please try again.'
+          : 'Unable to go online right now. Check your connection and GPS, then try again.',
+      )
+    } finally {
+      setTransitioning(false)
     }
-
-    window.setTimeout(() => setTransitioning(false), 200)
   }
 
-  const handleDecline = () => {
-    if (!request || transitioning) {
+  const handleToggleAvailability = async (nextAvailable: boolean) => {
+    if (!driverOnline || transitioning) {
       return
     }
 
     setTransitioning(true)
-    setRequest(null)
-    setPhase('online')
-    window.setTimeout(() => setTransitioning(false), 200)
+    setPresenceError('')
+
+    try {
+      const presence = await setDriverPresence(true, nextAvailable, driverAutoAccept)
+      setDriverIsAvailable(presence.is_available)
+    } catch (error) {
+      console.error('Unable to update availability:', error)
+      setPresenceError('Unable to update your availability right now. Please try again.')
+    } finally {
+      setTransitioning(false)
+    }
+  }
+
+  const handleToggleAutoAccept = async (nextAutoAccept: boolean) => {
+    if (!driverOnline || transitioning) {
+      return
+    }
+
+    setTransitioning(true)
+    setPresenceError('')
+
+    try {
+      const presence = await setDriverPresence(true, driverIsAvailable, nextAutoAccept)
+      setDriverAutoAccept(presence.auto_accept)
+    } catch (error) {
+      console.error('Unable to update auto-accept:', error)
+      setPresenceError('Unable to update auto-accept right now. Please try again.')
+    } finally {
+      setTransitioning(false)
+    }
+  }
+
+  const handleDecline = async () => {
+    if (!request || !pendingOffer || transitioning) {
+      return
+    }
+
+    setTransitioning(true)
+    setRequestError('')
+
+    try {
+      await declineRideOffer(request.id, driverId)
+      setPendingOffer(null)
+      setRequest(null)
+      setPhase('online')
+    } catch (error) {
+      console.error('Unable to decline ride offer:', error)
+      setRequestError(
+        error instanceof Error ? error.message : 'Unable to decline this ride right now.',
+      )
+    } finally {
+      setTransitioning(false)
+    }
   }
 
   const handleAcceptRide = async () => {
-    if (!request || transitioning) {
+    if (!request || !pendingOffer || transitioning) {
       return
     }
 
     setTransitioning(true)
+    setRequestError('')
 
     try {
-      const acceptedRide = await acceptRide(request.id, driverId)
+      const acceptedRide = await acceptRideOffer(request.id, driverId)
+      handledOfferIdsRef.current.add(pendingOffer.offer.id)
+      setPendingOffer(null)
       setActiveRide(acceptedRide)
       setRequest(null)
       setPhase('heading_to_pickup')
     } catch (error) {
-      console.error('Unable to accept ride:', error)
-      setPhase('online')
-      setRequest(request)
+      console.error('Unable to accept ride offer:', error)
+      const message = error instanceof Error ? error.message : 'Unable to accept this ride.'
+      const terminals = ['no longer available', 'no longer eligible']
+      const isTerminal = terminals.some((part) => message.toLowerCase().includes(part))
+
+      if (isTerminal) {
+        setPendingOffer(null)
+        setRequest(null)
+        setPhase('online')
+      } else {
+        setRequestError(message)
+      }
     } finally {
-      window.setTimeout(() => setTransitioning(false), 200)
+      setTransitioning(false)
     }
   }
 
@@ -779,7 +937,7 @@ return unsubscribe
     setTransitioning(true)
 
     try {
-      const updatedRide = await updateRideStatus(activeRide.id, 'arrived', driverId)
+      const updatedRide = await updateRideStatus(activeRide.id, 'arrived')
       setActiveRide(updatedRide)
       setPhase('arrived')
     } catch (error) {
@@ -797,7 +955,7 @@ return unsubscribe
     setTransitioning(true)
 
     try {
-      const updatedRide = await updateRideStatus(activeRide.id, 'in_progress', driverId)
+      const updatedRide = await updateRideStatus(activeRide.id, 'in_progress')
       setActiveRide(updatedRide)
       setPhase('in_progress')
     } catch (error) {
@@ -815,7 +973,7 @@ return unsubscribe
     setTransitioning(true)
 
     try {
-      const updatedRide = await updateRideStatus(activeRide.id, 'completed', driverId)
+      const updatedRide = await updateRideStatus(activeRide.id, 'completed')
       completedRideIdRef.current = activeRide.id
       setActiveRide(updatedRide)
       setPhase('completed')
@@ -1033,14 +1191,17 @@ const displayedDriver = driverProfile ?? demoDriver
     setShowNotifications(false)
 
     try {
-      const ride = await fetchRideById(id)
+      const pending = await fetchPendingOffer(driverId)
 
-      if (ride && ride.status === 'requested' && !activeRideRef.current) {
-        setRequest(ride)
+      if (pending && !activeRideRef.current) {
+        handledOfferIdsRef.current.add(pending.offer.id)
+        setRequestError('')
+        setPendingOffer(pending)
+        setRequest(pending.ride)
         setPhase('incoming_request')
       }
     } catch (error) {
-      console.error('Unable to open ride request:', error)
+      console.error('Unable to open ride offer:', error)
     }
   }
 
@@ -1330,9 +1491,15 @@ const renderOfflineState = () => (
         <span className="state-badge offline-badge">OFFLINE</span>
       </div>
 
+      {presenceError ? (
+        <p className="form-error-message" role="alert">
+          {presenceError}
+        </p>
+      ) : null}
+
       <div className="work-cta">
         <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
-          Go Online
+          {transitioning ? 'Going Online...' : 'Go Online'}
         </button>
         <p className="work-cta-hint">Nearby passengers will be able to request you as soon as you go online.</p>
       </div>
@@ -1344,17 +1511,62 @@ const renderOnlineState = () => (
       <div className="state-heading">
         <div>
           <p className="section-label">RIDE QUEUE</p>
-          <h3>Waiting for your next ride</h3>
-          <p>Your vehicle is available and ready to serve passengers.</p>
+          <h3>{driverIsAvailable ? 'Waiting for your next ride' : 'Availability paused'}</h3>
+          <p>
+            {driverIsAvailable
+              ? 'Your vehicle is available and ready to serve passengers.'
+              : 'You will keep receiving ride offers only when you mark yourself available.'}
+          </p>
         </div>
-        <span className="state-badge online-badge">ONLINE</span>
+        <span className={`state-badge ${driverIsAvailable ? 'online-badge' : 'paused-badge'}`}>
+          {driverIsAvailable ? 'ONLINE' : 'PAUSED'}
+        </span>
       </div>
 
-<div className="waiting-box">
-        <span className="search-dots" aria-hidden="true"><i></i><i></i><i></i></span>
-        <div>
-          <strong>Looking for nearby requests...</strong>
-          <span>Keep the dashboard open while you're available.</span>
+{driverIsAvailable ? (
+        <div className="waiting-box">
+          <span className="search-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+          <div>
+            <strong>Looking for nearby requests...</strong>
+            <span>Keep the dashboard open while you're available.</span>
+          </div>
+        </div>
+      ) : null}
+
+      {presenceError ? (
+        <p className="form-error-message" role="alert">
+          {presenceError}
+        </p>
+      ) : null}
+
+      <div className="presence-controls">
+        <div className="presence-control">
+          <span className="presence-label">
+            Availability
+            <small className={`presence-location-status is-${locationStatus}`}>
+              Location {locationStatus}
+            </small>
+          </span>
+          <button
+            type="button"
+            className={driverIsAvailable ? 'secondary-action is-active' : 'secondary-action'}
+            onClick={() => void handleToggleAvailability(!driverIsAvailable)}
+            disabled={transitioning}
+          >
+            {driverIsAvailable ? 'Available' : 'Unavailable'}
+          </button>
+        </div>
+
+        <div className="presence-control">
+          <span className="presence-label">Auto accept offers</span>
+          <button
+            type="button"
+            className={driverAutoAccept ? 'secondary-action is-active' : 'secondary-action'}
+            onClick={() => void handleToggleAutoAccept(!driverAutoAccept)}
+            disabled={transitioning}
+          >
+            {driverAutoAccept ? 'Auto accept ON' : 'Auto accept OFF'}
+          </button>
         </div>
       </div>
 
@@ -1442,11 +1654,25 @@ const renderOnlineState = () => (
         {renderPassengerReputationRow()}
       </div>
 
+      {requestError ? (
+        <p className="form-error-message" role="alert">
+          {requestError}
+        </p>
+      ) : null}
+
+      {pendingOffer ? (
+        <p className="offer-countdown" role="status" aria-live="polite">
+          {offerExpired
+            ? 'This offer has expired.'
+            : `Offer expires in ${offerSecondsLeft}s`}
+        </p>
+      ) : null}
+
 <div className="action-row request-actions">
-        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning}>
-          Accept Ride
+        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning || offerExpired}>
+          {offerExpired ? 'Offer Expired' : 'Accept Ride'}
         </button>
-        <button type="button" className="secondary-action" onClick={handleDecline} disabled={transitioning}>
+        <button type="button" className="secondary-action" onClick={handleDecline} disabled={transitioning || offerExpired}>
           Decline
         </button>
       </div>

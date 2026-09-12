@@ -5,6 +5,7 @@ export type RideStatus =
   | 'in_progress'
   | 'completed'
   | 'cancelled'
+  | 'no_driver'
 
 export type Ride = {
   id: string
