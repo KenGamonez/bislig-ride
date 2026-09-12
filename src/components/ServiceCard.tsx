@@ -7,7 +7,7 @@ type ServiceCardProps = {
   href?: string
   onSelect?: () => void
   variant?: 'secondary' | 'primary'
-  badge?: string
+  cta?: string
 }
 
 export function ServiceCard({
@@ -17,7 +17,7 @@ export function ServiceCard({
   href,
   onSelect,
   variant = 'secondary',
-  badge,
+  cta,
 }: ServiceCardProps) {
   const className =
     variant === 'primary'
@@ -32,9 +32,14 @@ export function ServiceCard({
       <span className="service-card-copy">
         <strong>{title}</strong>
         <small>{description}</small>
+        {cta ? (
+          <span className="service-card-cta">
+            <span className="service-card-cta-label">{cta}</span>
+            <span className="service-card-cta-arrow" aria-hidden="true">→</span>
+          </span>
+        ) : null}
       </span>
-      <span className="service-card-arrow" aria-hidden="true">→</span>
-      {badge ? <span className="service-card-badge">{badge}</span> : null}
+      {cta ? null : <span className="service-card-arrow" aria-hidden="true">→</span>}
     </>
   )
 

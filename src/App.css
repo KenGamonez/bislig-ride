@@ -9770,7 +9770,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   SERVICE LAUNCHER â€” app home (service dashboard + discovery)
+   HOMEPAGE — premium local mobility platform hub
+   (hero → services → discover → local → final CTA)
    Scoped to the launcher home only; booking layout untouched.
    ========================================================= */
 
@@ -9780,21 +9781,21 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .service-dashboard {
   display: grid;
-  gap: 28px;
+  gap: 26px;
 }
 
-/* --- Compact greeting hero --- */
-.service-greeting {
+/* --- Hero — compact brand statement --- */
+.home-hero {
   position: relative;
   overflow: hidden;
-  padding: 30px 28px 28px;
+  padding: 32px 30px 30px;
   background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
   border: 1px solid var(--color-border-dark);
   border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
   color: var(--color-white);
 }
 
-.service-greeting::before {
+.home-hero::before {
   content: '';
   position: absolute;
   top: -120px;
@@ -9807,9 +9808,12 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   pointer-events: none;
 }
 
-.service-greeting .eyebrow {
+.home-hero > * {
   position: relative;
   z-index: 1;
+}
+
+.home-hero .eyebrow {
   display: flex;
   align-items: center;
   gap: 8px;
@@ -9819,16 +9823,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   letter-spacing: 0.22em;
 }
 
-.service-greeting .eyebrow::after {
+.home-hero .eyebrow::after {
   content: '';
   width: 26px;
   height: 1px;
   background: rgba(0, 232, 138, 0.45);
 }
 
-.service-greeting h1 {
-  position: relative;
-  z-index: 1;
+.home-hero h1 {
   margin: 0;
   font-size: clamp(2rem, 4vw, 2.9rem);
   line-height: 1.04;
@@ -9837,20 +9839,97 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-white);
 }
 
-.service-greeting .hero-accent {
+.home-hero .hero-accent {
   color: var(--color-green);
   display: block;
 }
 
-.service-greeting .subtitle {
-  position: relative;
-  z-index: 1;
-  margin: 10px 0 0;
+.home-hero .subtitle {
+  margin: 12px 0 0;
   color: rgba(255, 255, 255, 0.66);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 34rem;
 }
 
-/* --- Service dashboard grid --- */
+.home-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.home-primary-cta {
+  min-height: 48px;
+  padding: 0 24px;
+  background: var(--color-green);
+  border-color: var(--color-green);
+  color: var(--color-black);
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.home-primary-cta:hover,
+.home-primary-cta:focus-visible {
+  background: var(--color-green-bright);
+  border-color: var(--color-green-bright);
+  color: var(--color-black);
+  box-shadow: 0 2px 10px rgba(0, 232, 138, 0.25);
+}
+
+.home-secondary-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 18px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  border-radius: var(--radius-pill);
+  color: var(--color-white);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  transition: border-color var(--transition), background var(--transition);
+}
+
+.home-secondary-link:hover,
+.home-secondary-link:focus-visible {
+  border-color: rgba(0, 232, 138, 0.7);
+  background: rgba(0, 232, 138, 0.08);
+  color: var(--color-white);
+}
+
+/* --- Section heading — editorial rhythm --- */
+.home-section-heading {
+  display: grid;
+  gap: 6px;
+}
+
+.home-section-heading .eyebrow {
+  margin-bottom: 0;
+  color: var(--color-green-deep);
+}
+
+.home-section-heading h2 {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.6vw, 1.8rem);
+  line-height: 1.22;
+  letter-spacing: -0.03em;
+}
+
+.home-section-heading h2 .hero-accent {
+  color: var(--color-green-deep);
+}
+
+/* --- Services — Ride Now dominant, supporting grid --- */
+.home-services {
+  display: grid;
+  gap: 14px;
+  scroll-margin-top: 96px;
+}
+
 .service-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -9875,7 +9954,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .service-card:hover {
-  border-color: var(--color-gray-300);
+  border-color: var(--color-green-deep);
   box-shadow: var(--shadow-xs);
   transform: translateY(-1px);
 }
@@ -9915,6 +9994,32 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--text-secondary);
 }
 
+.service-card-cta {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin-top: 7px;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-green-deep);
+}
+
+.service-card-cta-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.service-card-cta-arrow {
+  transition: transform var(--transition);
+}
+
+.service-card:hover .service-card-cta-arrow {
+  transform: translateX(3px);
+}
+
 .service-card-arrow {
   flex-shrink: 0;
   margin-left: auto;
@@ -9928,15 +10033,15 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   transform: translateX(3px);
 }
 
-/* Primary â€” Ride Now */
+/* Ride Now — dominant dark tile */
 .service-card--primary {
   grid-column: 1 / -1;
   align-items: center;
-  gap: 14px;
-  padding: 22px 20px;
+  gap: 16px;
+  padding: 24px 22px;
   background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
   border: 1px solid var(--color-green);
-  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.28), 0 0 22px rgba(0, 232, 138, 0.16);
+  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.28), 0 0 22px rgba(0, 232, 138, 0.1);
 }
 
 .service-card--primary:hover {
@@ -9949,62 +10054,29 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.35);
 }
 
-.service-card--primary .service-card-copy {
-  padding-right: 58px;
-}
-
 .service-card--primary .service-card-copy strong {
   color: var(--color-white);
-  font-size: 1.05rem;
+  font-size: 1.1rem;
 }
 
 .service-card--primary .service-card-copy small {
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.62);
 }
 
-.service-card--primary .service-card-arrow {
-  color: var(--color-green);
-}
-
-.service-card-badge {
-  position: absolute;
-  top: 10px;
-  right: 12px;
-  padding: 3px 8px;
+.service-card--primary .service-card-cta {
+  margin-top: 10px;
+  padding: 8px 16px;
+  align-self: flex-start;
   border-radius: var(--radius-pill);
-  background: rgba(0, 232, 138, 0.16);
-  color: var(--color-green);
-  font-size: 0.56rem;
-  font-weight: 800;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
+  background: var(--color-green);
+  color: var(--color-black);
+  font-size: 0.68rem;
 }
 
-/* --- Discover carousel --- */
+/* --- Discover — editorial value section --- */
 .discover-section {
   display: grid;
   gap: 14px;
-}
-
-.discover-heading {
-  display: grid;
-  gap: 6px;
-}
-
-.discover-heading .eyebrow {
-  margin-bottom: 0;
-  color: var(--color-green-deep);
-}
-
-.discover-heading h2 {
-  margin: 0;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.08;
-  letter-spacing: -0.03em;
-}
-
-.discover-heading .hero-accent {
-  color: var(--color-green-deep);
 }
 
 .discover-carousel {
@@ -10030,6 +10102,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   gap: 8px;
   padding: 20px 18px;
   border: 1px solid var(--color-gray-200);
+  border-top: 2px solid var(--color-gray-900);
   border-radius: var(--radius-md);
   background: var(--color-white);
   color: var(--text-primary);
@@ -10041,29 +10114,30 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .discover-card:hover {
-  border-color: var(--color-gray-300);
+  border-color: var(--color-green-deep);
+  border-top-color: var(--color-green);
   box-shadow: var(--shadow-xs);
   transform: translateY(-1px);
 }
 
 .discover-kicker {
-  font-size: 0.62rem;
+  font-size: 0.6rem;
   font-weight: 800;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--color-green-deep);
 }
 
 .discover-card h3 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.12rem;
   line-height: 1.2;
   letter-spacing: -0.02em;
 }
 
 .discover-card p {
   margin: 0;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   line-height: 1.5;
   color: var(--text-secondary);
 }
@@ -10072,9 +10146,12 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   display: inline-flex;
   align-items: center;
   gap: 7px;
-  margin-top: 6px;
-  font-size: 0.78rem;
+  margin-top: auto;
+  padding-top: 10px;
+  font-size: 0.66rem;
   font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
   color: var(--color-black-soft);
 }
 
@@ -10116,15 +10193,126 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   outline-offset: 2px;
 }
 
-/* --- Desktop â€” two-row service layout --- */
+/* --- Local / trust — subtle metadata row --- */
+.home-local {
+  display: grid;
+  gap: 8px;
+  padding-top: 24px;
+  border-top: 1px solid var(--color-gray-150);
+}
+
+.home-local .eyebrow {
+  margin-bottom: 2px;
+  color: var(--color-green-deep);
+}
+
+.home-local h2 {
+  margin: 0;
+  font-size: clamp(1.2rem, 2.6vw, 1.6rem);
+  line-height: 1.25;
+  letter-spacing: -0.02em;
+  max-width: 46rem;
+}
+
+.home-local-badges {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 0;
+  padding: 0;
+}
+
+.home-local-badges li {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 6px 12px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-pill);
+  background: var(--color-white);
+  color: var(--color-gray-700);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.home-local-badges li::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--color-green-deep);
+}
+
+/* --- Final CTA — strong, compact bookend --- */
+.home-final-cta {
+  position: relative;
+  overflow: hidden;
+  padding: 36px 32px;
+  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
+  border: 1px solid var(--color-border-dark);
+  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
+  color: var(--color-white);
+}
+
+.home-final-cta::before {
+  content: '';
+  position: absolute;
+  top: -120px;
+  right: -80px;
+  width: 260px;
+  height: 260px;
+  border: 1px solid rgba(0, 232, 138, 0.18);
+  box-shadow: 0 0 0 40px rgba(0, 232, 138, 0.04), 0 0 0 84px rgba(0, 232, 138, 0.03);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.home-final-cta > * {
+  position: relative;
+  z-index: 1;
+}
+
+.home-final-cta h2 {
+  margin: 0;
+  font-size: clamp(1.6rem, 3.4vw, 2.3rem);
+  line-height: 1.08;
+  letter-spacing: -0.035em;
+  text-transform: uppercase;
+  color: var(--color-white);
+}
+
+.home-final-cta p {
+  margin: 10px 0 0;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  max-width: 30rem;
+}
+
+.home-final-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+/* --- Desktop — refined rhythm and hierarchy --- */
 @media (min-width: 768px) {
   .service-dashboard {
-    gap: 32px;
+    gap: 34px;
   }
 
-  .service-greeting,
-  .service-grid,
-  .discover-section {
+  .home-hero {
+    padding: 40px 38px 36px;
+  }
+
+  .home-services,
+  .home-local,
+  .home-final-cta {
     margin: 0;
   }
 
@@ -10137,16 +10325,20 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     grid-column: span 2;
   }
 
+  .home-final-cta {
+    padding: 42px 40px;
+  }
+
   .discover-carousel {
     margin-left: -6px;
     padding-left: 6px;
   }
 }
 
-/* --- Mobile â€” app-first composition --- */
+/* --- Mobile — app-first composition --- */
 @media (max-width: 767px) {
   .service-launcher-layout {
-    padding-top: 12px;
+    padding-top: 10px;
     padding-bottom: calc(120px + env(safe-area-inset-bottom));
   }
 
@@ -10154,28 +10346,47 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     gap: 20px;
   }
 
-  .service-greeting {
+  .home-hero {
     margin: 0 12px;
     padding: 20px 18px 18px;
     border-radius: var(--radius-md);
   }
 
-  .service-greeting .eyebrow {
+  .home-hero .eyebrow {
     margin-bottom: 8px;
   }
 
-  .service-greeting h1 {
-    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  .home-hero h1 {
+    font-size: clamp(1.4rem, 6vw, 1.8rem);
   }
 
-  .service-greeting .subtitle {
-    font-size: 0.78rem;
+  .home-hero .subtitle {
+    font-size: 0.8rem;
   }
 
-  .service-grid {
+  .home-hero-actions {
+    gap: 8px;
+    margin-top: 18px;
+  }
+
+  .home-primary-cta {
+    padding: 0 18px;
+    font-size: 0.8rem;
+  }
+
+  .home-secondary-link {
+    padding: 0 16px;
+    font-size: 0.72rem;
+  }
+
+  .home-services {
+    gap: 12px;
     margin: 0 12px;
+  }
+
+  .home-services .service-grid {
+    margin: 0;
     gap: 10px;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .service-card {
@@ -10201,12 +10412,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     padding: 18px 16px;
   }
 
-  .service-card--primary .service-card-copy {
-    padding-right: 52px;
-  }
-
   .service-card--primary .service-card-copy strong {
-    font-size: 0.95rem;
+    font-size: 0.98rem;
   }
 
   .discover-section {
@@ -10217,19 +10424,71 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   .discover-card {
     flex-basis: min(78vw, 320px);
   }
+
+  .home-local {
+    margin: 0 12px;
+  }
+
+  .home-final-cta {
+    margin: 0 12px;
+    padding: 26px 20px;
+  }
+
+  .home-final-cta h2 {
+    font-size: clamp(1.35rem, 6vw, 1.7rem);
+  }
+
+  .home-final-cta p {
+    font-size: 0.8rem;
+  }
+
+  .home-final-actions {
+    gap: 8px;
+    margin-top: 18px;
+  }
 }
 
 @media (max-width: 420px) {
-  .service-greeting h1 {
+  .home-hero h1 {
     font-size: clamp(1.25rem, 6.5vw, 1.5rem);
   }
 
-  .service-card--primary .service-card-copy small {
-    display: none;
+  .home-hero-actions,
+  .home-final-actions {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .service-card-copy small {
-    font-size: 0.62rem;
+  .home-hero-actions .home-primary-cta,
+  .home-hero-actions .home-secondary-link,
+  .home-final-actions .home-primary-cta,
+  .home-final-actions .home-secondary-link {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .home-primary-cta,
+  .home-final-cta .home-primary-cta {
+    padding: 0 16px;
+    min-height: 48px;
+  }
+
+  .home-secondary-link {
+    min-height: 44px;
+  }
+
+  .home-final-cta .home-secondary-link {
+    min-height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .home-hero,
+  .home-final-cta,
+  .service-card,
+  .discover-card {
+    transition: none !important;
+    transform: none !important;
   }
 }
 
