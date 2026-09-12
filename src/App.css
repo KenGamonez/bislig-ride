@@ -10242,7 +10242,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   width: min(100%, 780px);
 }
 
-.pasabuy-hero .pasabuy-descriptor {
+.pasabuy-hero .pasabuy-descriptor,
+.pad-hero .pad-descriptor {
   position: relative;
   z-index: 1;
   margin-top: 16px;
@@ -11089,4 +11090,60 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   .driver-dash-header::after {
     transition: none !important;
   }
+}
+
+/* PA-DELIVER — premium 3-step delivery flow
+   (rides the shared flow-* system used by Pasabuy / Pakyawan) */
+
+.pad-route {
+  display: grid;
+}
+
+.pad-route-stop {
+  display: grid;
+  grid-template-columns: 14px minmax(0, 1fr);
+  gap: 12px;
+  align-items: flex-start;
+}
+
+.pad-route-stop .field-block {
+  min-width: 0;
+}
+
+.pad-route-dot {
+  width: 12px;
+  height: 12px;
+  margin-top: 6px;
+  border-radius: 50%;
+}
+
+.pad-route-dot.is-pickup {
+  background: var(--color-green);
+  box-shadow: 0 0 0 4px rgba(0, 232, 138, 0.14);
+}
+
+.pad-route-dot.is-delivery {
+  background: var(--color-black);
+  box-shadow: 0 0 0 4px rgba(7, 16, 18, 0.07);
+}
+
+.pad-route-leg {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  height: 34px;
+  padding-left: 7px;
+  color: var(--color-gray-400);
+  pointer-events: none;
+}
+
+.pad-route-leg-rail {
+  width: 1px;
+  height: 18px;
+  background: var(--color-gray-300);
+}
+
+.pad-route-leg svg {
+  flex-shrink: 0;
 }
