@@ -6,9 +6,10 @@ export type DriverRecord = {
   phone: string
   email: string | null
   profile_photo_url: string | null
-  vehicle_type: string
+vehicle_type: string
   vehicle_model: string
   plate_number: string
+  vehicle_capacity: number | null
 status: 'active' | 'inactive'
   availability: 'offline' | 'online' | 'busy'
   can_accept_pakyawan: boolean
@@ -38,6 +39,7 @@ export async function createDriver(driver: {
   vehicle_type: string
   vehicle_model: string
   plate_number: string
+  vehicle_capacity?: number | null
   status?: 'active' | 'inactive'
   availability?: 'offline' | 'online' | 'busy'
   can_accept_pakyawan?: boolean
@@ -66,6 +68,7 @@ export async function updateDriver(
     | 'email'
     | 'vehicle_type'
     | 'vehicle_model'
+    | 'vehicle_capacity'
     | 'plate_number'
     | 'status'
     | 'availability'
@@ -93,6 +96,7 @@ export type DriverProfileView = {
   vehicle_type: string | null
   vehicle_model: string | null
   vehicle_color: string | null
+  vehicle_capacity: number | null
   plate_number: string | null
   rating_average: number | null
   total_ratings: number | null

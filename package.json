@@ -12,6 +12,7 @@
     "test:driver-removal": "node scripts/driver-removal-check.ts",
     "test:driver-application": "node scripts/application-vehicle-type-check.ts",
     "test:gps": "node scripts/gps-flow-check.ts",
+    "test:vehicle": "node scripts/vehicle-dispatch-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

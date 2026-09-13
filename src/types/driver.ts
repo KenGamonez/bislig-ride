@@ -10,6 +10,7 @@ export type DriverProfile = {
   vehicle_type: string | null
   vehicle_model: string | null
   vehicle_color?: string | null
+  vehicle_capacity: number | null
   plate_number: string | null
   rating_average?: number | null
   total_ratings?: number | null
@@ -29,6 +30,7 @@ export type DriverProfileInput = {
   vehicle_type?: string | null
   vehicle_model?: string | null
   vehicle_color?: string | null
+  vehicle_capacity?: number | null
   plate_number?: string | null
   status?: DriverStatus
   availability?: DriverAvailability

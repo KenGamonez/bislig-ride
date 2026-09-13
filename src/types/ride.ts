@@ -1,3 +1,5 @@
+export type RequestedVehicleType = 'motorcycle' | 'umbak' | 'tricycle'
+
 export type RideStatus =
   | 'requested'
   | 'accepted'
@@ -23,6 +25,7 @@ export type Ride = {
   passenger_type: string
   destination_mode: 'same' | 'multiple'
   destination_stops: string[] | null
+  vehicle_type: RequestedVehicleType | null
   fare_cents: number | null
   fare_source: 'matrix' | 'distance' | null
   status: RideStatus

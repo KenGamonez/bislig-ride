@@ -24,6 +24,7 @@ import {
   validatePasswordStrength,
 } from '../lib/driverAccounts'
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
+import { formatVehicleCapacity, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
 import { supabase } from '../lib/supabase'
@@ -47,6 +48,7 @@ type DriverDraft = {
   vehicleType: string
   vehicleModel: string
   plateNumber: string
+  vehicleCapacity: number
   status: DriverStatus
   availability: DriverAvailability
   createAccount: boolean
@@ -76,9 +78,10 @@ const emptyDriverDraft: DriverDraft = {
   name: '',
   phone: '',
   email: '',
-  vehicleType: 'Motorbike',
+  vehicleType: 'motorcycle',
   vehicleModel: '',
   plateNumber: '',
+  vehicleCapacity: 1,
   status: 'Active',
   availability: 'Offline',
   createAccount: true,
@@ -87,6 +90,120 @@ const emptyDriverDraft: DriverDraft = {
   initialPassword: '',
   photo: null,
   photoPreviewUrl: '',
+}
+
+const DriverVehicleEditor: React.FC<{
+  driver: AdminDriver
+  onSaved: (updated: DriverRecord) => void
+  onError: (message: string) => void
+}> = ({ driver, onSaved, onError }) => {
+  const [draft, setDraft] = useState<{ vehicleType: string; vehicleCapacity: number | null }>({
+    vehicleType: driver.vehicleType,
+    vehicleCapacity: driver.vehicleCapacity,
+  })
+  const [isSaving, setIsSaving] = useState(false)
+
+  const handleSave = async () => {
+    setIsSaving(true)
+    onError('')
+
+    try {
+      const updated = await updateDriver(driver.id, {
+        vehicle_type: draft.vehicleType,
+        vehicle_capacity: draft.vehicleCapacity,
+      })
+      onSaved(updated)
+    } catch (error) {
+      console.error('Unable to update driver vehicle info:', error)
+      onError('Unable to update vehicle info. Please try again.')
+      setIsSaving(false)
+    }
+  }
+
+  return (
+    <div className="manage-account-box">
+      <div className="panel-header-row">
+        <h4>Vehicle & capacity</h4>
+      </div>
+
+      <div className="panel-form">
+        <label className="field-block">
+          <span className="field-label">Vehicle Type</span>
+          <select
+            className="input-field"
+            value={draft.vehicleType}
+            onChange={(event) => {
+              const vehicle = event.target.value as VehicleType
+              setDraft((current) => ({
+                ...current,
+                vehicleType: vehicle,
+                vehicleCapacity: vehicle === 'motorcycle' ? 1 : current.vehicleCapacity,
+              }))
+            }}
+          >
+            {VEHICLE_TYPES.map((vehicle) => (
+              <option key={vehicle} value={vehicle}>
+                {VEHICLE_LABELS[vehicle]}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        {draft.vehicleType === 'motorcycle' ? (
+          <p className="muted-copy form-note">
+            Motorcycle rides carry exactly 1 passenger.
+          </p>
+        ) : (
+          <label className="field-block">
+            <span className="field-label">Passenger Capacity</span>
+            <select
+              className="input-field"
+              value={draft.vehicleCapacity ?? ''}
+              onChange={(event) => {
+                const capacity = event.target.value === '' ? null : Number.parseInt(event.target.value, 10)
+                setDraft((current) => ({ ...current, vehicleCapacity: capacity }))
+              }}
+            >
+              <option value="">Not set</option>
+              {[1, 2, 3, 4, 5].map((capacity) => (
+                <option key={capacity} value={capacity}>
+                  {capacity === 5
+                    ? '5 passengers (5+)'
+                    : `${capacity} ${capacity === 1 ? 'passenger' : 'passengers'}`}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+
+        <div className="form-actions">
+          <button
+            type="button"
+            className="primary-action compact-button"
+            onClick={() => void handleSave()}
+            disabled={isSaving}
+          >
+            {isSaving ? 'Saving...' : 'Save Vehicle'}
+          </button>
+          <button
+            type="button"
+            className="secondary-action compact-button"
+            onClick={() => {
+              setDraft({ vehicleType: driver.vehicleType, vehicleCapacity: driver.vehicleCapacity })
+            }}
+            disabled={isSaving}
+          >
+            Reset
+          </button>
+        </div>
+      </div>
+
+      <p className="muted-copy">
+        {formatVehicleCapacity(driver.vehicleCapacity)}
+        {!driver.vehicleCapacity ? ' — dispatch will skip this driver until capacity is set.' : ''}
+      </p>
+    </div>
+  )
 }
 
 const emptyManageDraft: ManageDraft = {
@@ -198,6 +315,7 @@ export function AdminExperience({
     vehicleType: driver.vehicle_type,
     vehicleModel: driver.vehicle_model,
     plateNumber: driver.plate_number,
+    vehicleCapacity: driver.vehicle_capacity ?? null,
     status: driver.status === 'active' ? 'Active' : 'Inactive',
     availability:
       driver.availability === 'online'
@@ -556,6 +674,7 @@ useEffect(() => {
           vehicle_type: driverDraft.vehicleType,
           vehicle_model: driverDraft.vehicleModel.trim(),
           plate_number: driverDraft.plateNumber.trim(),
+          vehicle_capacity: driverDraft.vehicleCapacity,
           profile_photo_url:
             uploadedPhotoUrl ??
             (driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
@@ -597,6 +716,7 @@ useEffect(() => {
         vehicle_type: driverDraft.vehicleType,
         vehicle_model: driverDraft.vehicleModel.trim(),
         plate_number: driverDraft.plateNumber.trim(),
+        vehicle_capacity: driverDraft.vehicleCapacity,
         profile_photo_url:
           uploadedPhotoUrl ??
           (driverDraft.name.trim().toLowerCase() === 'san jay monteroso'
@@ -1070,11 +1190,50 @@ useEffect(() => {
 
                   <label className="field-block">
                     <span className="field-label">Vehicle Type</span>
-                    <input
+                    <select
                       className="input-field"
                       value={driverDraft.vehicleType}
-                      onChange={(event) => setDriverDraft((current) => ({ ...current, vehicleType: event.target.value }))}
-                    />
+                      onChange={(event) => {
+                        const vehicle = event.target.value as VehicleType
+                        setDriverDraft((current) => ({
+                          ...current,
+                          vehicleType: vehicle,
+                          vehicleCapacity: vehicle === 'motorcycle' ? 1 : current.vehicleCapacity,
+                        }))
+                      }}
+                    >
+                      {VEHICLE_TYPES.map((vehicle) => (
+                        <option key={vehicle} value={vehicle}>
+                          {VEHICLE_LABELS[vehicle]}
+                        </option>
+                      ))}
+                    </select>
+                  </label>
+
+                  <label className="field-block">
+                    <span className="field-label">Passenger Capacity</span>
+                    {driverDraft.vehicleType === 'motorcycle' ? (
+                      <p className="muted-copy form-note">
+                        Motorcycle rides carry exactly 1 passenger.
+                      </p>
+                    ) : (
+                      <select
+                        className="input-field"
+                        value={driverDraft.vehicleCapacity}
+                        onChange={(event) =>
+                          setDriverDraft((current) => ({
+                            ...current,
+                            vehicleCapacity: Number.parseInt(event.target.value, 10),
+                          }))
+                        }
+                      >
+                        {[1, 2, 3, 4, 5].map((capacity) => (
+                          <option key={capacity} value={capacity}>
+                            {capacity === 5 ? '5 passengers (5+)' : `${capacity} ${capacity === 1 ? 'passenger' : 'passengers'}`}
+                          </option>
+                        ))}
+                      </select>
+                    )}
                   </label>
 
                   <label className="field-block">
@@ -1196,7 +1355,7 @@ useEffect(() => {
                           </div>
                         </td>
                         <td>{driver.phone}</td>
-                        <td>{driver.vehicleType}<br />{driver.vehicleModel}</td>
+                        <td>{driver.vehicleType}<br />{driver.vehicleModel}<br /><span className="muted-copy">{driver.vehicleCapacity ? formatVehicleCapacity(driver.vehicleCapacity) : 'Capacity not set'}</span></td>
                         <td>{driver.plateNumber}</td>
                         <td>
                           <span className={driver.status === 'Active' ? 'status-pill online' : 'status-pill offline'}>
@@ -1272,6 +1431,7 @@ useEffect(() => {
                   <div><span>Username</span><strong>{selectedDriver.username || 'No login'}</strong></div>
                   <div><span>Vehicle</span><strong>{selectedDriver.vehicleType}</strong></div>
                   <div><span>Model</span><strong>{selectedDriver.vehicleModel}</strong></div>
+                  <div><span>Capacity</span><strong>{formatVehicleCapacity(selectedDriver.vehicleCapacity)}</strong></div>
                   <div><span>Plate</span><strong>{selectedDriver.plateNumber}</strong></div>
                   <div><span>Status</span><strong>{selectedDriver.status}</strong></div>
                   <div><span>Availability</span><strong>{selectedDriver.availability}</strong></div>
@@ -1287,6 +1447,18 @@ useEffect(() => {
                   </strong></div>
                   <div><span>Recent rides</span><strong>{selectedDriver.recentRides.length}</strong></div>
                 </div>
+
+                <DriverVehicleEditor
+                  key={selectedDriver.id}
+                  driver={selectedDriver}
+                  onSaved={(updated) => {
+                    const mappedDriver = mapDriverRecord(updated)
+                    setDrivers((current) =>
+                      current.map((driver) => driver.id === selectedDriver.id ? mappedDriver : driver),
+                    )
+                  }}
+                  onError={(message) => setDriverError(message)}
+                />
 
                 <div className="manage-account-box">
                   <div className="panel-header-row">

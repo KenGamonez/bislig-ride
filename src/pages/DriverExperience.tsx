@@ -8,6 +8,7 @@ import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
 import { PASSWORD_HELP_TEXT, validatePasswordStrength } from '../lib/driverAccounts'
 import { formatCentavos, MULTIPLE_DESTINATIONS_FARE_NOTE } from '../lib/fare'
+import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, fetchAvailablePakyawanBookings } from '../lib/scheduledBookings'
@@ -82,6 +83,7 @@ type DriverSummaryProfile = {
   vehicleType: string
   vehicleModel: string
   plateNumber: string
+  vehicleCapacity: number | null
   email: string | null
   username: string | null
 }
@@ -312,7 +314,7 @@ export function DriverExperience({
 
 const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, status, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
+        .select('id, status, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, vehicle_capacity, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -341,6 +343,7 @@ const { data: driver, error: driverError } = await supabase
           vehicleType: driver.vehicle_type ?? demoDriver.vehicleType,
           vehicleModel: driver.vehicle_model ?? demoDriver.vehicleModel,
           plateNumber: driver.plate_number ?? demoDriver.plateNumber,
+          vehicleCapacity: driver.vehicle_capacity ?? null,
           email: driver.email,
           username: driver.username,
         })
@@ -1458,6 +1461,7 @@ const renderSummary = () => (
             </p>
             <p className="driver-hero-vehicle">
               {displayedDriver.vehicleType} · {displayedDriver.vehicleModel} · {displayedDriver.plateNumber}
+              {driverProfile?.vehicleCapacity ? ` · ${formatVehicleCapacity(driverProfile.vehicleCapacity)}` : ''}
             </p>
             {driverProfile?.username ? (
               <p className="driver-hero-signed">Signed in as <strong>{driverProfile.username}</strong></p>
@@ -1660,6 +1664,7 @@ const renderOnlineState = () => (
 
 <div className="ride-info-grid">
         <div><span>Passenger</span><strong>{request?.customer_name}</strong></div>
+        <div><span>Vehicle</span><strong>{formatVehicleType(request?.vehicle_type)}</strong></div>
         <div><span>Passengers</span><strong>{request?.passenger_count}</strong></div>
         <div><span>Passenger type</span><strong>{request?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Phone</span><strong>{request?.customer_phone}</strong></div>
@@ -1724,6 +1729,7 @@ const renderOnlineState = () => (
       {renderRideStops(activeRide)}
 
       <div className="ride-info-grid">
+        <div><span>Vehicle</span><strong>{formatVehicleType(activeRide?.vehicle_type)}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
         <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
@@ -1775,6 +1781,7 @@ const renderOnlineState = () => (
 
 <div className="ride-info-grid">
         <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
+        <div><span>Vehicle</span><strong>{formatVehicleType(activeRide?.vehicle_type)}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
         <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
@@ -1832,6 +1839,7 @@ const renderOnlineState = () => (
       {renderRideStops(activeRide)}
 
       <div className="ride-info-grid">
+        <div><span>Vehicle</span><strong>{formatVehicleType(activeRide?.vehicle_type)}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
         <div><span>Passenger type</span><strong>{activeRide?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
@@ -1878,6 +1886,7 @@ const renderOnlineState = () => (
 
 <div className="ride-info-grid">
         <div><span>Passenger</span><strong>{activeRide?.customer_name}</strong></div>
+        <div><span>Vehicle</span><strong>{formatVehicleType(activeRide?.vehicle_type)}</strong></div>
         <div><span>Passengers</span><strong>{activeRide?.passenger_count}</strong></div>
         <div><span>Fare</span><strong>{fareDisplayFor(activeRide)}</strong></div>
         <div><span>Payment</span><strong>Cash or GCash</strong></div>

@@ -12,6 +12,14 @@ import { AnnouncementTicker } from '../components/AnnouncementTicker'
 import { WeatherWidget } from '../components/WeatherWidget'
 import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import {
+  formatVehicleType,
+  passengerCountOptionsFor,
+  type PassengerCountOption,
+  VEHICLE_LABELS,
+  VEHICLE_TYPES,
+  type VehicleType,
+} from '../lib/vehicle'
+import {
   computeFare,
   DEFAULT_FARE_LEVEL,
   formatCentavos,
@@ -28,16 +36,13 @@ import { dispatchRide } from '../lib/dispatch'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
 import type { Ride, RideCancellation } from '../types/ride'
 
-type PassengerCountOption = '1 passenger' | '2 passengers' | '3 passengers' | '4 passengers' | '5+ passengers'
-
-const passengerCountOptions: PassengerCountOption[] = ['1 passenger', '2 passengers', '3 passengers', '4 passengers', '5+ passengers']
-
 type CustomerFormState = {
   pickup: string
   destination: string
   name: string
   phone: string
   passengerType: DemoPassengerType
+  vehicleType: VehicleType
   passengerCount: PassengerCountOption
   destinationMode: 'same'
 }
@@ -56,6 +61,7 @@ const initialFormState: CustomerFormState = {
   name: '',
   phone: '',
   passengerType: 'Regular',
+  vehicleType: 'motorcycle',
   passengerCount: '1 passenger',
   destinationMode: 'same',
 }
@@ -95,6 +101,7 @@ customer_auth_id: null,
   passenger_type: 'Regular',
   destination_mode: 'same',
   destination_stops: null,
+  vehicle_type: null,
   fare_cents: null,
   fare_source: null,
   status: 'requested',
@@ -282,6 +289,7 @@ const restoreRide = async () => {
       name: formData.name.trim(),
 phone: formData.phone.trim(),
       passengerType: formData.passengerType,
+      vehicleType: formData.vehicleType,
       passengerCount: formData.passengerCount,
       destinationMode: formData.destinationMode,
     }),
@@ -308,7 +316,7 @@ phone: formData.phone.trim(),
     formatPassengerCount(formData.passengerCount) +
     (formValues.name.trim() ? ` · ${formValues.name.trim()}` : '') +
     (formValues.phone.trim() ? ` · ${formValues.phone.trim()}` : '')
-  const preferencesSummary = `${formValues.passengerType}${
+  const preferencesSummary = `${formatVehicleType(formValues.vehicleType)} · ${formValues.passengerType}${
     formValues.passengerType === 'Regular' ? ' ride' : ''
   }`
 
@@ -358,6 +366,18 @@ const handleInput = (field: keyof CustomerFormState, value: string) => {
       return
     }
 
+    if (field === 'vehicleType') {
+      const vehicle = value as VehicleType
+
+      setFormData((current) => ({
+        ...current,
+        vehicleType: vehicle,
+        passengerCount: vehicle === 'motorcycle' ? '1 passenger' : current.passengerCount,
+      }))
+      setValidationErrors((current) => ({ ...current, vehicleType: undefined, passengerCount: undefined }))
+      return
+    }
+
     setFormData((current) => ({ ...current, [field]: value }))
     setValidationErrors((current) => ({ ...current, [field]: undefined }))
   }
@@ -375,6 +395,14 @@ const validateForm = () => {
 
     if (!formValues.name) {
       nextErrors.name = 'Please enter your name.'
+    }
+
+    if (formValues.vehicleType === 'motorcycle') {
+      const parsedCount = Number.parseInt(String(formValues.passengerCount), 10)
+
+      if (!Number.isFinite(parsedCount) || parsedCount > 1) {
+        nextErrors.passengerCount = 'Motorcycle rides carry exactly 1 passenger.'
+      }
     }
 
     setValidationErrors(nextErrors)
@@ -774,6 +802,9 @@ void loadAssignedDriver()
     window.localStorage.removeItem(passengerShareStorageKey(ride.id || ''))
 
     try {
+      const requestedPassengerCount =
+        formValues.vehicleType === 'motorcycle' ? '1 passenger' : formValues.passengerCount
+
       const createdRide = await createRide({
         customer_auth_id: customerAuthId ?? await getCustomerAuthId(),
         customer_name: formValues.name,
@@ -785,7 +816,8 @@ destination_address: formValues.destination,
         destination_lat: null,
         destination_lng: null,
         driver_id: null,
-        passenger_count: formValues.passengerCount,
+        vehicle_type: formValues.vehicleType,
+        passenger_count: requestedPassengerCount,
         passenger_type: formValues.passengerType,
         destination_mode: 'same',
         destination_stops: [],
@@ -1105,19 +1137,41 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
 
         <div className="ride-options-grid">
           <div className="field-block">
-            <span className="field-label">Number of passengers</span>
+            <span className="field-label">Vehicle</span>
             <select
               className="input-field"
-              value={formData.passengerCount}
-              onChange={(event) => handleInput('passengerCount', event.target.value)}
+              value={formData.vehicleType}
+              onChange={(event) => handleInput('vehicleType', event.target.value)}
             >
-              {passengerCountOptions.map((count) => (
-                <option key={count} value={count}>
-                  {count}
+              {VEHICLE_TYPES.map((vehicle) => (
+                <option key={vehicle} value={vehicle}>
+                  {VEHICLE_LABELS[vehicle]}
                 </option>
               ))}
             </select>
           </div>
+
+          {formData.vehicleType === 'motorcycle' ? (
+            <div className="field-block">
+              <span className="field-label">Passengers</span>
+              <p className="field-note">Motorcycle rides carry exactly 1 passenger.</p>
+            </div>
+          ) : (
+            <div className="field-block">
+              <span className="field-label">Number of passengers</span>
+              <select
+                className="input-field"
+                value={formData.passengerCount}
+                onChange={(event) => handleInput('passengerCount', event.target.value)}
+              >
+                {passengerCountOptionsFor(formData.vehicleType).map((count) => (
+                  <option key={count} value={count}>
+                    {count}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
         </div>
       </section>
       </div>
@@ -1278,19 +1332,41 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
             <div className="accordion-panel">
               <div className="accordion-content passenger-fields">
                 <div className="field-block">
-                  <span className="field-label">Number of passengers</span>
+                  <span className="field-label">Vehicle</span>
                   <select
                     className="input-field"
-                    value={formData.passengerCount}
-                    onChange={(event) => handleInput('passengerCount', event.target.value)}
+                    value={formData.vehicleType}
+                    onChange={(event) => handleInput('vehicleType', event.target.value)}
                   >
-                    {passengerCountOptions.map((count) => (
-                      <option key={count} value={count}>
-                        {count}
+                    {VEHICLE_TYPES.map((vehicle) => (
+                      <option key={vehicle} value={vehicle}>
+                        {VEHICLE_LABELS[vehicle]}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {formData.vehicleType === 'motorcycle' ? (
+                  <div className="field-block">
+                    <span className="field-label">Passengers</span>
+                    <p className="field-note">Motorcycle rides carry exactly 1 passenger.</p>
+                  </div>
+                ) : (
+                  <div className="field-block">
+                    <span className="field-label">Number of passengers</span>
+                    <select
+                      className="input-field"
+                      value={formData.passengerCount}
+                      onChange={(event) => handleInput('passengerCount', event.target.value)}
+                    >
+                      {passengerCountOptionsFor(formData.vehicleType).map((count) => (
+                        <option key={count} value={count}>
+                          {count}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                )}
 
                 <div className="field-block">
                   <span className="field-label">Passenger type</span>
@@ -1354,6 +1430,10 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
           <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
         </div>
         <div>
+          <dt>Vehicle</dt>
+          <dd>{formatVehicleType(ride.vehicle_type ?? formValues.vehicleType)}</dd>
+        </div>
+        <div>
           <dt>Passenger Type</dt>
           <dd>{formValues.passengerType}</dd>
         </div>
@@ -1391,6 +1471,10 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
         <div>
           <dt>Passengers</dt>
           <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
+        </div>
+        <div>
+          <dt>Vehicle</dt>
+          <dd>{formatVehicleType(ride.vehicle_type ?? formValues.vehicleType)}</dd>
         </div>
         <div>
           <dt>Passenger Type</dt>
@@ -1711,6 +1795,10 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
           <dd>{formatPassengerCount(ride.passenger_count ?? formValues.passengerCount)}</dd>
         </div>
 <div>
+          <dt>Vehicle</dt>
+          <dd>{formatVehicleType(ride.vehicle_type ?? formValues.vehicleType)}</dd>
+        </div>
+        <div>
           <dt>Passenger Type</dt>
           <dd>{formValues.passengerType}</dd>
         </div>

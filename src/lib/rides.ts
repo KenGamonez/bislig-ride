@@ -1,4 +1,4 @@
-import type { CancelledByRole, Ride, RideRating, RideStatus } from '../types/ride'
+import type { CancelledByRole, Ride, RideRating, RideStatus, RequestedVehicleType } from '../types/ride'
 import { getCustomerAuthId, supabase } from './supabase'
 
 export type CreateRideInput = {
@@ -16,6 +16,7 @@ export type CreateRideInput = {
   passenger_type?: string
   destination_mode?: 'same' | 'multiple'
   destination_stops?: string[]
+  vehicle_type?: RequestedVehicleType | null
   fare_cents?: number | null
   fare_source?: 'matrix' | 'distance' | null
   status?: RideStatus
@@ -41,6 +42,7 @@ export async function createRide(input: CreateRideInput): Promise<Ride> {
       passenger_type: input.passenger_type ?? 'Regular',
       destination_mode: input.destination_mode ?? 'same',
       destination_stops: (input.destination_stops ?? []).filter(Boolean),
+      vehicle_type: input.vehicle_type ?? null,
       fare_cents: input.fare_cents ?? null,
       fare_source: input.fare_source ?? null,
       status: input.status ?? 'requested',

@@ -1,21 +1,39 @@
 -- Bislig Ride: Driver Dispatch V1 — dispatch_ride + internal dispatch core.
--- Run this file in the Supabase SQL editor after dispatch_ride_offers.sql and
--- rides_no_driver_status.sql (idempotent).
+-- Run this file in the Supabase SQL editor after dispatch_ride_offers.sql,
+-- rides_no_driver_status.sql and driver_vehicle_capacity.sql (idempotent).
 --
 -- dispatch_ride is the public entry point. The passenger calls it immediately
 -- after createRide (or after tapping "Try Again" on a no-driver ride). It picks
 -- the nearest ELIGIBLE driver (active + online + available + no active ride +
--- GPS fresher than 60s + no outstanding offer elsewhere) and either:
+-- GPS fresher than 60s + no outstanding offer elsewhere + VEHICLE match +
+-- CAPACITY match) and either:
 --   * auto-assigns the ride (driver has auto_accept on), or
 --   * writes a single live ride_offers row for that driver (manual accept).
 -- If no one can be reached it reports no_driver_found — and when there is not a
 -- single online driver the ride itself is parked as 'no_driver' for the
 -- passenger UI.
 --
+-- VEHICLE + CAPACITY eligibility (Ride Now):
+--   * Rides are matched to the requested vehicle type only. drivers.vehicle_type
+--     is normalised with lower() against the constrained ride.vehicle_type
+--     (motorcycle / umbak / tricycle).
+--   * A Motorcycle ride matches any motorcycle driver (capacity effectively 1 —
+--     the ride UI only ever allows 1 passenger).
+--   * An Umbak/Tricycle ride requires drivers.vehicle_capacity >= the ride's
+--     passenger_count (5+ is stored as 5, so capacity >= 5 matches only
+--     drivers configured to carry 5+).
+--   * Legacy rides with vehicle_type NULL bypass both filters (unchanged
+--     behaviour) so pre-existing ride history stays dispatchable exactly as
+--     before and no capacity is ever invented for a driver.
+--
 -- The heavy lifting lives in br_dispatch_ride_core so decline_ride_offer can
 -- chain the next candidate synchronously without duplicating the logic. The
 -- core is deliberately NOT exposed to any role (it assumes the caller already
 -- passed dispatch_ride's owner/admin authorization).
+--
+-- NOTE: this version is a SUPERSET of dispatch_core_round_skip_fix.sql — the
+-- same-round exclusion is already included below, so re-running the older fix
+-- file afterwards would revert the round-skip. Deploy this file LAST.
 
 create or replace function public.br_dispatch_ride_core(p_ride_id uuid)
 returns table (
@@ -85,16 +103,35 @@ begin
      and status = 'offered'
      and expires_at <= now();
 
+  -- The round we are about to solicit as: every new offer for this ride is
+  -- written at v_last_round + 1, so drivers already offered in round
+  -- v_last_round must be excluded (declined/expired drivers get a real skip).
+  select coalesce(max(dispatch_round), 0)
+    into v_last_round
+    from public.ride_offers
+   where ride_id = p_ride_id;
+
   -- Candidate pool = online active drivers with no active ride (regardless of
-  -- GPS freshness). Used to distinguish "no drivers at all" from "drivers
-  -- exist but none can be reached right now".
+  -- GPS freshness) that can actually carry this trip. Used to distinguish
+  -- "no drivers at all" from "drivers exist but none can be reached right
+  -- now". The vehicle/capacity filter is applied here too so the pool count
+  -- reflects the real addressed market for this ride.
   select count(*)
     into v_candidate_pool
     from public.drivers d
     join public.driver_locations dl on dl.driver_id = d.id
    where d.status = 'active'
      and dl.is_online = true
-     and dl.current_ride_id is null;
+     and dl.current_ride_id is null
+     and (
+       v_ride.vehicle_type is null
+       or lower(coalesce(d.vehicle_type, '')) = v_ride.vehicle_type
+     )
+     and (
+       v_ride.vehicle_type is null
+       or v_ride.vehicle_type = 'motorcycle'
+       or (d.vehicle_capacity is not null and d.vehicle_capacity >= v_ride.passenger_count)
+     );
 
   select d.id, d.auth_user_id, dl.auto_accept,
          dl.latitude, dl.longitude, dl.updated_at
@@ -108,11 +145,26 @@ begin
      and dl.latitude is not null
      and dl.longitude is not null
      and dl.updated_at >= now() - interval '60 seconds'
+     and (
+       v_ride.vehicle_type is null
+       or lower(coalesce(d.vehicle_type, '')) = v_ride.vehicle_type
+     )
+     and (
+       v_ride.vehicle_type is null
+       or v_ride.vehicle_type = 'motorcycle'
+       or (d.vehicle_capacity is not null and d.vehicle_capacity >= v_ride.passenger_count)
+     )
      and not exists (
        select 1 from public.ride_offers o
        where o.driver_id = d.id
          and o.status = 'offered'
          and o.expires_at > now()
+     )
+     and not exists (
+       select 1 from public.ride_offers o
+       where o.ride_id = p_ride_id
+         and o.driver_id = d.id
+         and o.dispatch_round = v_last_round
      )
    order by
      case when v_ride.pickup_lat is not null and v_ride.pickup_lng is not null then
@@ -138,11 +190,6 @@ begin
     return query
       select p_ride_id, v_ride.status, null::uuid, null::uuid, true, v_candidate_pool;
   end if;
-
-  select coalesce(max(dispatch_round), 0)
-    into v_last_round
-    from public.ride_offers
-   where ride_id = p_ride_id;
 
   if v_candidate.auto_accept then
     update public.ride_offers

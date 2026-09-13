@@ -179,6 +179,7 @@ select
   d.vehicle_type,
   d.vehicle_model,
   d.vehicle_color,
+  d.vehicle_capacity,
   d.plate_number,
   d.rating_average,
   d.total_ratings

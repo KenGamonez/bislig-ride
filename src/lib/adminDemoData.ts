@@ -14,6 +14,7 @@ export type AdminDriver = {
   vehicleType: string
   vehicleModel: string
   plateNumber: string
+  vehicleCapacity: number | null
   status: DriverStatus
   availability: DriverAvailability
   rating: number
@@ -78,6 +79,7 @@ export const adminDrivers: AdminDriver[] = [
     vehicleType: demoDriver.vehicleType,
     vehicleModel: demoDriver.vehicleModel,
     plateNumber: demoDriver.plateNumber,
+    vehicleCapacity: 3,
     status: 'Active',
     availability: 'Online',
     rating: demoDriver.rating,
@@ -98,6 +100,7 @@ export const adminDrivers: AdminDriver[] = [
     vehicleType: 'Motorbike',
     vehicleModel: 'Yamaha NMAX',
     plateNumber: 'ABC 7789',
+    vehicleCapacity: 1,
     status: 'Active',
     availability: 'Busy',
     rating: 4.8,
@@ -118,6 +121,7 @@ export const adminDrivers: AdminDriver[] = [
     vehicleType: 'Car',
     vehicleModel: 'Toyota Vios',
     plateNumber: 'XYZ 4450',
+    vehicleCapacity: 4,
     status: 'Active',
     availability: 'Offline',
     rating: 4.7,
@@ -138,6 +142,7 @@ export const adminDrivers: AdminDriver[] = [
     vehicleType: 'Motorbike',
     vehicleModel: 'Honda Click',
     plateNumber: 'DEF 6671',
+    vehicleCapacity: 1,
     status: 'Inactive',
     availability: 'Offline',
     rating: 4.5,
