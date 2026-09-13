@@ -48,6 +48,32 @@ import type { PakyawanBooking } from '../types/scheduledBooking'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
+const resolvePresenceErrorMessage = (error: unknown, offline: boolean): string => {
+  if (
+    !offline &&
+    error &&
+    typeof error === 'object' &&
+    typeof (error as { code?: unknown }).code === 'number'
+  ) {
+    switch ((error as { code: number }).code) {
+      case 1:
+        return 'Location permission was denied. Please allow location access in your browser settings and try again.'
+      case 2:
+        return 'Your location could not be determined. Turn on precise location or GPS and try again.'
+      case 3:
+        return 'Location lookup timed out. Move to an open area and try again.'
+    }
+  }
+
+  if (error instanceof Error && error.message) {
+    return error.message
+  }
+
+  return offline
+    ? 'Unable to go offline right now. Please try again.'
+    : 'Unable to go online right now. Check your connection and GPS, then try again.'
+}
+
 type DriverPhase = 'offline' | 'online' | 'incoming_request' | 'heading_to_pickup' | 'arrived' | 'in_progress' | 'completed'
 
 type DriverSummaryProfile = {
@@ -77,27 +103,27 @@ const recentRides = [
     passenger: 'Ana Ramos',
     pickup: 'Barangay Tabon',
     destination: 'Bislig City Public Market',
-    date: 'Today Ã¢â‚¬Â¢ 8:20 AM',
+    date: 'Today • 8:20 AM',
     status: 'completed',
-    fare: 'Ã¢â€šÂ±115',
+    fare: '₱115',
   },
   {
     id: 102,
     passenger: 'Chris Lim',
     pickup: 'Mangagoy',
     destination: 'Alabel Road',
-    date: 'Today Ã¢â‚¬Â¢ 7:05 AM',
+    date: 'Today • 7:05 AM',
     status: 'completed',
-    fare: 'Ã¢â€šÂ±140',
+    fare: '₱140',
   },
   {
     id: 103,
     passenger: 'Nina Flores',
     pickup: 'Barangay San Roque',
     destination: 'Bislig City Plaza',
-    date: 'Yesterday Ã¢â‚¬Â¢ 9:10 PM',
+    date: 'Yesterday • 9:10 PM',
     status: 'completed',
-    fare: 'Ã¢â€šÂ±130',
+    fare: '₱130',
   },
 ]
 
@@ -825,11 +851,7 @@ const handleToggleOnline = async () => {
       }
     } catch (error) {
       console.error('Unable to toggle driver presence:', error)
-      setPresenceError(
-        driverOnline
-          ? 'Unable to go offline right now. Please try again.'
-          : 'Unable to go online right now. Check your connection and GPS, then try again.',
-      )
+      setPresenceError(resolvePresenceErrorMessage(error, driverOnline))
     } finally {
       setTransitioning(false)
     }
