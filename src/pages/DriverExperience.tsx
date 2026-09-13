@@ -19,7 +19,6 @@ import {
   showBrowserNotification,
 } from '../lib/notifications'
 import { subscribeToPassengerLocation } from '../lib/passengerLocations'
-import { updateDriverLocation } from '../lib/driverLocations'
 import {
   acceptRideOffer,
   declineRideOffer,
@@ -813,13 +812,11 @@ const handleToggleOnline = async () => {
         setDriverLocation({ latitude: fix.latitude, longitude: fix.longitude })
         setLastLocationFixIso(new Date().toISOString())
 
-        // Publish the first fix BEFORE enabling presence: set_driver_presence
-        // requires an existing driver_locations row with a fresh position, so a
-        // brand-new driver (or one with a stale row) must have a live fix on
-        // record before the dispatch engine can consider them eligible.
-        await updateDriverLocation(driverId, fix.latitude, fix.longitude)
-
-        const presence = await setDriverPresence(true, driverIsAvailable, driverAutoAccept)
+        // Publish the first fix AND set presence in one atomic RPC call:
+        // set_driver_presence records the position and marks the driver
+        // online in the same transaction, so the driver is never flagged
+        // online without a fresh position on record.
+        const presence = await setDriverPresence(true, driverIsAvailable, driverAutoAccept, fix.latitude, fix.longitude)
         setDriverIsAvailable(presence.is_available)
         setDriverAutoAccept(presence.auto_accept)
 

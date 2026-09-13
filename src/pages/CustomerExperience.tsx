@@ -15,7 +15,6 @@ import {
   computeFare,
   DEFAULT_FARE_LEVEL,
   formatCentavos,
-  MULTIPLE_DESTINATIONS_FARE_NOTE,
 } from '../lib/fare'
 import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
@@ -40,7 +39,7 @@ type CustomerFormState = {
   phone: string
   passengerType: DemoPassengerType
   passengerCount: PassengerCountOption
-  destinationMode: 'same' | 'multiple'
+  destinationMode: 'same'
 }
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
@@ -178,7 +177,6 @@ const [rating, setRating] = useState(0)
   const [cancelError, setCancelError] = useState('')
   const [cancellation, setCancellation] = useState<RideCancellation | null>(null)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
-  const [extraDestinations, setExtraDestinations] = useState<string[]>([''])
   const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
   const [launcherView, setLauncherView] = useState(true)
   const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
@@ -290,14 +288,6 @@ phone: formData.phone.trim(),
     [formData],
   )
 
-  const destinationStops = useMemo(() => {
-    if (formData.destinationMode !== 'multiple') {
-      return []
-    }
-
-    return [formValues.destination, ...extraDestinations.map((stop) => stop.trim()).filter(Boolean)]
-  }, [formData.destinationMode, formValues.destination, extraDestinations])
-
   const fareQuote = useMemo(() => {
     if (!formValues.destination) {
       return null
@@ -305,22 +295,15 @@ phone: formData.phone.trim(),
 
     return computeFare({
       destination: formValues.destination,
-      destinationMode: formData.destinationMode,
+      destinationMode: 'same',
       passengerType: formValues.passengerType,
       fuelLevel: DEFAULT_FARE_LEVEL,
       distanceKm: null,
     })
-  }, [formValues.destination, formValues.passengerType, formData.destinationMode])
+  }, [formValues.destination, formValues.passengerType])
 
   const pickupSummary = formData.pickup.trim() || (pickupLocation ? 'Current location set' : '')
-  const extraDropOffCount = extraDestinations
-    .map((stop) => stop.trim())
-    .filter(Boolean).length
   const destinationSummary = formData.destination.trim()
-  const additionalDropOffsSummary =
-    extraDropOffCount > 0
-      ? ` + ${extraDropOffCount} additional drop-off${extraDropOffCount > 1 ? 's' : ''}`
-      : ''
   const passengerSummary =
     formatPassengerCount(formData.passengerCount) +
     (formValues.name.trim() ? ` · ${formValues.name.trim()}` : '') +
@@ -330,10 +313,6 @@ phone: formData.phone.trim(),
   }`
 
   const rideFareDisplay = (ride: Ride): { label: string; value: string } => {
-    if (ride.destination_mode === 'multiple') {
-      return { label: 'Fare', value: MULTIPLE_DESTINATIONS_FARE_NOTE }
-    }
-
     if (typeof ride.fare_cents === 'number' && Number.isFinite(ride.fare_cents)) {
       return { label: 'Estimated fare', value: `₱${formatCentavos(ride.fare_cents)}` }
     }
@@ -341,74 +320,7 @@ phone: formData.phone.trim(),
     return { label: 'Fare', value: 'Fare handled traditionally with the driver.' }
   }
 
-  const renderDestinationModeControls = () => (
-    <>
-      <div className="ride-mode-tabs" role="radiogroup" aria-label="Destination type">
-        <button
-          type="button"
-          role="radio"
-          aria-checked={formData.destinationMode === 'same'}
-          className={
-            formData.destinationMode === 'same' ? 'ride-mode-tab selected' : 'ride-mode-tab'
-          }
-          onClick={() => handleInput('destinationMode', 'same')}
-        >
-          Same destination
-        </button>
-        <button
-          type="button"
-          role="radio"
-          aria-checked={formData.destinationMode === 'multiple'}
-          className={
-            formData.destinationMode === 'multiple' ? 'ride-mode-tab selected' : 'ride-mode-tab'
-          }
-          onClick={() => handleInput('destinationMode', 'multiple')}
-        >
-          Different destinations
-        </button>
-      </div>
-
-      {formData.destinationMode === 'multiple' ? (
-        <div className="extra-destination-list">
-          <span className="field-label">Drop-offs for the other riders</span>
-          {extraDestinations.map((stop, index) => (
-            <div className="destination-stop" key={index}>
-              <LocationInput
-                label={`Drop-off ${index + 2}`}
-                value={stop}
-                placeholder="Enter drop-off location"
-                onChange={(value) => handleExtraDestination(index, value)}
-              />
-              <button
-                type="button"
-                className="destination-stop-remove"
-                aria-label={`Remove destination ${index + 2}`}
-                onClick={() => handleRemoveExtraDestination(index)}
-              >
-                ×
-              </button>
-            </div>
-          ))}
-          {extraDestinations.length < 4 ? (
-            <button type="button" className="add-stop-action" onClick={handleAddExtraDestination}>
-              + Add another drop-off
-            </button>
-          ) : null}
-        </div>
-      ) : null}
-    </>
-  )
-
   const renderFarePreview = () => {
-    if (formData.destinationMode === 'multiple') {
-      return (
-        <div className="fare-box">
-          <span className="field-label">Fare</span>
-          <strong>{MULTIPLE_DESTINATIONS_FARE_NOTE}</strong>
-        </div>
-      )
-    }
-
     if (fareQuote) {
       return (
         <div className="fare-box">
@@ -429,7 +341,6 @@ phone: formData.phone.trim(),
 
 const resetForm = () => {
     setFormData(initialFormState)
-    setExtraDestinations([''])
     setValidationErrors({})
     setSubmitError('')
     setPickupLocation(null)
@@ -447,35 +358,8 @@ const handleInput = (field: keyof CustomerFormState, value: string) => {
       return
     }
 
-    if (field === 'destinationMode') {
-      setFormData((current) => ({ ...current, destinationMode: value as 'same' | 'multiple' }))
-      setValidationErrors((current) => ({ ...current, destination: undefined }))
-      return
-    }
-
     setFormData((current) => ({ ...current, [field]: value }))
     setValidationErrors((current) => ({ ...current, [field]: undefined }))
-  }
-
-  const handleExtraDestination = (index: number, value: string) => {
-    setExtraDestinations((current) => current.map((stop, stopIndex) => (stopIndex === index ? value : stop)))
-    setValidationErrors((current) => ({ ...current, destination: undefined }))
-  }
-
-  const handleAddExtraDestination = () => {
-    setExtraDestinations((current) => (current.length < 4 ? [...current, ''] : current))
-  }
-
-  const handleRemoveExtraDestination = (index: number) => {
-    if (extraDestinations.length <= 1) {
-      setFormData((current) => ({ ...current, destinationMode: 'same' }))
-    }
-
-    setExtraDestinations((current) =>
-      current.length <= 1 ? [''] : current.filter((_, stopIndex) => stopIndex !== index),
-    )
-
-    setValidationErrors((current) => ({ ...current, destination: undefined }))
   }
 
 const validateForm = () => {
@@ -487,13 +371,6 @@ const validateForm = () => {
 
     if (!formValues.destination) {
       nextErrors.destination = 'Destination is required.'
-    }
-
-    if (
-      formData.destinationMode === 'multiple' &&
-      extraDestinations.map((stop) => stop.trim()).filter(Boolean).length === 0
-    ) {
-      nextErrors.destination = 'Add the drop-off locations for the riders going to different destinations.'
     }
 
     if (!formValues.name) {
@@ -910,9 +787,8 @@ destination_address: formValues.destination,
         driver_id: null,
         passenger_count: formValues.passengerCount,
         passenger_type: formValues.passengerType,
-        destination_mode: formData.destinationMode,
-        destination_stops:
-          formData.destinationMode === 'multiple' ? destinationStops : [],
+        destination_mode: 'same',
+        destination_stops: [],
         fare_cents: fareQuote?.fareCents ?? null,
         fare_source: fareQuote?.source ?? null,
         status: 'requested',
@@ -1180,7 +1056,6 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
               error={validationErrors.destination}
               onChange={(value) => handleInput('destination', value)}
             />
-            {renderDestinationModeControls()}
           </div>
 </div>
       </section>
@@ -1320,7 +1195,6 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
                 {destinationSummary ? (
                   <small className="accordion-value">
                     {destinationSummary}
-                    {additionalDropOffsSummary}
                   </small>
                 ) : (
                   <small>Enter your destination</small>
@@ -1341,7 +1215,6 @@ const statusCopy: Record<Exclude<RidePhase, 'request' | 'no_driver' | 'payment' 
                   error={validationErrors.destination}
                   onChange={(value) => handleInput('destination', value)}
                 />
-                {renderDestinationModeControls()}
               </div>
             </div>
           </div>

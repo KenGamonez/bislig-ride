@@ -7,12 +7,16 @@ export async function setDriverPresence(
   online: boolean,
   available: boolean,
   autoAccept: boolean,
+  latitude?: number | null,
+  longitude?: number | null,
 ): Promise<DriverPresence> {
   const { data, error } = await supabase
     .rpc('set_driver_presence', {
       p_online: online,
       p_available: available,
       p_auto_accept: autoAccept,
+      p_latitude: latitude ?? null,
+      p_longitude: longitude ?? null,
     })
     .single()
 
