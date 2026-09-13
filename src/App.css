@@ -12118,3 +12118,219 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     padding: 12px 12px;
   }
 }
+
+/* ============================================================
+   CUSTOMER HOMEPAGE LAUNCHER â€” PREMIUM EDITORIAL LIGHT OVERRIDE
+   Homepage stays the Service launcher (service-selection homepage).
+   Scoped to .customer-layout so the ride booking page, other
+   dashboards, and admin remain untouched.
+   MATCHES the booking page's green editorial accent + light paper.
+   ============================================================ */
+
+/* --- Greeting hero: light editorial (was dark) --- */
+.customer-layout .service-dashboard {
+  display: grid;
+  gap: 14px;
+}
+
+.customer-layout .service-greeting {
+  position: relative;
+  overflow: hidden;
+  padding: 30px 28px 28px;
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(150deg, var(--color-white) 0%, var(--color-gray-50) 100%);
+  -webkit-mask-image: linear-gradient(#000 0 0);
+}
+
+.customer-layout .service-greeting::before {
+  content: '';
+  position: absolute;
+  top: -110px;
+  right: -60px;
+  width: 250px;
+  height: 250px;
+  border: 1px solid rgba(0, 232, 138, 0.30);
+  box-shadow: 0 0 0 36px rgba(0, 232, 138, 0.05), 0 0 0 76px rgba(0, 232, 138, 0.03);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.customer-layout .service-greeting .eyebrow,
+.customer-layout .service-greeting .eyebrow::after {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .service-greeting .eyebrow::after {
+  background: var(--color-green);
+}
+
+.customer-layout .service-greeting h1 {
+  position: relative;
+  z-index: 1;
+  margin: 0;
+  color: var(--color-black-soft);
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  letter-spacing: -0.045em;
+  line-height: 1.05;
+}
+
+.customer-layout .service-greeting .hero-accent {
+  color: var(--color-green-deep);
+  display: block;
+}
+
+.customer-layout .service-greeting .subtitle {
+  position: relative;
+  z-index: 1;
+  margin: 8px 0 0;
+  color: var(--color-gray-500);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* --- "Ride Now" primary card: paper w/ green editorial accent --- */
+.customer-layout .service-card--primary {
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 14px;
+  padding: 22px 20px;
+  background: var(--color-white);
+  border: 1px solid var(--color-green);
+  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.22), 0 2px 18px rgba(0, 232, 138, 0.10);
+}
+
+.customer-layout .service-card--primary:hover {
+  border-color: var(--color-green-deep);
+  box-shadow: 0 0 0 1px rgba(0, 196, 114, 0.30), 0 6px 24px rgba(0, 232, 138, 0.16);
+}
+
+.customer-layout .service-card--primary .service-card-icon {
+  background: rgba(0, 232, 138, 0.14);
+  color: var(--color-green-deep);
+  box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.30);
+}
+
+.customer-layout .service-card--primary .service-card-copy strong {
+  color: var(--color-black-soft);
+}
+
+.customer-layout .service-card--primary .service-card-copy small {
+  color: var(--color-gray-500);
+}
+
+.customer-layout .service-card--primary .service-card-arrow {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .service-card--primary:hover .service-card-arrow {
+  color: var(--color-green-deep);
+  transform: translateX(3px);
+}
+
+.customer-layout .service-card--primary .service-card-badge {
+  background: var(--color-green);
+  color: var(--color-black-soft);
+}
+
+/* --- Secondary service cards: light paper + hover lift --- */
+.customer-layout .service-card {
+  border: 1px solid var(--color-gray-200);
+  background: var(--color-white);
+  color: var(--color-text-primary, var(--text-primary));
+}
+
+.customer-layout .service-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.customer-layout .service-card-icon {
+  background: var(--color-gray-50);
+  color: var(--color-gray-700);
+}
+
+.customer-layout .service-card-copy strong {
+  color: var(--color-black-soft);
+}
+
+.customer-layout .service-card-copy small {
+  color: var(--color-gray-500);
+}
+
+.customer-layout .service-card-arrow {
+  color: var(--color-gray-500);
+}
+
+.customer-layout .service-card:hover .service-card-arrow {
+  color: var(--color-green-deep);
+}
+
+/* --- Discover section: lean into light editorial (already light) --- */
+.customer-layout .discover-heading .eyebrow {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .discover-heading .hero-accent {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .discover-card {
+  background: var(--color-white);
+  border-color: var(--color-gray-200);
+  color: var(--color-black-soft);
+}
+
+.customer-layout .discover-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-xs);
+  transform: translateY(-1px);
+}
+
+.customer-layout .discover-kicker {
+  color: var(--color-green-deep);
+}
+
+.customer-layout .discover-card h3 {
+  color: var(--color-black-soft);
+}
+
+.customer-layout .discover-card p {
+  color: var(--color-gray-500);
+}
+
+.customer-layout .discover-cta {
+  color: var(--color-black-soft);
+}
+
+.customer-layout .discover-cta-arrow,
+.customer-layout .discover-card:hover .discover-cta-arrow {
+  color: var(--color-green-deep);
+}
+
+/* --- Carousel dots: green active, gray idle --- */
+.customer-layout .carousel-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+
+.customer-layout .carousel-dot {
+  width: 6px;
+  height: 6px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0;
+  background: var(--color-gray-300);
+  cursor: pointer;
+  transition: background var(--transition), width var(--transition);
+}
+
+.customer-layout .carousel-dot.is-active,
+.customer-layout .carousel-dot.is-active:hover {
+  width: 20px;
+  background: var(--color-green);
+}

@@ -185,7 +185,7 @@ const [rating, setRating] = useState(0)
   const [cancellation, setCancellation] = useState<RideCancellation | null>(null)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
-  const [launcherView, setLauncherView] = useState(false)
+  const [launcherView, setLauncherView] = useState(true)
   const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [passengerLocationError, setPassengerLocationError] = useState('')
   const [passengerLocationShared, setPassengerLocationShared] = useState(false)
@@ -204,9 +204,9 @@ const [rating, setRating] = useState(0)
         handleBackToHome()
         return
       }
-      setLauncherView(false)
+      setLauncherView(true)
       window.requestAnimationFrame(() => {
-        document.getElementById('ride-booking-form')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+        document.querySelector('.service-dashboard')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
       })
   } else {
     setShowProfile(true)
