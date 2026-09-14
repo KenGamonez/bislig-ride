@@ -3,8 +3,8 @@ import { ServiceCarousel } from './ServiceCarousel'
 
 const rideIcon = (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 3 4 7l4 4" />
-    <path d="M4 7h16" />
+    <path d="M8 3l4 4-4 4" />
+    <path d="M12 7H4" />
     <path d="m16 21 4-4-4-4" />
     <path d="M20 17H4" />
   </svg>
@@ -35,19 +35,19 @@ const pakyawanIcon = (
 
 const carRentalIcon = (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M4 16h-1v-5l1.8-4.6A2 2 0 0 1 6.6 5h10.8a2 2 0 0 1 1.8 1.4L21 11v5h-1" />
-    <path d="M5 16v-4h14v4" />
-    <circle cx="7" cy="17" r="2" />
-    <circle cx="17" cy="17" r="2" />
+    <path d="M4 17h-1a1 1 0 0 1-1-1v-5l2-4.5A2 2 0 0 1 5.8 5.5H18.2a2 2 0 0 1 1.8 1.5L22 11v5a1 1 0 0 1-1 1h-1a2.5 2.5 0 0 1-5 0H9a2.5 2.5 0 0 1-5 0Z" />
+    <path d="M6 12h12" />
+    <circle cx="7" cy="17" r="1.5" />
+    <circle cx="17" cy="17" r="1.5" />
+    <path d="M19 11l-2-4m4 4H3" />
   </svg>
 )
 
 const deliverIcon = (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="m7.5 4.27 9 5.15" />
-    <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-    <path d="M3.3 7 12 12l8.7-5" />
-    <path d="M12 22V12" />
+    <path d="M12 2v20" />
+    <path d="M5 9 12 2l7 7" />
+    <path d="M15 15l-3 3-3-3" />
   </svg>
 )
 
@@ -59,44 +59,59 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
   return (
     <section className="service-dashboard" aria-label="Bislig Ride services">
       <header className="service-greeting">
-        <p className="eyebrow">Bislig Ride</p>
-        <h1>What do you need <span className="hero-accent">today?</span></h1>
-        <p className="subtitle">Choose a service and get started.</p>
+        <div className="service-greeting-copy">
+          <p className="eyebrow">Bislig Ride</p>
+          <h1>What do you need <span className="hero-accent">today?</span></h1>
+          <p className="subtitle">Choose how you want to move around Bislig City.</p>
+        </div>
       </header>
 
-      <div className="service-grid">
-        <ServiceCard
-          variant="primary"
-          badge="Popular"
-          title="Ride Now"
-          description="On-demand rides around Bislig City"
-          icon={rideIcon}
-          onSelect={onSelectRideNow}
-        />
-        <ServiceCard
-          href="/pasabuy"
-          title="Pasabuy"
-          description="We shop and hand over your items"
-          icon={pasabuyIcon}
-        />
-        <ServiceCard
-          href="/pakyawan"
-          title="Pakyawan"
-          description="Scheduled private & whole-day trips"
-          icon={pakyawanIcon}
-        />
-        <ServiceCard
-          href="/car-rentals"
-          title="Car Rentals"
-          description="Self-drive cars & vans by the day"
-          icon={carRentalIcon}
-        />
-        <ServiceCard
-          href="/pa-deliver"
-          title="Pa-deliver"
-          description="Send packages across Bislig"
-          icon={deliverIcon}
-        />
+      <div className="service-layout">
+        <div className="service-layout-ride">
+          <ServiceCard
+            variant="primary"
+            badge="Popular"
+            title="Ride Now"
+            description="On-demand rides around Bislig City & Bislig"
+            icon={rideIcon}
+            onSelect={onSelectRideNow}
+          />
+        </div>
+
+        <div className="service-rail" aria-label="Other ways to move">
+          <p className="service-rail-label">Other ways to move</p>
+          <div className="service-rail-rows">
+            <ServiceCard
+              title="Pasabuy"
+              description="Get items shopped & handed over in Bislig"
+              icon={pasabuyIcon}
+              compact
+              disabled
+              badge="Coming soon"
+            />
+            <ServiceCard
+              href="/pakyawan"
+              title="Pakyawan"
+              description="Reserve a vehicle for long-distance or out-of-town trips, family travel, and group transportation."
+              icon={pakyawanIcon}
+              compact
+            />
+            <ServiceCard
+              href="/car-rentals"
+              title="Car Rentals"
+              description="Self-drive cars & vans by the day"
+              icon={carRentalIcon}
+              compact
+            />
+            <ServiceCard
+              href="/pa-deliver"
+              title="Pa-deliver"
+              description="Send packages across Bislig"
+              icon={deliverIcon}
+              compact
+            />
+          </div>
+        </div>
       </div>
 
       <ServiceCarousel onSelectRideNow={onSelectRideNow} />
