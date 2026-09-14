@@ -176,6 +176,13 @@ h4 {
   gap: 24px;
 }
 
+.header-right-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
 .brand-block {
   display: flex;
   align-items: center;
@@ -319,6 +326,10 @@ h4 {
 @media (min-width: 768px) {
   .beta-indicator {
     margin-right: auto;
+  }
+
+  .header-right-controls {
+    margin-left: auto;
   }
 }
 
@@ -12879,12 +12890,10 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .app-header .language-toggle {
-  margin-left: 8px;
 }
 
 @media (max-width: 767px) {
   .app-header .language-toggle {
-    margin-left: 2px;
   }
 }
 

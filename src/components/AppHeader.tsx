@@ -124,22 +124,24 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
             )}
           </nav>
 
-          <LanguageToggle />
+          <div className="header-right-controls">
+            <LanguageToggle />
 
-          <button
-            type="button"
-            className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
-            aria-label={isMobileNavOpen ? t('nav.closeMenu') : t('nav.openMenu')}
-            aria-expanded={isMobileNavOpen}
-            aria-controls="mobile-main-navigation"
-            onClick={() => setIsMobileNavOpen((current) => !current)}
-          >
-            <span className="mobile-menu-icon" aria-hidden="true">
-              <span></span>
-              <span></span>
-              <span></span>
-            </span>
-          </button>
+            <button
+              type="button"
+              className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
+              aria-label={isMobileNavOpen ? t('nav.closeMenu') : t('nav.openMenu')}
+              aria-expanded={isMobileNavOpen}
+              aria-controls="mobile-main-navigation"
+              onClick={() => setIsMobileNavOpen((current) => !current)}
+            >
+              <span className="mobile-menu-icon" aria-hidden="true">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 
