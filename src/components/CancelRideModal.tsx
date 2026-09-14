@@ -1,22 +1,23 @@
 import { useState } from 'react'
 import type { CancelledByRole } from '../types/ride'
+import { useLanguage } from '../lib/i18n'
 
 const RIDER_QUICK_REASONS = [
-  'I found another ride',
-  'My plans changed',
-  'Driver is taking too long',
-  'Wrong pickup or destination',
-  'Other',
-]
+  { value: 'I found another ride', key: 'cancel.foundAnotherRide' },
+  { value: 'My plans changed', key: 'cancel.plansChanged' },
+  { value: 'Driver is taking too long', key: 'cancel.driverTooLong' },
+  { value: 'Wrong pickup or destination', key: 'cancel.wrongRoute' },
+  { value: 'Other', key: 'cancel.other' },
+] as const
 
 const DRIVER_QUICK_REASONS = [
-  'Vehicle problem',
-  'Emergency',
-  'Unable to reach pickup location',
-  'Passenger not responding',
-  'Passenger requested something I cannot accommodate',
-  'Other',
-]
+  { value: 'Vehicle problem', key: 'cancel.vehicleProblem' },
+  { value: 'Emergency', key: 'cancel.emergency' },
+  { value: 'Unable to reach pickup location', key: 'cancel.cannotReach' },
+  { value: 'Passenger not responding', key: 'cancel.passengerNoResponse' },
+  { value: 'Passenger requested something I cannot accommodate', key: 'cancel.passengerRequest' },
+  { value: 'Other', key: 'cancel.other' },
+] as const
 
 type CancelRideModalProps = {
   open: boolean
@@ -35,6 +36,7 @@ export function CancelRideModal({
   onClose,
   onConfirm,
 }: CancelRideModalProps) {
+  const { t } = useLanguage()
   const [selectedReason, setSelectedReason] = useState('')
   const [customReason, setCustomReason] = useState('')
 
@@ -61,13 +63,13 @@ export function CancelRideModal({
       className="ride-chat-overlay cancel-ride-modal"
       role="dialog"
       aria-modal="true"
-      aria-label="Cancel ride"
+      aria-label={t('cancel.title')}
     >
       <div className="ride-chat-panel cancel-ride-panel">
         <div className="ride-chat-header">
           <div>
-            <strong>Cancel this ride?</strong>
-            <span>Let the {role === 'driver' ? 'passenger' : 'driver'} know why.</span>
+            <strong>{t('cancel.title')}</strong>
+            <span>{role === 'driver' ? t('cancel.letPassengerKnow') : t('cancel.letDriverKnow')}</span>
           </div>
 
           <button
@@ -75,7 +77,7 @@ export function CancelRideModal({
             className="ride-chat-close"
             onClick={onClose}
             disabled={submitting}
-            aria-label="Keep the ride and close"
+            aria-label={t('cancel.closeAria')}
           >
             X
           </button>
@@ -83,33 +85,32 @@ export function CancelRideModal({
 
         <div className="cancel-ride-body">
           <p className="cancel-ride-note">
-            Your ride will be cancelled and the {role === 'driver' ? 'passenger' : 'driver'} will be
-            notified right away. Why are you cancelling?
+            {t('cancel.note', { role: role === 'driver' ? t('chat.rolePassenger') : t('chat.roleDriver') })}
           </p>
 
-          <div className="cancel-ride-reasons" role="radiogroup" aria-label="Cancellation reason">
+          <div className="cancel-ride-reasons" role="radiogroup" aria-label={t('cancel.reasonsLabel')}>
             {quickReasons.map((reason) => (
               <button
-                key={reason}
+                key={reason.value}
                 type="button"
-                className={selectedReason === reason ? 'cancel-ride-reason selected' : 'cancel-ride-reason'}
-                onClick={() => setSelectedReason(reason)}
+                className={selectedReason === reason.value ? 'cancel-ride-reason selected' : 'cancel-ride-reason'}
+                onClick={() => setSelectedReason(reason.value)}
                 role="radio"
-                aria-checked={selectedReason === reason}
+                aria-checked={selectedReason === reason.value}
               >
-                {reason}
+                {t(reason.key)}
               </button>
             ))}
           </div>
 
           {showCustom ? (
             <label className="field-label cancel-ride-custom">
-              Tell us more <span>(required)</span>
+              {t('cancel.tellMore')} <span>{t('cancel.required')}</span>
               <textarea
                 className="text-input cancel-ride-textarea"
                 value={customReason}
                 onChange={(event) => setCustomReason(event.target.value)}
-                placeholder="Describe the reason for cancelling..."
+                placeholder={t('cancel.placeholder')}
                 rows={3}
                 maxLength={300}
               />
@@ -130,7 +131,7 @@ export function CancelRideModal({
             onClick={onClose}
             disabled={submitting}
           >
-            Keep Ride
+            {t('cancel.keepRide')}
           </button>
           <button
             type="button"
@@ -138,7 +139,7 @@ export function CancelRideModal({
             onClick={handleConfirm}
             disabled={!confirmationReady || submitting}
           >
-            {submitting ? 'Cancelling...' : 'Confirm Cancellation'}
+            {submitting ? t('cancel.cancelling') : t('cancel.confirm')}
           </button>
         </div>
       </div>

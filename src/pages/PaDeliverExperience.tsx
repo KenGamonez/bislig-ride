@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
+import { useLanguage } from '../lib/i18n'
 
 const routeToView = (nextView: AppViewMode) => {
   try {
@@ -46,6 +47,7 @@ const getToday = () => {
 const packageTypes = ['Documents', 'Parcels', 'Food', 'Clothing', 'Gadgets', 'Other']
 
 export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
+  const { t } = useLanguage()
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [step, setStep] = useState(1)
@@ -61,24 +63,24 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     const nextErrors: FormErrors = {}
 
     if (target === 1) {
-      if (!form.package_type.trim()) nextErrors.package_type = 'This field is required.'
-      if (!form.package_size.trim()) nextErrors.package_size = 'This field is required.'
+      if (!form.package_type.trim()) nextErrors.package_type = t('err.required')
+      if (!form.package_size.trim()) nextErrors.package_size = t('err.required')
     }
 
     if (target === 2) {
-      if (!form.pickup_address.trim()) nextErrors.pickup_address = 'This field is required.'
-      if (!form.delivery_address.trim()) nextErrors.delivery_address = 'This field is required.'
-      if (!form.preferred_date.trim()) nextErrors.preferred_date = 'This field is required.'
-      if (!form.preferred_time.trim()) nextErrors.preferred_time = 'This field is required.'
+      if (!form.pickup_address.trim()) nextErrors.pickup_address = t('err.required')
+      if (!form.delivery_address.trim()) nextErrors.delivery_address = t('err.required')
+      if (!form.preferred_date.trim()) nextErrors.preferred_date = t('err.required')
+      if (!form.preferred_time.trim()) nextErrors.preferred_time = t('err.required')
     }
 
     if (target === 3) {
       const phone = form.sender_phone.trim()
-      if (!form.sender_name.trim()) nextErrors.sender_name = 'This field is required.'
+      if (!form.sender_name.trim()) nextErrors.sender_name = t('err.required')
       if (!phone) {
-        nextErrors.sender_phone = 'This field is required.'
+        nextErrors.sender_phone = t('err.required')
       } else if (!/^[0-9+\-\s()]+$/.test(phone)) {
-        nextErrors.sender_phone = 'Enter a valid phone number.'
+        nextErrors.sender_phone = t('err.invalidPhone')
       }
     }
 
@@ -100,12 +102,12 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     ]
 
     requiredFields.forEach((name) => {
-      if (!form[name].trim()) nextErrors[name] = 'This field is required.'
+      if (!form[name].trim()) nextErrors[name] = t('err.required')
     })
 
     const phone = form.sender_phone.trim()
     if (phone && !/^[0-9+\-\s()]+$/.test(phone)) {
-      nextErrors.sender_phone = 'Enter a valid phone number.'
+      nextErrors.sender_phone = t('err.invalidPhone')
     }
 
     setErrors(nextErrors)
@@ -171,7 +173,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
           id={`pa-deliver-${name}`}
           className={`input-field${errors[name] ? ' has-error' : ''}`}
           type="text"
-          placeholder="Example: Barangay, street, landmark"
+          placeholder={t('pad.addressPlaceholder')}
           value={form[name]}
           onChange={(event) => updateField(name, event.target.value)}
         />
@@ -185,7 +187,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       return (
         <div className="flow-fields">
           <div className="pad-route">
-            {routeField('pickup_address', 'Pickup Address', 'is-pickup')}
+            {routeField('pickup_address', t('pad.pickupAddress'), 'is-pickup')}
 
             <div className="pad-route-leg" aria-hidden="true">
               <span className="pad-route-leg-rail" />
@@ -204,14 +206,14 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               </svg>
             </div>
 
-            {routeField('delivery_address', 'Delivery Address', 'is-delivery')}
+            {routeField('delivery_address', t('pad.deliveryAddress'), 'is-delivery')}
           </div>
 
           <div className="flow-date-group">
-            <span className="field-label">When do you need it?</span>
+            <span className="field-label">{t('pad.whenNeed')}</span>
             <div className="flow-date-row">
-              {field('preferred_date', 'Preferred Date', 'date', undefined, getToday())}
-              {field('preferred_time', 'Preferred Time', 'time')}
+              {field('preferred_date', t('pad.preferredDate'), 'date', undefined, getToday())}
+              {field('preferred_time', t('pad.preferredTime'), 'time')}
             </div>
           </div>
         </div>
@@ -222,8 +224,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       return (
         <div className="flow-fields">
           <div className="flow-field-row">
-            {field('sender_name', 'Sender Full Name')}
-            {field('sender_phone', 'Contact Number', 'tel')}
+            {field('sender_name', t('pad.senderName'))}
+            {field('sender_phone', t('pad.contactNumber'), 'tel')}
           </div>
         </div>
       )
@@ -232,13 +234,13 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     return (
       <div className="flow-fields">
         <label className="field-block">
-          <span className="field-label">Package Type</span>
+          <span className="field-label">{t('pad.packageType')}</span>
           <select
             className={`input-field${errors.package_type ? ' has-error' : ''}`}
             value={form.package_type}
             onChange={(event) => updateField('package_type', event.target.value)}
           >
-            <option value="">Select an option</option>
+            <option value="">{t('form.selectOption')}</option>
             {packageTypes.map((type) => (
               <option key={type}>{type}</option>
             ))}
@@ -247,16 +249,16 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
         </label>
 
         <label className="field-block">
-          <span className="field-label">Package Details (Optional)</span>
+          <span className="field-label">{t('pad.packageDetails')}</span>
           <textarea
             className="input-field textarea-field flow-notes"
-            placeholder="Example: sealed envelope, box, fragile items"
+            placeholder={t('pad.packageDetailsPlaceholder')}
             value={form.package_details}
             onChange={(event) => updateField('package_details', event.target.value)}
           />
         </label>
 
-        {field('package_size', 'Size or Approximate Weight', 'text', 'Example: Shoe box size')}
+        {field('package_size', t('pad.packageSize'), 'text', t('pad.sizePlaceholder'))}
       </div>
     )
   }
@@ -264,14 +266,14 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   if (submitted) {
     return (
       <>
-        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">Request received</p>
-            <h1>Delivery Request Received</h1>
-            <p>Our team will confirm pickup details and the delivery fee with you before the package is booked.</p>
+            <p className="eyebrow">{t('pad.receivedEyebrow')}</p>
+            <h1>{t('pad.receivedTitle')}</h1>
+            <p>{t('pad.receivedBody')}</p>
             <button type="button" className="primary-action" onClick={onBack}>
-              Back to Home
+              {t('form.backHome')}
             </button>
           </section>
         </main>
@@ -280,29 +282,27 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   }
 
   const stepTitles: Record<number, { title: string; hint: string }> = {
-    1: { title: 'What are you sending?', hint: "Tell us about the package and roughly how big it is." },
-    2: { title: 'Where should it go?', hint: 'Pickup and delivery addresses, plus your preferred schedule.' },
-    3: { title: 'Who should we contact?', hint: "We'll use these details to confirm pickup and delivery with you." },
+    1: { title: t('pad.step1.title'), hint: t('pad.step1.hint') },
+    2: { title: t('pad.step2.title'), hint: t('pad.step2.hint') },
+    3: { title: t('pad.step3.title'), hint: t('pad.step3.hint') },
   }
 
   return (
     <>
-      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
       <main className="scheduled-shell flow-shell">
         <section className="section-header scheduled-header pad-hero">
-          <p className="eyebrow">Pa-deliver</p>
+          <p className="eyebrow">{t('pad.eyebrow')}</p>
           <h1>
-            Send it.
-            <span className="hero-accent">We'll take it there.</span>
+            {t('pad.title1')}
+            <span className="hero-accent">{t('pad.title2')}</span>
           </h1>
-          <p className="subtitle">
-            Need to send a package across Bislig? Tell us what you're sending, where it's going, and when you need it delivered.
-          </p>
-          <p className="pad-descriptor">Package &middot; Pickup &middot; Delivery</p>
+          <p className="subtitle">{t('pad.subtitle')}</p>
+          <p className="pad-descriptor">{t('pad.descriptor')}</p>
         </section>
 
         <form className="scheduled-form flow-card" ref={cardRef} onSubmit={handleSubmit} noValidate>
-          <div className="flow-progress" role="presentation" aria-label={`Pa-deliver progress: step ${step} of 3`}>
+          <div className="flow-progress" role="presentation" aria-label={t('pad.progressAria', { step, total: 3 })}>
             {[1, 2, 3].map((number) =>
               step < number
                 ? [
@@ -342,20 +342,20 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             <div className="flow-actions">
               {step < 3 ? (
                 <button type="submit" className="primary-action request-ride-action">
-                  Continue &rarr;
+                  {t('form.continue')} &rarr;
                 </button>
               ) : (
                 <button type="submit" className="primary-action request-ride-action">
-                  Request Delivery &rarr;
+                  {t('pad.submit')} &rarr;
                 </button>
               )}
               {step === 1 ? (
                 <button type="button" className="flow-back" onClick={onBack}>
-                  &larr; Back to Home
+                  &larr; {t('form.backHome')}
                 </button>
               ) : (
                 <button type="button" className="flow-back" onClick={() => goToStep(step - 1)}>
-                  &larr; Back
+                  &larr; {t('form.back')}
                 </button>
               )}
             </div>
@@ -363,8 +363,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
 
           {step === 3 ? (
             <div className="scheduled-pricing-note flow-final-note">
-              <strong>Delivery fee is confirmed after review.</strong>
-              <span>Distance, package size, and urgency will be considered before the fee is confirmed.</span>
+              <strong>{t('pad.finalNoteStrong')}</strong>
+              <span>{t('pad.finalNoteText')}</span>
             </div>
           ) : null}
         </form>

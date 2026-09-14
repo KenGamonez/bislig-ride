@@ -12815,3 +12815,95 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     transform: none !important;
   }
 }
+
+/* =========================================================
+   LANGUAGE TOGGLE — premium segmented EN | BI control
+   Compact pill, green active segment, header placement.
+   ========================================================= */
+
+.language-toggle {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--color-gray-150);
+  border-radius: var(--radius-pill);
+  background: var(--color-gray-50);
+  box-shadow: inset 0 1px 2px rgba(7, 16, 18, 0.04);
+}
+
+.language-option {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 38px;
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--color-gray-500);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: color var(--transition), background var(--transition), box-shadow var(--transition);
+}
+
+.language-option:hover {
+  color: var(--color-black-soft);
+}
+
+.language-option.is-active {
+  background: var(--color-green);
+  color: var(--color-black-soft);
+  box-shadow: 0 1px 4px rgba(0, 232, 138, 0.35);
+}
+
+.language-option:focus-visible {
+  outline: 2px solid var(--color-green-deep);
+  outline-offset: 2px;
+}
+
+.language-option:active {
+  transform: scale(0.97);
+}
+
+/* Header placement — keep nav cluster on the right */
+.app-header .top-nav {
+  margin-left: auto;
+}
+
+.app-header .language-toggle {
+  margin-left: 8px;
+}
+
+@media (max-width: 767px) {
+  .app-header .language-toggle {
+    margin-left: 2px;
+  }
+}
+
+@media (max-width: 420px) {
+  .language-option {
+    min-width: 32px;
+    padding: 0 8px;
+    height: 24px;
+    font-size: 0.58rem;
+  }
+
+  .app-header .language-toggle {
+    padding: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .language-option {
+    transition: none !important;
+    transform: none !important;
+  }
+}

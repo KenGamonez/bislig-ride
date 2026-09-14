@@ -1,4 +1,5 @@
 import { ServiceCarousel } from './ServiceCarousel'
+import { useLanguage } from '../lib/i18n'
 
 const pakyawanIcon = (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -38,20 +39,22 @@ type ServiceDashboardProps = {
 }
 
 export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
+  const { t } = useLanguage()
+
   return (
-    <section className="service-dashboard" aria-label="Bislig Ride services">
+    <section className="service-dashboard" aria-label={t('dash.eyebrow')}>
       <header className="home-hero">
-        <p className="home-hero-eyebrow">Bislig Ride</p>
+        <p className="home-hero-eyebrow">{t('dash.eyebrow')}</p>
         <h1 className="home-hero-title">
-          What do you need <span className="home-hero-accent">today?</span>
+          {t('dash.title1')} <span className="home-hero-accent">{t('dash.title2')}</span>
         </h1>
-        <p className="home-hero-subtitle">Choose how you want to move around Bislig City.</p>
+        <p className="home-hero-subtitle">{t('dash.subtitle')}</p>
       </header>
 
       <button type="button" className="ride-now-card" onClick={onSelectRideNow}>
-        <span className="ride-now-badge">Popular</span>
-        <span className="ride-now-title">Ride Now</span>
-        <span className="ride-now-copy">Get moving around Bislig City.</span>
+        <span className="ride-now-badge">{t('dash.popular')}</span>
+        <span className="ride-now-title">{t('dash.rideNow')}</span>
+        <span className="ride-now-copy">{t('dash.rideNowCopy')}</span>
         <span className="ride-now-arrow" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
             <path d="M5 12h14" />
@@ -60,16 +63,16 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
         </span>
       </button>
 
-      <section className="other-ways" aria-label="Other ways to move">
-        <p className="other-ways-label">Other ways to move</p>
+      <section className="other-ways" aria-label={t('dash.otherWays')}>
+        <p className="other-ways-label">{t('dash.otherWays')}</p>
         <div className="other-ways-rows">
           <a href="/pakyawan" className="other-ways-row">
             <span className="other-ways-icon" aria-hidden="true">
               {pakyawanIcon}
             </span>
             <span className="other-ways-copy">
-              <strong>Pakyawan</strong>
-              <small>Reserve a vehicle for longer trips.</small>
+              <strong>{t('dash.pakyawan')}</strong>
+              <small>{t('dash.pakyawanDesc')}</small>
             </span>
             <span className="other-ways-arrow" aria-hidden="true">→</span>
           </a>
@@ -79,8 +82,8 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
               {deliverIcon}
             </span>
             <span className="other-ways-copy">
-              <strong>Pa-deliver</strong>
-              <small>Send packages across Bislig.</small>
+              <strong>{t('dash.paDeliver')}</strong>
+              <small>{t('dash.paDeliverDesc')}</small>
             </span>
             <span className="other-ways-arrow" aria-hidden="true">→</span>
           </a>
@@ -90,8 +93,8 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
               {carRentalIcon}
             </span>
             <span className="other-ways-copy">
-              <strong>Car Rentals</strong>
-              <small>Rent a vehicle by the day.</small>
+              <strong>{t('dash.carRentals')}</strong>
+              <small>{t('dash.carRentalsDesc')}</small>
             </span>
             <span className="other-ways-arrow" aria-hidden="true">→</span>
           </a>

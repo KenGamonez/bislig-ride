@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useLanguage } from '../lib/i18n'
 
 const BISLIG_LATITUDE = 8.1789
 const BISLIG_LONGITUDE = 126.3216
@@ -25,18 +26,6 @@ type OpenMeteoResponse = {
   }
 }
 
-const getWeatherDescription = (code: number) => {
-  if (code === 0) return 'Clear sky'
-  if ([1, 2].includes(code)) return 'Mostly sunny'
-  if (code === 3) return 'Cloudy'
-  if ([45, 48].includes(code)) return 'Foggy'
-  if ([51, 53, 55, 56, 57].includes(code)) return 'Light drizzle'
-  if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return 'Light rain'
-  if ([71, 73, 75, 77, 85, 86].includes(code)) return 'Snow'
-  if ([95, 96, 99].includes(code)) return 'Thunderstorm'
-  return 'Mixed conditions'
-}
-
 const getWeatherIcon = (code: number, isDay: number) => {
   if (code === 0) return isDay ? '☀' : '☾'
   if ([1, 2].includes(code)) return isDay ? '◐' : '◑'
@@ -46,15 +35,28 @@ const getWeatherIcon = (code: number, isDay: number) => {
   return '○'
 }
 
-const formatUpdatedTime = (updatedAt: Date) => {
-  const minutesAgo = Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / 60000))
-  return minutesAgo === 0 ? 'Updated just now' : `Updated ${minutesAgo} minute${minutesAgo === 1 ? '' : 's'} ago`
-}
-
 export function WeatherWidget() {
+  const { t } = useLanguage()
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
+
+  const getWeatherDescription = (code: number) => {
+    if (code === 0) return t('weather.clear')
+    if ([1, 2].includes(code)) return t('weather.sunny')
+    if (code === 3) return t('weather.cloudy')
+    if ([45, 48].includes(code)) return t('weather.foggy')
+    if ([51, 53, 55, 56, 57].includes(code)) return t('weather.drizzle')
+    if ([61, 63, 65, 66, 67, 80, 81, 82].includes(code)) return t('weather.lightRain')
+    if ([71, 73, 75, 77, 85, 86].includes(code)) return t('weather.snow')
+    if ([95, 96, 99].includes(code)) return t('weather.storm')
+    return t('weather.mixed')
+  }
+
+  const formatUpdatedTime = (updatedAt: Date) => {
+    const minutesAgo = Math.max(0, Math.floor((Date.now() - updatedAt.getTime()) / 60000))
+    return minutesAgo === 0 ? t('weather.updatedNow') : t('weather.updatedAgo', { minutes: minutesAgo })
+  }
 
   useEffect(() => {
     let isMounted = true
@@ -99,14 +101,14 @@ export function WeatherWidget() {
   }, [])
 
   return (
-    <section className="weather-widget" aria-label="Bislig City weather">
+    <section className="weather-widget" aria-label={t('weather.label')}>
       <div className="weather-header">
-        <div><p className="weather-label">Bislig City Weather</p><p className="weather-context">Plan your ride around today's weather.</p></div>
+        <div><p className="weather-label">{t('weather.label')}</p><p className="weather-context">{t('weather.context')}</p></div>
         {weather ? <span className="weather-icon" aria-hidden="true">{getWeatherIcon(weather.weatherCode, weather.isDay)}</span> : null}
       </div>
-      {isLoading ? <p className="weather-status">Checking current conditions...</p> : hasError || !weather ? <p className="weather-status">Weather is temporarily unavailable. Your ride booking is still ready.</p> : <>
+      {isLoading ? <p className="weather-status">{t('weather.checking')}</p> : hasError || !weather ? <p className="weather-status">{t('weather.unavailable')}</p> : <>
         <div className="weather-main"><strong>{Math.round(weather.temperature)}°C</strong><span>{getWeatherDescription(weather.weatherCode)}</span></div>
-        <div className="weather-details"><span>Feels like <strong>{Math.round(weather.feelsLike)}°C</strong></span><span>Humidity <strong>{weather.humidity}%</strong></span><span>Rain <strong>{weather.precipitation} mm</strong></span></div>
+        <div className="weather-details"><span>{t('weather.feelsLike')} <strong>{Math.round(weather.feelsLike)}°C</strong></span><span>{t('weather.humidity')} <strong>{weather.humidity}%</strong></span><span>{t('weather.rain')} <strong>{weather.precipitation} mm</strong></span></div>
         <p className="weather-updated">{formatUpdatedTime(weather.updatedAt)}</p>
       </>}
     </section>

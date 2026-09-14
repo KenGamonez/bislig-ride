@@ -2,6 +2,7 @@
 import { AppHeader } from './AppHeader'
 import { supabase } from '../lib/supabase'
 import { sendDriverPasswordReset, signInDriverWithIdentifier } from '../lib/driverAuth'
+import { useLanguage } from '../lib/i18n'
 
 type DriverLoginProps = {
   onLogin: (driverId: string) => void
@@ -13,6 +14,7 @@ type DriverLoginProps = {
 type DriverLoginMode = 'login' | 'forgot' | 'sent'
 
 export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLoginProps) {
+  const { t } = useLanguage()
   const [mode, setMode] = useState<DriverLoginMode>('login')
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
@@ -24,7 +26,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
     event.preventDefault()
 
     if (!identifier.trim() || !password) {
-      setError('Enter your username or email and password to continue.')
+      setError(t('auth.errMissingCredentials'))
       return
     }
 
@@ -35,7 +37,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
       const { data } = await signInDriverWithIdentifier(identifier, password)
 
       if (!data.user) {
-        setError('Incorrect username or password.')
+        setError(t('auth.errInvalidCredentials'))
         setLoading(false)
         return
       }
@@ -48,14 +50,14 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
 
       if (driverError || !driver) {
         await supabase.auth.signOut()
-        setError('This account is not linked to a Bislig Ride driver.')
+        setError(t('auth.errNotLinked'))
         setLoading(false)
         return
       }
 
       if (driver.status === 'inactive') {
         await supabase.auth.signOut()
-        setError('This driver account is deactivated. Contact the admin to reactivate it.')
+        setError(t('auth.errDeactivated'))
         setLoading(false)
         return
       }
@@ -64,7 +66,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
       setLoading(false)
     } catch (signInError) {
       console.error('Unable to sign in driver:', signInError)
-      setError('Incorrect username or password.')
+      setError(t('auth.errInvalidCredentials'))
       setLoading(false)
     }
   }
@@ -73,7 +75,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
     event.preventDefault()
 
     if (!identifier.trim()) {
-      setError('Enter your username or email to find your account.')
+      setError(t('auth.errForgotMissing'))
       return
     }
 
@@ -85,7 +87,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
       setMode('sent')
     } catch (resetError) {
       console.error('Unable to send password reset:', resetError)
-      setError("We couldn't send a reset link right now. Please try again.")
+      setError(t('auth.errResetFailed'))
     } finally {
       setLoading(false)
     }
@@ -102,7 +104,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
       <AppHeader
         view={view}
         onViewChange={onViewChange}
-        primaryLabel="My Rides"
+        primaryLabel={t('nav.myRides')}
         onPrimaryAction={() => onViewChange('Rider')}
       />
       <div className="auth-shell">
@@ -112,12 +114,12 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
               <path d="M19 12H5" />
               <path d="m12 19-7-7 7-7" />
             </svg>
-            Back to Rider
+            {t('auth.backToRider')}
           </button>
 
           <div className="auth-header">
-            <p className="eyebrow auth-eyebrow">Driver Access</p>
-            <h2>{mode === 'login' ? 'Welcome back' : mode === 'forgot' ? 'Reset password' : 'Check your inbox'}</h2>
+            <p className="eyebrow auth-eyebrow">{t('auth.driverAccess')}</p>
+            <h2>{mode === 'login' ? t('auth.welcomeBack') : mode === 'forgot' ? t('auth.resetPassword') : t('auth.checkInbox')}</h2>
           </div>
 
           {error ? <p className="auth-error" role="alert">{error}</p> : null}
@@ -125,7 +127,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
           {mode === 'login' ? (
             <form onSubmit={handleLogin}>
               <label className="field-block">
-                <span className="field-label">Username or email</span>
+                <span className="field-label">{t('auth.usernameEmail')}</span>
                 <input
                   className="input-field"
                   type="text"
@@ -138,7 +140,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
               </label>
 
               <label className="field-block">
-                <span className="field-label">Password</span>
+                <span className="field-label">{t('auth.password')}</span>
                 <input
                   className="input-field"
                   type={showPassword ? 'text' : 'password'}
@@ -157,7 +159,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
                   onClick={() => setShowPassword((current) => !current)}
                   disabled={loading}
                 >
-                  {showPassword ? 'Hide password' : 'Show password'}
+                  {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
                 </button>
               </div>
 
@@ -166,15 +168,15 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
                 className="primary-action request-ride-action"
                 disabled={loading}
               >
-                {loading ? 'Signing in...' : 'Login'}
+                {loading ? t('auth.signingIn') : t('auth.login')}
               </button>
 
               <div className="auth-links">
                 <button type="button" className="link-button" onClick={() => { setMode('forgot'); setError('') }} disabled={loading}>
-                  Forgot password?
+                  {t('auth.forgotPassword')}
                 </button>
                 <button type="button" className="link-button">
-                  Contact Admin
+                  {t('auth.contactAdmin')}
                 </button>
               </div>
             </form>
@@ -183,11 +185,11 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
           {mode === 'forgot' ? (
             <form onSubmit={handleForgotSubmit}>
               <p className="muted-copy">
-                Enter your username or registered email and we'll send a password reset link.
+                {t('auth.resetHint')}
               </p>
 
               <label className="field-block">
-                <span className="field-label">Username or email</span>
+                <span className="field-label">{t('auth.usernameEmail')}</span>
                 <input
                   className="input-field"
                   type="text"
@@ -200,12 +202,12 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
               </label>
 
               <button type="submit" className="primary-action request-ride-action" disabled={loading}>
-                {loading ? 'Sending link...' : 'Send reset link'}
+                {loading ? t('auth.sendingLink') : t('auth.sendResetLink')}
               </button>
 
               <div className="auth-links">
                 <button type="button" className="link-button" onClick={handleBackToLogin} disabled={loading}>
-                  Back to login
+                  {t('auth.backToLogin')}
                 </button>
               </div>
             </form>
@@ -214,13 +216,12 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
           {mode === 'sent' ? (
             <div>
               <p className="muted-copy">
-                If a Bislig Ride driver account matches that username or email, a password reset
-                link has been sent. It only works for a short time — check your inbox (and spam folder).
+                {t('auth.sentNote')}
               </p>
 
               <div className="auth-links">
                 <button type="button" className="link-button" onClick={handleBackToLogin}>
-                  Back to login
+                  {t('auth.backToLogin')}
                 </button>
               </div>
             </div>

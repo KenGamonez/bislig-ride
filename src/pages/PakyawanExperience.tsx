@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { createPakyawanBooking } from '../lib/scheduledBookings'
 import { pakyawanTripTypes, type PakyawanTripType } from '../types/scheduledBooking'
+import { useLanguage } from '../lib/i18n'
 
 const routeToView = (nextView: AppViewMode) => {
   try {
@@ -48,6 +49,7 @@ const getToday = () => {
 }
 
 export function PakyawanExperience({ onBack }: { onBack: () => void }) {
+  const { t } = useLanguage()
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitError, setSubmitError] = useState('')
@@ -67,11 +69,11 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       'booking_date', 'pickup_time', 'pickup_location', 'destination', 'passengers', 'trip_type', 'customer_name', 'customer_phone',
     ]
     requiredFields.forEach((field) => {
-      if (!form[field].trim()) nextErrors[field] = 'This field is required.'
+      if (!form[field].trim()) nextErrors[field] = t('err.required')
     })
-    if (form.booking_date && form.booking_date < getToday()) nextErrors.booking_date = 'Please choose today or a future date.'
-    if (form.passengers && (!/^\d+$/.test(form.passengers) || Number(form.passengers) < 1)) nextErrors.passengers = 'Enter at least one passenger.'
-    if (form.estimated_hours && (!/^\d+$/.test(form.estimated_hours) || Number(form.estimated_hours) < 1)) nextErrors.estimated_hours = 'Enter the expected duration in hours.'
+    if (form.booking_date && form.booking_date < getToday()) nextErrors.booking_date = t('pak.futureDate')
+    if (form.passengers && (!/^\d+$/.test(form.passengers) || Number(form.passengers) < 1)) nextErrors.passengers = t('pak.onePassenger')
+    if (form.estimated_hours && (!/^\d+$/.test(form.estimated_hours) || Number(form.estimated_hours) < 1)) nextErrors.estimated_hours = t('pak.durationHours')
     setErrors(nextErrors)
     return Object.keys(nextErrors).length === 0
   }
@@ -81,31 +83,31 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
     if (target === 1) {
       if (!form.booking_date.trim()) {
-        nextErrors.booking_date = 'This field is required.'
+        nextErrors.booking_date = t('err.required')
       } else if (form.booking_date < getToday()) {
-        nextErrors.booking_date = 'Please choose today or a future date.'
+        nextErrors.booking_date = t('pak.futureDate')
       }
-      if (!form.pickup_time.trim()) nextErrors.pickup_time = 'This field is required.'
+      if (!form.pickup_time.trim()) nextErrors.pickup_time = t('err.required')
     }
 
     if (target === 2) {
-      if (!form.pickup_location.trim()) nextErrors.pickup_location = 'This field is required.'
-      if (!form.destination.trim()) nextErrors.destination = 'This field is required.'
-      if (!form.trip_type.trim()) nextErrors.trip_type = 'This field is required.'
+      if (!form.pickup_location.trim()) nextErrors.pickup_location = t('err.required')
+      if (!form.destination.trim()) nextErrors.destination = t('err.required')
+      if (!form.trip_type.trim()) nextErrors.trip_type = t('err.required')
       const passengers = form.passengers.trim()
       if (!passengers) {
-        nextErrors.passengers = 'This field is required.'
+        nextErrors.passengers = t('err.required')
       } else if (!/^\d+$/.test(passengers) || Number(passengers) < 1) {
-        nextErrors.passengers = 'Enter at least one passenger.'
+        nextErrors.passengers = t('pak.onePassenger')
       }
     }
 
     if (target === 3) {
       if (form.estimated_hours && (!/^\d+$/.test(form.estimated_hours) || Number(form.estimated_hours) < 1)) {
-        nextErrors.estimated_hours = 'Enter the expected duration in hours.'
+        nextErrors.estimated_hours = t('pak.durationHours')
       }
-      if (!form.customer_name.trim()) nextErrors.customer_name = 'This field is required.'
-      if (!form.customer_phone.trim()) nextErrors.customer_phone = 'This field is required.'
+      if (!form.customer_name.trim()) nextErrors.customer_name = t('err.required')
+      if (!form.customer_phone.trim()) nextErrors.customer_phone = t('err.required')
     }
 
     setErrors(nextErrors)
@@ -152,7 +154,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit pakyawan booking:', error)
-      setSubmitError('We could not submit your booking request right now. Please try again.')
+      setSubmitError(t('pak.submitFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -190,37 +192,37 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       return (
         <div className="flow-fields">
           <div className="flow-field-row">
-            {field('pickup_location', 'Pickup Location')}
-            {field('destination', 'Destination')}
+            {field('pickup_location', t('pak.pickupLocation'))}
+            {field('destination', t('pak.destination'))}
           </div>
           <div className="flow-field-row">
             <label className="field-block">
-              <span className="field-label">Number of Passengers</span>
+              <span className="field-label">{t('pak.numPassengers')}</span>
               <div className={`flow-stepper${errors.passengers ? ' has-error' : ''}`}>
-                <button type="button" aria-label="Decrease number of passengers" onClick={() => adjustPassengers(-1)}>
+                <button type="button" aria-label={t('pak.decreasePassengers')} onClick={() => adjustPassengers(-1)}>
                   &minus;
                 </button>
                 <input
-                  aria-label="Number of passengers"
+                  aria-label={t('pak.passengerCountAria')}
                   inputMode="numeric"
                   type="text"
                   value={form.passengers}
                   onChange={(event) => updateField('passengers', event.target.value.replace(/[^0-9]/g, ''))}
                 />
-                <button type="button" aria-label="Increase number of passengers" onClick={() => adjustPassengers(1)}>
+                <button type="button" aria-label={t('pak.increasePassengers')} onClick={() => adjustPassengers(1)}>
                   +
                 </button>
               </div>
               {errors.passengers ? <span className="field-error">{errors.passengers}</span> : null}
             </label>
             <label className="field-block">
-              <span className="field-label">Trip Type</span>
+              <span className="field-label">{t('pak.tripType')}</span>
               <select
                 className={`input-field${errors.trip_type ? ' has-error' : ''}`}
                 value={form.trip_type}
                 onChange={(event) => updateField('trip_type', event.target.value)}
               >
-                <option value="">Select trip type</option>
+                <option value="">{t('pak.selectTripType')}</option>
                 {pakyawanTripTypes.map((type) => (
                   <option key={type}>{type}</option>
                 ))}
@@ -235,22 +237,22 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     if (step === 3) {
       return (
         <div className="flow-fields">
-          {field('estimated_hours', 'Estimated Duration (hours, optional)', 'number')}
+          {field('estimated_hours', t('pak.estimatedHours'), 'number')}
           <label className="field-block">
-            <span className="field-label">Additional Stops or Special Requests (Optional)</span>
+            <span className="field-label">{t('pak.specialRequests')}</span>
             <textarea
               className="input-field textarea-field flow-notes"
-              placeholder="Example: Stop at another location, extra luggage, special event, etc."
+              placeholder={t('pak.specialRequestsPlaceholder')}
               value={form.special_requests}
               onChange={(event) => updateField('special_requests', event.target.value)}
             />
           </label>
           <div className="flow-subgroup">
-            <span>Contact details</span>
+            <span>{t('pak.contactDetails')}</span>
           </div>
           <div className="flow-field-row">
-            {field('customer_name', 'Full Name')}
-            {field('customer_phone', 'Phone Number', 'tel')}
+            {field('customer_name', t('pak.fullName'))}
+            {field('customer_phone', t('pak.phoneNumber'), 'tel')}
           </div>
         </div>
       )
@@ -259,8 +261,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     return (
       <div className="flow-fields">
         <div className="flow-date-row">
-          {field('booking_date', 'Trip Date', 'date', undefined, getToday())}
-          {field('pickup_time', 'Pickup Time', 'time')}
+          {field('booking_date', t('pak.tripDate'), 'date', undefined, getToday())}
+          {field('pickup_time', t('pak.pickupTime'), 'time')}
         </div>
       </div>
     )
@@ -269,15 +271,15 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   if (submitted) {
     return (
       <>
-        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">Request received</p>
-            <h1>Booking Request Received</h1>
-            <p>Your Pakyawan / Umbak request has been submitted.</p>
-            <p>Our team will review your trip details, vehicle availability, and pricing. Final pricing will be confirmed before your booking is accepted.</p>
+            <p className="eyebrow">{t('pak.receivedEyebrow')}</p>
+            <h1>{t('pak.receivedTitle')}</h1>
+            <p>{t('pak.receivedBody1')}</p>
+            <p>{t('pak.receivedBody2')}</p>
             <button type="button" className="primary-action" onClick={onBack}>
-              Back to Ride Booking
+              {t('pak.backToRide')}
             </button>
           </section>
         </main>
@@ -286,26 +288,26 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   }
 
   const stepTitles: Record<number, { title: string; hint: string }> = {
-    1: { title: 'Trip schedule', hint: 'When should we pick you up?' },
-    2: { title: 'Route & group', hint: "Where are you going, and who's coming?" },
-    3: { title: 'Trip details', hint: 'Almost there. Tell us a little more about the trip.' },
+    1: { title: t('pak.step1.title'), hint: t('pak.step1.hint') },
+    2: { title: t('pak.step2.title'), hint: t('pak.step2.hint') },
+    3: { title: t('pak.step3.title'), hint: t('pak.step3.hint') },
   }
 
   return (
     <>
-      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
       <main className="scheduled-shell flow-shell">
         <section className="section-header scheduled-header">
-          <p className="eyebrow">Pakyawan / Umbak</p>
+          <p className="eyebrow">{t('pak.eyebrow')}</p>
           <h1>
-            Going somewhere?
-            <span className="hero-accent">We'll get you there.</span>
+            {t('pak.title1')}
+            <span className="hero-accent">{t('pak.title2')}</span>
           </h1>
-          <p className="subtitle">Reserve a vehicle for long-distance or out-of-town trips, family travel, and group transportation.</p>
+          <p className="subtitle">{t('pak.subtitle')}</p>
         </section>
 
         <form className="scheduled-form flow-card" ref={cardRef} onSubmit={handleSubmit} noValidate>
-          <div className="flow-progress" role="presentation" aria-label={`Pakyawan progress: step ${step} of 3`}>
+          <div className="flow-progress" role="presentation" aria-label={t('pak.progressAria', { step, total: 3 })}>
             {[1, 2, 3].map((number) =>
               step < number
                 ? [
@@ -347,20 +349,20 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             <div className="flow-actions">
               {step < 3 ? (
                 <button type="submit" className="primary-action request-ride-action">
-                  Continue &rarr;
+                  {t('form.continue')} &rarr;
                 </button>
               ) : (
                 <button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>
-                  {isSubmitting ? 'Submitting request...' : 'Request Pakyawan \u2192'}
+                  {isSubmitting ? t('pak.submitting') : `${t('pak.submit')} \u2192`}
                 </button>
               )}
               {step === 1 ? (
                 <button type="button" className="flow-back" onClick={onBack}>
-                  &larr; Back to Home
+                  &larr; {t('form.backHome')}
                 </button>
               ) : (
                 <button type="button" className="flow-back" onClick={() => goToStep(step - 1)}>
-                  &larr; Back
+                  &larr; {t('form.back')}
                 </button>
               )}
             </div>
@@ -368,8 +370,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
           {step === 3 ? (
             <div className="scheduled-pricing-note flow-final-note">
-              <strong>Availability confirmed with you first.</strong>
-              <span>We'll contact you to confirm availability, trip details, and pricing.</span>
+              <strong>{t('pak.finalNoteStrong')}</strong>
+              <span>{t('pak.finalNoteText')}</span>
             </div>
           ) : null}
         </form>

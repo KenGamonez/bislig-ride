@@ -1,20 +1,24 @@
+import { useLanguage } from '../lib/i18n'
+
 type AnnouncementTickerProps = {
   variant?: 'flow' | 'fixed'
   className?: string
 }
 
-const segment = (
-  <>
-    <span>Bislig Ride is currently onboarding our founding drivers</span>
-    <span className="ticker-dot" aria-hidden="true" />
-    <span>More rides coming soon</span>
-    <span className="ticker-dot" aria-hidden="true" />
-  </>
-)
-
 const blank = [undefined, undefined, undefined, undefined]
 
 export function AnnouncementTicker({ variant = 'flow', className }: AnnouncementTickerProps) {
+  const { t } = useLanguage()
+
+  const segment = (
+    <>
+      <span>{t('ticker.onboarding')}</span>
+      <span className="ticker-dot" aria-hidden="true" />
+      <span>{t('ticker.moreRides')}</span>
+      <span className="ticker-dot" aria-hidden="true" />
+    </>
+  )
+
   return (
     <div
       className={
@@ -23,7 +27,7 @@ export function AnnouncementTicker({ variant = 'flow', className }: Announcement
           : `announcement-ticker${className ? ` ${className}` : ''}`
       }
       role="marquee"
-      aria-label="Bislig Ride announcement: currently onboarding founding drivers"
+      aria-label={t('ticker.aria')}
     >
       <div className="ticker-track">
         {blank.map((_, index) => (

@@ -3,6 +3,7 @@ import type { FormEvent } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { createContactMessage } from '../lib/contactMessages'
 import type { ContactMessageInsert } from '../types/contactMessage'
+import { useLanguage } from '../lib/i18n'
 
 const goHome = () => {
   window.location.href = '/'
@@ -18,6 +19,7 @@ const goToView = (nextView: AppViewMode) => {
 }
 
 export function ContactExperience() {
+  const { t } = useLanguage()
   const [submitted, setSubmitted] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
@@ -41,7 +43,7 @@ export function ContactExperience() {
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit contact message:', error)
-      setSubmitError('We could not send your message right now. Please try again.')
+      setSubmitError(t('contact.submitFailed'))
     } finally {
       setIsSubmitting(false)
     }
@@ -52,65 +54,55 @@ export function ContactExperience() {
       <AppHeader
         view="Rider"
         onViewChange={goToView}
-        primaryLabel="My Rides"
+        primaryLabel={t('nav.myRides')}
         onPrimaryAction={goHome}
         desktopNavItems={[
-          { label: 'Book Pakyawan', href: '/pakyawan', className: 'nav-link nav-link-pakyawan' },
-          { label: 'My Rides', href: '/', className: 'nav-button' },
-          { label: 'Explore Bislig', href: '/', className: 'nav-button' },
-          { label: 'Become a Driver', href: '/become-a-driver', className: 'nav-cta' },
-          { label: 'Contact', href: '/contact', className: 'nav-button active' },
+          { label: t('nav.bookPakyawan'), href: '/pakyawan', className: 'nav-link nav-link-pakyawan' },
+          { label: t('nav.myRides'), href: '/', className: 'nav-button' },
+          { label: t('nav.exploreBislig'), href: '/', className: 'nav-button' },
+          { label: t('nav.becomeDriver'), href: '/become-a-driver', className: 'nav-cta' },
+          { label: t('nav.contact'), href: '/contact', className: 'nav-button active' },
         ]}
       />
 
       <main className="contact-shell">
         <section className="contact-intro">
-          <p className="eyebrow">GET IN TOUCH</p>
-          <h1>Let's connect.</h1>
-          <p>
-            Have a question about Bislig Ride, want to partner with us,
-            feature your business, or discuss a digital project? We'd love
-            to hear from you.
-          </p>
+          <p className="eyebrow">{t('contact.eyebrow')}</p>
+          <h1>{t('contact.title')}</h1>
+          <p>{t('contact.intro')}</p>
         </section>
 
-        <section className="contact-grid" aria-label="Contact Bislig Ride">
+        <section className="contact-grid" aria-label={t('contact.aria')}>
           <div className="contact-info-card">
             <div>
-              <p className="contact-card-label">BISLIG RIDE</p>
-              <h2>Built for Bislig.</h2>
-              <p className="contact-info-copy">
-                We're building a local platform that connects passengers,
-                drivers, businesses, and the community.
-              </p>
+              <p className="contact-card-label">{t('contact.cardLabel')}</p>
+              <h2>{t('contact.cardTitle')}</h2>
+              <p className="contact-info-copy">{t('contact.infoCopy')}</p>
             </div>
 
             <div className="contact-info-list">
               <div className="contact-info-item">
-                <span>Location</span>
-                <strong>Bislig City, Surigao del Sur</strong>
+                <span>{t('contact.location')}</span>
+                <strong>{t('contact.locationValue')}</strong>
               </div>
 
               <div className="contact-info-item">
-                <span>For businesses</span>
-                <strong>Partnerships &amp; featured listings</strong>
+                <span>{t('contact.forBusinesses')}</span>
+                <strong>{t('contact.businessValue')}</strong>
               </div>
 
               <div className="contact-info-item">
-                <span>For projects</span>
-                <strong>Websites &amp; digital solutions</strong>
+                <span>{t('contact.forProjects')}</span>
+                <strong>{t('contact.projectsValue')}</strong>
               </div>
             </div>
 
             <div className="contact-business-note">
-              <span className="contact-business-kicker">EXPLORE BISLIG</span>
-              <h3>Want your business to be discovered?</h3>
-              <p>
-                Tell us about your business and how you'd like to be part
-                of the growing Explore Bislig experience.
-              </p>
+              <span className="contact-business-kicker">{t('contact.exploreKicker')}</span>
+              <h3>{t('contact.exploreTitle')}</h3>
+              <p>{t('contact.exploreText')}</p>
               <a className="contact-explore-link" href="/">
-                Explore Bislig
+                {t('contact.exploreLink')}
               </a>
             </div>
           </div>
@@ -119,61 +111,55 @@ export function ContactExperience() {
             {submitted ? (
               <div className="contact-success">
                 <span className="contact-success-mark" aria-hidden="true">?</span>
-                <p className="eyebrow">MESSAGE RECEIVED</p>
-                <h2>Thank you for reaching out.</h2>
-                <p>
-                  Your message has been received. We'll get back to you as
-                  soon as possible.
-                </p>
+                <p className="eyebrow">{t('contact.msgReceived')}</p>
+                <h2>{t('contact.thanksTitle')}</h2>
+                <p>{t('contact.thanksText')}</p>
                 <button
                   type="button"
                   className="secondary-action"
                   onClick={() => setSubmitted(false)}
                 >
-                  Send Another Message
+                  {t('contact.sendAnother')}
                 </button>
               </div>
             ) : (
               <form className="contact-form" onSubmit={handleSubmit}>
                 <div className="contact-form-heading">
-                  <p className="eyebrow">CONTACT US</p>
-                  <h2>How can we help?</h2>
-                  <p>
-                    Send us a message and we'll direct it to the right
-                    place.
-                  </p>
+                  <p className="eyebrow">{t('contact.contactEyebrow')}</p>
+                  <h2>{t('contact.helpTitle')}</h2>
+                  <p>{t('contact.helpText')}</p>
                 </div>
 
                 <label className="contact-field">
-                  <span>What can we help you with? <b>*</b></span>
+                  <span>{t('contact.inquiryField')} <b>*</b></span>
                   <select name="inquiry_type" required defaultValue="General Inquiry">
-                    <option>General Inquiry</option>
-                    <option>Ride / Rider Support</option>
-                    <option>Driver Inquiry</option>
-                    <option>Business Partnership</option>
-                    <option>Feature My Business</option>
-                    <option>Explore Bislig</option>
-                    <option>Website / Digital Project</option>
-                    <option>Feedback / Suggestion</option>
-                    <option>Report a Problem</option>
-                    <option>Other</option>
+                    <option value="General Inquiry">{t('contact.inquiryGeneral')}</option>
+                    <option value="Ride / Rider Support">{t('contact.inquiryRide')}</option>
+                    <option value="Driver Inquiry">{t('contact.inquiryDriver')}</option>
+                    <option value="Business Partnership">{t('contact.inquiryPartnership')}</option>
+                    <option value="Feature My Business">{t('contact.inquiryFeature')}</option>
+                    <option value="Explore Bislig">{t('contact.inquiryExplore')}</option>
+                    <option value="Website / Digital Project">{t('contact.inquiryWeb')}</option>
+                    <option value="Feedback / Suggestion">{t('contact.inquiryFeedback')}</option>
+                    <option value="Report a Problem">{t('contact.inquiryReport')}</option>
+                    <option value="Other">{t('contact.inquiryOther')}</option>
                   </select>
                 </label>
 
                 <div className="contact-field-row">
                   <label className="contact-field">
-                    <span>Full Name <b>*</b></span>
+                    <span>{t('contact.fullName')} <b>*</b></span>
                     <input
                       type="text"
                       name="full_name"
-                      placeholder="Your name"
+                      placeholder={t('contact.namePlaceholder')}
                       autoComplete="name"
                       required
                     />
                   </label>
 
                   <label className="contact-field">
-                    <span>Phone Number <b>*</b></span>
+                    <span>{t('contact.phone')} <b>*</b></span>
                     <input
                       type="tel"
                       name="phone"
@@ -186,7 +172,7 @@ export function ContactExperience() {
 
                 <div className="contact-field-row">
                   <label className="contact-field">
-                    <span>Email <small>(optional)</small></span>
+                    <span>{t('contact.email')} <small>{t('rating.optional')}</small></span>
                     <input
                       type="email"
                       name="email"
@@ -196,22 +182,22 @@ export function ContactExperience() {
                   </label>
 
                   <label className="contact-field">
-                    <span>Business / Organization <small>(optional)</small></span>
+                    <span>{t('contact.org')} <small>{t('rating.optional')}</small></span>
                     <input
                       type="text"
                       name="organization"
-                      placeholder="Business or organization"
+                      placeholder={t('contact.orgPlaceholder')}
                       autoComplete="organization"
                     />
                   </label>
                 </div>
 
                 <label className="contact-field">
-                  <span>Message <b>*</b></span>
+                  <span>{t('contact.message')} <b>*</b></span>
                   <textarea
                     name="message"
                     rows={6}
-                    placeholder="Tell us how we can help..."
+                    placeholder={t('contact.messagePlaceholder')}
                     required
                   />
                 </label>
@@ -219,13 +205,10 @@ export function ContactExperience() {
                 {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}
 
                 <button type="submit" className="primary-action contact-submit" disabled={isSubmitting}>
-                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                  {isSubmitting ? t('contact.sending') : t('contact.sendMessage')}
                 </button>
 
-                <p className="contact-form-note">
-                  By submitting this form, you agree that Bislig Ride may
-                  use the information you provide to respond to your inquiry.
-                </p>
+                <p className="contact-form-note">{t('contact.formNote')}</p>
               </form>
             )}
           </div>
@@ -234,4 +217,3 @@ export function ContactExperience() {
     </div>
   )
 }
-

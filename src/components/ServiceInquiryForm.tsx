@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useLanguage } from '../lib/i18n'
 
 export type ServiceInquiryField = {
   name: string
@@ -58,6 +59,7 @@ export function ServiceInquiryForm({
   onBack,
   onSuccess,
 }: ServiceInquiryFormProps) {
+  const { t } = useLanguage()
   const [form, setForm] = useState<Record<string, string>>({})
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitted, setSubmitted] = useState(false)
@@ -75,16 +77,16 @@ export function ServiceInquiryForm({
         const value = (form[field.name] ?? '').trim()
 
         if (!field.optional && !value) {
-          nextErrors[field.name] = 'This field is required.'
+          nextErrors[field.name] = t('err.required')
           return
         }
 
         if (value && field.type === 'tel' && !/^[0-9+\-\s()]+$/.test(value)) {
-          nextErrors[field.name] = 'Enter a valid phone number.'
+          nextErrors[field.name] = t('err.invalidPhone')
         }
 
         if (value && field.type === 'number' && !/^\d+$/.test(value)) {
-          nextErrors[field.name] = 'Enter a valid number.'
+          nextErrors[field.name] = t('err.invalidNumber')
         }
       })
     })
@@ -130,7 +132,7 @@ export function ServiceInquiryForm({
             value={value}
             onChange={(event) => updateField(field.name, event.target.value)}
           >
-            <option value="">Select an option</option>
+            <option value="">{t('form.selectOption')}</option>
             {(field.options ?? []).map((option) => (
               <option key={option}>{option}</option>
             ))}
@@ -181,7 +183,7 @@ export function ServiceInquiryForm({
       </section>
 
       <form className="scheduled-form" onSubmit={handleSubmit} noValidate>
-        <button type="button" className="back-link" onClick={onBack}>← Back to Home</button>
+        <button type="button" className="back-link" onClick={onBack}>← {t('form.backHome')}</button>
 
         {sections.map((section) => (
           <section className="booking-section" key={section.number}>

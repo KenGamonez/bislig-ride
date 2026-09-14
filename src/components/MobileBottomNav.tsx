@@ -1,3 +1,5 @@
+import { useLanguage } from '../lib/i18n'
+
 export type MobileBottomNavTab = 'home' | 'rides' | 'profile'
 
 type MobileBottomNavProps = {
@@ -6,8 +8,10 @@ type MobileBottomNavProps = {
 }
 
 export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps) {
+  const { t } = useLanguage()
+
   return (
-    <nav className="mobile-bottom-nav" aria-label="Primary mobile navigation">
+    <nav className="mobile-bottom-nav" aria-label={t('header.ariaPrimary')}>
       <button
         type="button"
         className={activeTab === 'home' ? 'bottom-nav-item is-active' : 'bottom-nav-item'}
@@ -21,7 +25,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
             <path d="M9.5 21v-6h5v6" />
           </svg>
         </span>
-        <span className="bottom-nav-label">Home</span>
+        <span className="bottom-nav-label">{t('nav.home')}</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
 
@@ -39,7 +43,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
             <path d="M9 11h6" />
           </svg>
         </span>
-        <span className="bottom-nav-label">My Rides</span>
+        <span className="bottom-nav-label">{t('nav.myRides')}</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
 
@@ -55,7 +59,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
             <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
           </svg>
         </span>
-        <span className="bottom-nav-label">Profile</span>
+        <span className="bottom-nav-label">{t('nav.profile')}</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
     </nav>

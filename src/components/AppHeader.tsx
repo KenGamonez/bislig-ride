@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react'
 import bisligLogo from '../assets/Bislig Ride Logo.png'
+import { LanguageToggle } from './LanguageToggle'
+import { useLanguage } from '../lib/i18n'
 
 export type AppViewMode = 'Rider' | 'driver' | 'admin'
 
@@ -20,6 +22,7 @@ type AppHeaderProps = {
 
 export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPrimaryAction, desktopNavItems }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
+  const { t } = useLanguage()
 
   useEffect(() => {
     if (!isMobileNavOpen) return
@@ -77,11 +80,11 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
             </a>
           </div>
 
-          <span className="beta-indicator" title="Bislig Ride is in beta">
-            <span className="beta-indicator-label">Beta</span>
+          <span className="beta-indicator" title={t('nav.betaTitle')}>
+            <span className="beta-indicator-label">{t('nav.beta')}</span>
           </span>
 
-          <nav className="top-nav desktop-nav" aria-label="Main navigation">
+          <nav className="top-nav desktop-nav" aria-label={t('nav.ariaMain')}>
             {desktopNavItems ? (
               desktopNavItems.map((item) => (
                 <a
@@ -94,9 +97,9 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               ))
             ) : (
               <>
-                <a className={view === 'Rider' ? 'nav-link is-active' : 'nav-link'} href="/">Home</a>
+                <a className={view === 'Rider' ? 'nav-link is-active' : 'nav-link'} href="/">{t('nav.home')}</a>
 
-                <a className="nav-link nav-link-pakyawan" href="/pakyawan">Book Pakyawan</a>
+                <a className="nav-link nav-link-pakyawan" href="/pakyawan">{t('nav.bookPakyawan')}</a>
 
                 <button
                   type="button"
@@ -111,20 +114,22 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
                   className="nav-button"
                   onClick={openDriverLogin}
                 >
-                  Driver Login
+                  {t('nav.driverLogin')}
                 </button>
 
-                <a className="nav-link" href="/contact">Contact</a>
+                <a className="nav-link" href="/contact">{t('nav.contact')}</a>
 
-                <a className="nav-cta" href="/become-a-driver">Become a Driver</a>
+                <a className="nav-cta" href="/become-a-driver">{t('nav.becomeDriver')}</a>
               </>
             )}
           </nav>
 
+          <LanguageToggle />
+
           <button
             type="button"
             className={isMobileNavOpen ? 'mobile-menu-toggle is-open' : 'mobile-menu-toggle'}
-            aria-label={isMobileNavOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-label={isMobileNavOpen ? t('nav.closeMenu') : t('nav.openMenu')}
             aria-expanded={isMobileNavOpen}
             aria-controls="mobile-main-navigation"
             onClick={() => setIsMobileNavOpen((current) => !current)}
@@ -150,7 +155,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
           <button
             type="button"
             className="mobile-nav-close"
-            aria-label="Close navigation menu"
+            aria-label={t('nav.closeMenu')}
             onClick={() => setIsMobileNavOpen(false)}
           >
             <span aria-hidden="true">
@@ -165,13 +170,13 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
         <div className="mobile-nav-scroll">
           <div className="mobile-nav-divider" aria-hidden="true"></div>
 
-          <nav className="mobile-nav-links" aria-label="Mobile navigation">
+          <nav className="mobile-nav-links" aria-label={t('nav.ariaMobile')}>
             <a
               className="mobile-nav-item"
               href="/"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Home</span>
+              <span className="mobile-nav-label">{t('nav.home')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
@@ -185,7 +190,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               className="mobile-nav-item mobile-nav-driver"
               onClick={openDriverLogin}
             >
-              <span className="mobile-nav-label">Driver Login</span>
+              <span className="mobile-nav-label">{t('nav.driverLogin')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -199,7 +204,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               href="/become-a-driver"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Become a Driver</span>
+              <span className="mobile-nav-label">{t('nav.becomeDriver')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="10" />
@@ -215,7 +220,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               href="/pakyawan"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Book Pakyawan</span>
+              <span className="mobile-nav-label">{t('nav.bookPakyawan')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
@@ -230,8 +235,8 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               className="mobile-nav-item mobile-nav-disabled"
               aria-disabled="true"
             >
-              <span className="mobile-nav-label">Pasabuy</span>
-              <span className="mobile-nav-badge">Coming soon</span>
+              <span className="mobile-nav-label">{t('nav.pasabuy')}</span>
+              <span className="mobile-nav-badge">{t('nav.comingSoon')}</span>
             </div>
 
             <a
@@ -239,7 +244,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               href="/pa-deliver"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Pa-deliver</span>
+              <span className="mobile-nav-label">{t('nav.paDeliver')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M12 2v20" />
@@ -254,7 +259,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
               href="/car-rentals"
               onClick={() => setIsMobileNavOpen(false)}
             >
-              <span className="mobile-nav-label">Car Rentals</span>
+              <span className="mobile-nav-label">{t('nav.carRentals')}</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 17h-1a1 1 0 0 1-1-1v-5l2-4.5A2 2 0 0 1 5.8 5.5H18.2a2 2 0 0 1 1.8 1.5L22 11v5a1 1 0 0 1-1 1h-1a2.5 2.5 0 0 1-5 0H9a2.5 2.5 0 0 1-5 0Z" />
@@ -289,8 +294,8 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
           </nav>
 
           <div className="mobile-nav-footer">
-            <span>Bislig City</span>
-            <span>Ride local. Move freely.</span>
+            <span>{t('header.footerCity')}</span>
+            <span>{t('header.footerTagline')}</span>
           </div>
         </div>
       </div>

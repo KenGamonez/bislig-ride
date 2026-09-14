@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import type { FormEvent } from 'react'
 import { getCustomerAuthId, supabase } from '../lib/supabase'
+import { useLanguage } from '../lib/i18n'
 
 type ChatMessage = {
   id: string
@@ -28,6 +29,7 @@ export function RideChat({
   driverAuthId,
   onClose,
 }: RideChatProps) {
+  const { t } = useLanguage()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
@@ -130,7 +132,7 @@ export function RideChat({
 
     if (error) {
       console.error('Unable to send ride chat message:', error)
-        setSendError(error?.message || 'Unable to send message.')
+        setSendError(error?.message || t('chat.sendFailed'))
     } else {
       const sent = data as ChatMessage
 
@@ -149,25 +151,25 @@ export function RideChat({
   }
 
   return (
-    <div className="ride-chat-overlay" role="dialog" aria-modal="true" aria-label={`Chat with ${otherPartyName}`}>
+    <div className="ride-chat-overlay" role="dialog" aria-modal="true" aria-label={t('chat.titleWith', { name: otherPartyName })}>
       <div className="ride-chat-panel">
         <div className="ride-chat-header">
           <div>
-            <strong>Chat with {otherPartyName}</strong>
+            <strong>{t('chat.titleWith', { name: otherPartyName })}</strong>
             <span>Bislig Ride</span>
           </div>
 
-          <button type="button" className="ride-chat-close" onClick={onClose} aria-label="Close chat">
+          <button type="button" className="ride-chat-close" onClick={onClose} aria-label={t('chat.closeAria')}>
             X
           </button>
         </div>
 
         <div className="ride-chat-messages">
           {loading ? (
-            <p className="ride-chat-empty">Loading messages...</p>
+            <p className="ride-chat-empty">{t('chat.loading')}</p>
           ) : messages.length === 0 ? (
             <p className="ride-chat-empty">
-              No messages yet. Send a message to your {currentRole === 'Rider' ? 'driver' : 'passenger'}.
+              {t('chat.empty', { role: currentRole === 'Rider' ? t('chat.roleDriver') : t('chat.rolePassenger') })}
             </p>
           ) : (
             messages.map((item) => {
@@ -201,14 +203,14 @@ export function RideChat({
             type="text"
             value={message}
             onChange={(event) => setMessage(event.target.value)}
-            placeholder="Type a message..."
+            placeholder={t('chat.placeholder')}
             maxLength={1000}
             disabled={sending}
-            aria-label="Chat message"
+            aria-label={t('chat.aria')}
           />
 
           <button type="submit" disabled={sending}>
-            {sending ? '...' : 'Send'}
+            {sending ? '...' : t('chat.send')}
           </button>
         </form>
       </div>

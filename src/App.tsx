@@ -15,6 +15,7 @@ import { AppHeader } from './components/AppHeader'
 import { AppFooter } from './components/AppFooter'
 import { supabase } from './lib/supabase'
 import { unlockNotificationAudio } from './lib/notifications'
+import { useLanguage } from './lib/i18n'
 
 type ViewMode = 'Rider' | 'driver' | 'admin'
 
@@ -34,6 +35,7 @@ function readRequestedView(): ViewMode {
 }
 
 function App() {
+  const { t } = useLanguage()
   const [view, setView] = useState<ViewMode>(readRequestedView)
   const [driverAuthenticated, setDriverAuthenticated] = useState(false)
   const [driverBlocked, setDriverBlocked] = useState(false)
@@ -233,14 +235,14 @@ function App() {
               <div className="auth-shell">
                 <div className="auth-card">
                   <div className="auth-header">
-                    <p className="eyebrow auth-eyebrow">Driver Access</p>
-                    <h2>Account inactive</h2>
+                    <p className="eyebrow auth-eyebrow">{t('auth.driverAccess')}</p>
+                    <h2>{t('blocked.title')}</h2>
                   </div>
                   <p className="muted-copy">
-                    Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+                    {t('blocked.text')}
                   </p>
                   <button type="button" className="primary-action request-ride-action" onClick={() => setView('Rider')}>
-                    Back to Ride Booking
+                    {t('blocked.back')}
                   </button>
                 </div>
               </div>

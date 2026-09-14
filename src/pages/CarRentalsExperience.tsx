@@ -3,6 +3,7 @@ import {
   ServiceInquiryForm,
   type ServiceInquirySection,
 } from '../components/ServiceInquiryForm'
+import { useLanguage } from '../lib/i18n'
 
 const routeToView = (nextView: AppViewMode) => {
   try {
@@ -14,74 +15,76 @@ const routeToView = (nextView: AppViewMode) => {
   window.location.reload()
 }
 
-const sections: ServiceInquirySection[] = [
-  {
-    number: '01',
-    title: 'The vehicle',
-    hint: 'What would you like to rent?',
-    fields: [
-      {
-        name: 'vehicle_type',
-        label: 'Vehicle Type',
-        type: 'select',
-        options: ['Sedan', 'SUV', 'Van', 'Motorcycle', 'Other'],
-      },
-      {
-        name: 'transmission',
-        label: 'Transmission',
-        type: 'select',
-        options: ['Automatic', 'Manual'],
-      },
-    ],
-  },
-  {
-    number: '02',
-    title: 'Schedule',
-    hint: 'When do you need the vehicle?',
-    fields: [
-      { name: 'pickup_date', label: 'Pickup Date', type: 'date' },
-      { name: 'pickup_time', label: 'Pickup Time', type: 'time' },
-      { name: 'return_date', label: 'Return Date', type: 'date' },
-      {
-        name: 'with_driver',
-        label: 'Driver Option',
-        type: 'select',
-        options: ['Self-drive', 'With driver'],
-      },
-    ],
-  },
-  {
-    number: '03',
-    title: 'Your contact information',
-    hint: 'So we can confirm availability with you',
-    fields: [
-      { name: 'customer_name', label: 'Full Name' },
-      { name: 'customer_phone', label: 'Phone Number', type: 'tel' },
-    ],
-  },
-]
-
 export function CarRentalsExperience({ onBack }: { onBack: () => void }) {
+  const { t } = useLanguage()
+
+  const sections: ServiceInquirySection[] = [
+    {
+      number: '01',
+      title: t('car.sect1.title'),
+      hint: t('car.sect1.hint'),
+      fields: [
+        {
+          name: 'vehicle_type',
+          label: t('car.vehicleType'),
+          type: 'select',
+          options: ['Sedan', 'SUV', 'Van', 'Motorcycle', 'Other'],
+        },
+        {
+          name: 'transmission',
+          label: t('car.transmission'),
+          type: 'select',
+          options: ['Automatic', 'Manual'],
+        },
+      ],
+    },
+    {
+      number: '02',
+      title: t('car.sect2.title'),
+      hint: t('car.sect2.hint'),
+      fields: [
+        { name: 'pickup_date', label: t('car.pickupDate'), type: 'date' },
+        { name: 'pickup_time', label: t('car.pickupTime'), type: 'time' },
+        { name: 'return_date', label: t('car.returnDate'), type: 'date' },
+        {
+          name: 'with_driver',
+          label: t('car.driverOption'),
+          type: 'select',
+          options: [t('car.selfDrive'), t('car.withDriver')],
+        },
+      ],
+    },
+    {
+      number: '03',
+      title: t('car.sect3.title'),
+      hint: t('car.sect3.hint'),
+      fields: [
+        { name: 'customer_name', label: t('car.fullName') },
+        { name: 'customer_phone', label: t('car.phoneNumber'), type: 'tel' },
+      ],
+    },
+  ]
+
   return (
     <>
-      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel="My Rides" onPrimaryAction={onBack} />
+      <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
       <ServiceInquiryForm
         idPrefix="car-rentals"
-        eyebrow="Self-drive and chauffeur rentals"
-        title="Car Rentals"
-        titleAccent="/ Pa-arkila"
-        subtitle="Rent a sedan, SUV, van, or motorcycle for your plans."
-        intro="Car Rentals lets you inquire about renting a vehicle for errands, trips, and events — with or without a driver. A representative will confirm vehicle availability and rental rates with you before booking — this is an inquiry, not an automatic reservation."
+        eyebrow={t('car.eyebrow')}
+        title={t('car.title')}
+        titleAccent={t('car.titleAccent')}
+        subtitle={t('car.subtitle')}
+        intro={t('car.intro')}
         sections={sections}
         note={{
-          strong: 'Availability and rates are confirmed after review.',
-          text: 'Vehicle availability, rental duration, and driver preference determine final pricing.',
+          strong: t('car.noteStrong'),
+          text: t('car.noteText'),
         }}
-        submitLabel="Submit Rental Inquiry"
-        successEyebrow="Inquiry received"
-        successTitle="Rental Inquiry Received"
-        successBody="Our team will confirm vehicle availability, driver options, and rates with you before your rental is booked."
-        successButtonLabel="Back to Home"
+        submitLabel={t('car.submit')}
+        successEyebrow={t('car.successEyebrow')}
+        successTitle={t('car.successTitle')}
+        successBody={t('car.successBody')}
+        successButtonLabel={t('form.backHome')}
         onBack={onBack}
         onSuccess={onBack}
       />

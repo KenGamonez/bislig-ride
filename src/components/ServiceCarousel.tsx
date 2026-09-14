@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react'
+import { useLanguage } from '../lib/i18n'
 
 type DiscoveryItem = {
   key: string
@@ -10,47 +11,48 @@ type DiscoveryItem = {
   onSelect?: () => void
 }
 
-const discoveryItems: DiscoveryItem[] = [
-  {
-    key: 'city',
-    kicker: 'Everyday trips',
-    title: 'City hops, anytime',
-    description: 'Quick on-demand motorbike rides across Bislig City and nearby barangays.',
-    cta: 'Ride Now',
-  },
-  {
-    key: 'trips',
-    kicker: 'Whole-day trips',
-    title: 'Family trips & events',
-    description: 'A private Pakyawan vehicle for out-of-town trips, airport transfers, and gatherings.',
-    cta: 'Book Pakyawan',
-    href: '/pakyawan',
-  },
-  {
-    key: 'deliver',
-    kicker: 'Same-day sending',
-    title: 'Packages across Bislig',
-    description: 'Send documents, parcels, and small items to any barangay in the city.',
-    cta: 'Pa-deliver',
-    href: '/pa-deliver',
-  },
-  {
-    key: 'cars',
-    kicker: 'Ride in comfort',
-    title: 'Cars for the day',
-    description: 'Rent a sedan, SUV, or van for your errands — self-drive or with a driver.',
-    cta: 'Car Rentals',
-    href: '/car-rentals',
-  },
-]
-
 const prefersReducedMotion = () =>
   typeof window !== 'undefined' &&
   window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
 export function ServiceCarousel({ onSelectRideNow }: { onSelectRideNow: () => void }) {
+  const { t } = useLanguage()
   const trackRef = useRef<HTMLDivElement | null>(null)
   const [activeIndex, setActiveIndex] = useState(0)
+
+  const discoveryItems: DiscoveryItem[] = [
+    {
+      key: 'city',
+      kicker: t('carousel.city.kicker'),
+      title: t('carousel.city.title'),
+      description: t('carousel.city.desc'),
+      cta: t('carousel.city.cta'),
+    },
+    {
+      key: 'trips',
+      kicker: t('carousel.trips.kicker'),
+      title: t('carousel.trips.title'),
+      description: t('carousel.trips.desc'),
+      cta: t('carousel.trips.cta'),
+      href: '/pakyawan',
+    },
+    {
+      key: 'deliver',
+      kicker: t('carousel.deliver.kicker'),
+      title: t('carousel.deliver.title'),
+      description: t('carousel.deliver.desc'),
+      cta: t('carousel.deliver.cta'),
+      href: '/pa-deliver',
+    },
+    {
+      key: 'cars',
+      kicker: t('carousel.cars.kicker'),
+      title: t('carousel.cars.title'),
+      description: t('carousel.cars.desc'),
+      cta: t('carousel.cars.cta'),
+      href: '/car-rentals',
+    },
+  ]
 
   const items = discoveryItems.map((item) =>
     item.key === 'city' ? { ...item, onSelect: onSelectRideNow } : item,
@@ -85,15 +87,15 @@ export function ServiceCarousel({ onSelectRideNow }: { onSelectRideNow: () => vo
   return (
     <section className="discover-section" aria-labelledby="discover-heading">
       <div className="discover-heading">
-        <p className="eyebrow">Also available</p>
-        <h2 id="discover-heading">Discover <span className="hero-accent">Bislig Ride</span></h2>
+        <p className="eyebrow">{t('carousel.kicker')}</p>
+        <h2 id="discover-heading">{t('carousel.title1')} <span className="hero-accent">{t('carousel.title2')}</span></h2>
       </div>
 
       <div
         className="discover-carousel"
         ref={trackRef}
         onScroll={handleScroll}
-        aria-label="Discover more ways to use Bislig Ride"
+        aria-label={t('carousel.aria')}
       >
         {items.map((item) => {
           const cardContent = (
@@ -124,14 +126,14 @@ export function ServiceCarousel({ onSelectRideNow }: { onSelectRideNow: () => vo
         })}
       </div>
 
-      <div className="carousel-dots" role="tablist" aria-label="Discovery card pagination">
+      <div className="carousel-dots" role="tablist" aria-label={t('carousel.aria')}>
         {items.map((item, index) => (
           <button
             type="button"
             key={item.key}
             role="tab"
             className={index === activeIndex ? 'carousel-dot is-active' : 'carousel-dot'}
-            aria-label={`Go to card ${index + 1} of ${items.length}: ${item.title}`}
+            aria-label={t('carousel.dot', { index: index + 1, total: items.length, title: item.title })}
             aria-selected={index === activeIndex}
             onClick={() => handleDotSelect(index)}
           />
