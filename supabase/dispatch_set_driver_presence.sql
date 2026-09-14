@@ -39,8 +39,10 @@ begin
   end if;
 
   if p_online then
-    -- Publish the first fix together with presence (atomic go-online), so
-    -- there is no window where the driver is online without a position.
+    -- Position is now OPTIONAL for going online. When the client shares one
+    -- it is still recorded here (backward compatible with the old atomic
+    -- go-online write); a driver can go online with no GPS fix at all. The
+    -- ACTIVE-driver gate above remains the only presence requirement.
     if p_latitude is not null and p_longitude is not null then
       insert into public.driver_locations (driver_id, latitude, longitude)
       values (v_driver_id, p_latitude, p_longitude)
@@ -48,20 +50,6 @@ begin
       do update set
         latitude = excluded.latitude,
         longitude = excluded.longitude;
-      v_has_fix := true;
-    else
-      -- No coordinates supplied: require an already-shared position before
-      -- presence can be toggled (used by availability/auto-accept toggles).
-      select exists (
-        select 1 from public.driver_locations dl
-        where dl.driver_id = v_driver_id
-        and dl.latitude is not null and dl.longitude is not null
-      ) into v_has_fix;
-    end if;
-
-    if not v_has_fix then
-      raise exception 'A driver position is required before going online.'
-        using errcode = '42501';
     end if;
   end if;
 

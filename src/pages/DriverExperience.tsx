@@ -29,10 +29,7 @@ import {
 } from '../lib/dispatch'
 import {
   driverLocationStatus,
-  hasGeolocation,
   persistOfflineBestEffort,
-  requestFirstFix,
-  startDriverLocationTracking,
 } from '../lib/driverPresence'
 import {
   cancelRide,
@@ -228,13 +225,13 @@ export function DriverExperience({
   const [confirmPassword, setConfirmPassword] = useState('')
   const [showPasswordFields, setShowPasswordFields] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
-  const [driverLocation, setDriverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [driverLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [pendingOffer, setPendingOffer] = useState<PendingOffer | null>(null)
   const [driverIsAvailable, setDriverIsAvailable] = useState(true)
   const [driverAutoAccept, setDriverAutoAccept] = useState(false)
   const [presenceError, setPresenceError] = useState('')
   const [requestError, setRequestError] = useState('')
-  const [lastLocationFixIso, setLastLocationFixIso] = useState<string | null>(null)
+  const [lastLocationFixIso] = useState<string | null>(null)
   const [, setLocationTick] = useState(0)
   const [offerSecondsLeft, setOfferSecondsLeft] = useState(0)
 
@@ -819,31 +816,17 @@ const handleToggleOnline = async () => {
 
     try {
       if (!driverOnline) {
-        if (!hasGeolocation()) {
-          setPresenceError(
-            'Location services are required to go online. Enable precise location for this browser and try again.',
-          )
-          return
-        }
-
-        const fix = await requestFirstFix()
-        setDriverLocation({ latitude: fix.latitude, longitude: fix.longitude })
-        setLastLocationFixIso(new Date().toISOString())
-
-        // Publish the first fix AND set presence in one atomic RPC call:
-        // set_driver_presence records the position and marks the driver
-        // online in the same transaction, so the driver is never flagged
-        // online without a fresh position on record.
-        const presence = await setDriverPresence(true, driverIsAvailable, driverAutoAccept, fix.latitude, fix.longitude)
+        // Go online via the presence RPC without requiring a GPS fix. The
+        // ACTIVE-driver + authenticated-session checks happen inside
+        // set_driver_presence; no latitude/longitude are needed.
+        const presence = await setDriverPresence(true, driverIsAvailable, driverAutoAccept)
         setDriverIsAvailable(presence.is_available)
         setDriverAutoAccept(presence.auto_accept)
 
-        stopTrackingRef.current = startDriverLocationTracking(driverId, {
-          onPosition: (position) => {
-            setDriverLocation(position)
-            setLastLocationFixIso(new Date().toISOString())
-          },
-        })
+        // No location tracking is started here: going online must not spin up
+        // navigator.geolocation (watchPosition), request permission, or
+        // require a first fix. The map remains fully functional — it simply
+        // renders without a driver-marker position until one is shared.
 
         completedRideIdRef.current = null
         lastActiveRideIdRef.current = null

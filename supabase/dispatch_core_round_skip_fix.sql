@@ -115,11 +115,8 @@ begin
    where d.status = 'active'
      and dl.is_online = true
      and dl.is_available = true
-     and dl.current_ride_id is null
-     and dl.latitude is not null
-     and dl.longitude is not null
-     and dl.updated_at >= now() - interval '60 seconds'
-     and not exists (
+      and dl.current_ride_id is null
+      and not exists (
        select 1 from public.ride_offers o
        where o.driver_id = d.id
          and o.status = 'offered'
