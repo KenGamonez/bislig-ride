@@ -2014,6 +2014,11 @@ onClick={() => setRating(star)}
         view={currentView}
         onViewChange={onSwitchView}
         primaryLabel={showProfile ? 'Book a Ride' : 'My Rides'}
+        primaryBrief={
+          ride.pickup_address && ride.destination_address
+            ? `${ride.pickup_address} → ${ride.destination_address}`
+            : undefined
+        }
         onPrimaryAction={() => setShowProfile((current) => !current)}
       />
 

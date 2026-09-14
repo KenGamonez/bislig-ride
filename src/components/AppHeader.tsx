@@ -13,11 +13,12 @@ type AppHeaderProps = {
   view: AppViewMode
   onViewChange?: (view: AppViewMode) => void
   primaryLabel: string
+  primaryBrief?: string
   onPrimaryAction: () => void
   desktopNavItems?: AppHeaderDesktopNavItem[]
 }
 
-export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, desktopNavItems }: AppHeaderProps) {
+export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPrimaryAction, desktopNavItems }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
 
   useEffect(() => {
@@ -173,8 +174,38 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
               <span className="mobile-nav-label">Home</span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
-                  <circle cx="12" cy="7" r="4" />
+                  <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                  <polyline points="9 22 9 12 15 12 15 22" />
+                </svg>
+              </span>
+            </a>
+
+            <button
+              type="button"
+              className="mobile-nav-item mobile-nav-driver"
+              onClick={openDriverLogin}
+            >
+              <span className="mobile-nav-label">Driver Login</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                </svg>
+              </span>
+            </button>
+
+            <a
+              className="mobile-nav-item mobile-nav-driver"
+              href="/become-a-driver"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Become a Driver</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="m19.07 4.93-4.24 4.24" />
+                  <path d="m8.93 4.93 4.24 4.24" />
+                  <circle cx="12" cy="12" r="2" />
                 </svg>
               </span>
             </a>
@@ -195,9 +226,48 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
               </span>
             </a>
 
+            <div
+              className="mobile-nav-item mobile-nav-disabled"
+              aria-disabled="true"
+            >
+              <span className="mobile-nav-label">Pasabuy</span>
+              <span className="mobile-nav-badge">Coming soon</span>
+            </div>
+
+            <a
+              className="mobile-nav-item"
+              href="/pa-deliver"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Pa-deliver</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M12 2v20" />
+                  <path d="M5 9 12 2l7 7" />
+                  <path d="M15 15l-3 3-3-3" />
+                </svg>
+              </span>
+            </a>
+
+            <a
+              className="mobile-nav-item"
+              href="/car-rentals"
+              onClick={() => setIsMobileNavOpen(false)}
+            >
+              <span className="mobile-nav-label">Car Rentals</span>
+              <span className="mobile-nav-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 17h-1a1 1 0 0 1-1-1v-5l2-4.5A2 2 0 0 1 5.8 5.5H18.2a2 2 0 0 1 1.8 1.5L22 11v5a1 1 0 0 1-1 1h-1a2.5 2.5 0 0 1-5 0H9a2.5 2.5 0 0 1-5 0Z" />
+                  <path d="M6 12h12" />
+                  <circle cx="7" cy="17" r="1.5" />
+                  <circle cx="17" cy="17" r="1.5" />
+                </svg>
+              </span>
+            </a>
+
             <button
               type="button"
-              className="mobile-nav-item"
+              className="mobile-nav-item mobile-nav-primary"
               onClick={() => {
                 onPrimaryAction()
                 setIsMobileNavOpen(false)
@@ -205,6 +275,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
             >
               <span className="mobile-nav-label">
                 {primaryLabel}
+                {primaryBrief ? <small className="mobile-nav-brief">{primaryBrief}</small> : null}
               </span>
               <span className="mobile-nav-arrow" aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -215,49 +286,6 @@ export function AppHeader({ view, onViewChange, primaryLabel, onPrimaryAction, d
                 </svg>
               </span>
             </button>
-
-            <button
-              type="button"
-              className="mobile-nav-item"
-              onClick={openDriverLogin}
-            >
-              <span className="mobile-nav-label">Driver Login</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                  <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                </svg>
-              </span>
-            </button>
-
-            <a
-              className="mobile-nav-item"
-              href="/contact"
-              onClick={() => setIsMobileNavOpen(false)}
-            >
-              <span className="mobile-nav-label">Contact</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2Z" />
-                </svg>
-              </span>
-            </a>
-
-            <a
-              className="mobile-nav-item mobile-nav-driver"
-              href="/become-a-driver"
-              onClick={() => setIsMobileNavOpen(false)}
-            >
-              <span className="mobile-nav-label">Become a Driver</span>
-              <span className="mobile-nav-arrow" aria-hidden="true">
-                <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <path d="m19.07 4.93-4.24 4.24" />
-                  <path d="m8.93 4.93 4.24 4.24" />
-                  <circle cx="12" cy="12" r="2" />
-                </svg>
-              </span>
-            </a>
           </nav>
 
           <div className="mobile-nav-footer">
