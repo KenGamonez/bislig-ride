@@ -27,14 +27,6 @@ const discoveryItems: DiscoveryItem[] = [
     href: '/pakyawan',
   },
   {
-    key: 'groceries',
-    kicker: 'Shop for you',
-    title: 'Groceries to your door',
-    description: 'Let a trusted runner handle your palengke and grocery runs around town.',
-    cta: 'Try Pasabuy',
-    href: '/pasabuy',
-  },
-  {
     key: 'deliver',
     kicker: 'Same-day sending',
     title: 'Packages across Bislig',

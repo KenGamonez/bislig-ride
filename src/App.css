@@ -12379,3 +12379,409 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   width: 20px;
   background: var(--color-green);
 }
+
+/* =========================================================
+   PREMIUM EDITORIAL HOMEPAGE — customer service launcher
+   Editorial hero → dominant Ride Now panel → editorial list.
+   Booking form, fleet, dispatch and driver surfaces untouched.
+   ========================================================= */
+
+/* --- Launcher surface: warm off-white editorial page --- */
+.customer-layout.service-launcher-layout {
+  display: block;
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 40px 32px 96px;
+  background: #FBFAF8;
+}
+
+/* --- Editorial stack rhythm --- */
+.customer-layout .service-dashboard {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 40px;
+}
+
+/* --- 1. Editorial hero --- */
+.customer-layout .home-hero {
+  display: grid;
+  gap: 16px;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: var(--color-gray-900);
+}
+
+.customer-layout .home-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0;
+  color: var(--color-gray-500);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.customer-layout .home-hero-eyebrow::after {
+  content: '';
+  width: 42px;
+  height: 1px;
+  background: var(--color-gray-300);
+}
+
+.customer-layout .home-hero-title {
+  margin: 0;
+  color: var(--color-gray-900);
+  font-size: clamp(1.95rem, 8.6vw, 2.9rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.98;
+  text-transform: uppercase;
+}
+
+.customer-layout .home-hero-accent {
+  display: block;
+  color: var(--color-green-deep);
+}
+
+.customer-layout .home-hero-subtitle {
+  margin: 0;
+  max-width: 32ch;
+  color: var(--color-gray-500);
+  font-size: 0.95rem;
+  line-height: 1.55;
+}
+
+/* --- 2. Ride Now — dominant photographic hero card --- */
+.customer-layout .ride-now-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  gap: 10px;
+  width: 100%;
+  min-height: clamp(400px, 105vw, 500px);
+  padding: 30px 26px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 20px;
+  background:
+    linear-gradient(180deg, rgba(8,10,9,0.80) 0%, rgba(8,10,9,0.32) 38%, rgba(8,10,9,0.18) 55%, rgba(8,10,9,0.92) 100%),
+    url("data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' width='900' height='700' viewBox='0 0 900 700'><g fill='none' stroke='%23ffffff' stroke-linecap='round'><path d='M-20 470 C 120 428 190 512 310 478 S 480 406 575 442 S 715 482 820 448' stroke-width='7' stroke-opacity='0.10'/><path d='M-20 488 C 120 446 205 532 325 498 S 495 422 595 458 S 730 500 820 468' stroke-width='3' stroke-opacity='0.07'/><path d='M120 128 C 205 86 265 152 348 118' stroke-width='2' stroke-opacity='0.09'/><path d='M318 58 C 392 36 448 92 528 68' stroke-width='2' stroke-opacity='0.08'/><path d='M-20 348 C 150 318 230 372 372 342 S 570 302 668 332 S 788 358 820 342' stroke-width='1.5' stroke-opacity='0.05'/></g></svg>"),
+    radial-gradient(120% 80% at 78% 6%, rgba(0,232,138,0.16) 0%, rgba(0,232,138,0.04) 48%, rgba(0,0,0,0) 72%),
+    radial-gradient(90% 60% at 14% 0%, rgba(226,240,233,0.10) 0%, rgba(0,0,0,0) 62%),
+    linear-gradient(155deg, #252b29 0%, #141a18 40%, #0a0e0d 72%, #070909 100%);
+  background-size: cover, cover, cover, cover, cover;
+  background-position: center;
+  color: var(--color-white);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  box-shadow: 0 24px 50px -28px rgba(10,14,13,0.55);
+  transition: transform var(--transition-medium), box-shadow var(--transition-medium);
+}
+
+.customer-layout .ride-now-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 30px 60px -28px rgba(10,14,13,0.65);
+}
+
+.customer-layout .ride-now-card:active {
+  transform: translateY(-1px) scale(0.995);
+}
+
+.customer-layout .ride-now-card:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: 3px;
+}
+
+.customer-layout .ride-now-badge {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: var(--color-green);
+  color: var(--color-black-soft);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.customer-layout .ride-now-title {
+  margin-top: 6px;
+  color: var(--color-white);
+  font-size: clamp(2.6rem, 12vw, 4.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 0.95;
+  text-transform: uppercase;
+}
+
+.customer-layout .ride-now-copy {
+  max-width: 24ch;
+  margin: 0;
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.92rem;
+  line-height: 1.5;
+}
+
+.customer-layout .ride-now-arrow {
+  position: absolute;
+  right: 26px;
+  bottom: 26px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: var(--radius-pill);
+  background: var(--color-green);
+  color: var(--color-black-soft);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+  transition: transform var(--transition), background var(--transition);
+}
+
+.customer-layout .ride-now-arrow svg {
+  transition: transform var(--transition);
+}
+
+.customer-layout .ride-now-card:hover .ride-now-arrow svg {
+  transform: translateX(4px);
+}
+
+/* --- 3. Other ways to move — editorial list --- */
+.customer-layout .other-ways {
+  display: grid;
+  gap: 8px;
+}
+
+.customer-layout .other-ways-label {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin: 0 0 2px;
+  color: var(--color-gray-500);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+.customer-layout .other-ways-label::after {
+  content: '';
+  width: 46px;
+  height: 1px;
+  background: var(--color-gray-300);
+}
+
+.customer-layout .other-ways-rows {
+  display: flex;
+  flex-direction: column;
+}
+
+.customer-layout .other-ways-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  padding: 20px 4px;
+  border: 0;
+  border-bottom: 1px solid var(--color-gray-200);
+  background: transparent;
+  color: var(--color-gray-900);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  transition: background var(--transition);
+}
+
+.customer-layout .other-ways-row:last-child {
+  border-bottom: 0;
+}
+
+.customer-layout .other-ways-row:focus-visible {
+  outline: 2px solid var(--color-green);
+  outline-offset: -2px;
+}
+
+.customer-layout .other-ways-row:active {
+  background: rgba(7,16,18,0.03);
+}
+
+.customer-layout .other-ways-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: var(--color-gray-100);
+  color: var(--color-gray-700);
+}
+
+.customer-layout .other-ways-copy {
+  display: grid;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.customer-layout .other-ways-copy strong {
+  color: var(--color-gray-900);
+  font-size: 1.02rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.customer-layout .other-ways-copy small {
+  color: var(--color-gray-500);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.customer-layout .other-ways-arrow {
+  flex-shrink: 0;
+  color: var(--color-gray-400);
+  font-size: 1.1rem;
+  line-height: 1;
+  transition: transform var(--transition), color var(--transition);
+}
+
+.customer-layout .other-ways-row:hover .other-ways-arrow {
+  transform: translateX(4px);
+  color: var(--color-green-deep);
+}
+
+.customer-layout .other-ways-row:hover .other-ways-copy strong {
+  color: var(--color-black-soft);
+}
+
+/* --- 4. Discover — secondary editorial block --- */
+.customer-layout .discover-section {
+  gap: 18px;
+  margin-top: 4px;
+  margin-left: 0;
+  margin-right: 0;
+  padding-top: 36px;
+  border-top: 1px solid var(--color-gray-200);
+}
+
+.customer-layout .discover-heading {
+  gap: 8px;
+}
+
+.customer-layout .discover-heading .eyebrow {
+  color: var(--color-gray-500);
+  font-size: 0.68rem;
+  letter-spacing: 0.2em;
+}
+
+.customer-layout .discover-heading h2 {
+  color: var(--color-gray-900);
+  font-size: clamp(1.55rem, 3vw, 2.1rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.02;
+  text-transform: uppercase;
+}
+
+.customer-layout .discover-heading .hero-accent {
+  color: var(--color-gray-900);
+}
+
+.customer-layout .discover-card {
+  border-color: var(--color-gray-150);
+  box-shadow: var(--shadow-card);
+}
+
+.customer-layout .discover-kicker {
+  color: var(--color-gray-500);
+}
+
+.customer-layout .discover-cta-arrow {
+  color: var(--color-gray-400);
+}
+
+.customer-layout .discover-card:hover .discover-cta-arrow {
+  color: var(--color-green-deep);
+}
+
+/* --- Header — clean premium surface --- */
+@media (max-width: 767px) {
+  .app-header .header-inner {
+    padding: 0 20px;
+  }
+
+  .mobile-menu-toggle {
+    background: transparent;
+    border-color: transparent;
+  }
+
+  .mobile-menu-toggle:hover {
+    border-color: rgba(7,16,18,0.14);
+  }
+
+  .mobile-menu-toggle:focus-visible {
+    outline-color: rgba(0,232,138,0.45);
+  }
+
+  .customer-layout.service-launcher-layout {
+    padding: 6px 22px calc(118px + env(safe-area-inset-bottom));
+  }
+
+  .customer-layout .service-dashboard {
+    gap: 34px;
+  }
+}
+
+/* --- Desktop — centered premium product column --- */
+@media (min-width: 768px) {
+  .customer-layout .service-dashboard {
+    gap: 52px;
+  }
+
+  .customer-layout .home-hero-title {
+    font-size: clamp(2.6rem, 5.6vw, 4.4rem);
+    max-width: 18ch;
+  }
+
+  .customer-layout .home-hero-subtitle {
+    font-size: 1.05rem;
+  }
+
+  .customer-layout .ride-now-card {
+    min-height: 460px;
+    padding: 40px 34px;
+  }
+
+  .customer-layout .ride-now-arrow {
+    right: 34px;
+    bottom: 34px;
+  }
+
+  .customer-layout .other-ways-rows {
+    max-width: 640px;
+  }
+}
+
+/* --- Reduced motion — guard editorial motion --- */
+@media (prefers-reduced-motion: reduce) {
+  .customer-layout .ride-now-card,
+  .customer-layout .ride-now-arrow,
+  .customer-layout .ride-now-arrow svg,
+  .customer-layout .other-ways-arrow {
+    transition: none !important;
+    transform: none !important;
+  }
+}

@@ -1,22 +1,4 @@
-import { ServiceCard } from './ServiceCard'
 import { ServiceCarousel } from './ServiceCarousel'
-
-const rideIcon = (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M8 3l4 4-4 4" />
-    <path d="M12 7H4" />
-    <path d="m16 21 4-4-4-4" />
-    <path d="M20 17H4" />
-  </svg>
-)
-
-const pasabuyIcon = (
-  <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-    <path d="M3 6h18" />
-    <path d="M16 10a4 4 0 0 1-8 0" />
-  </svg>
-)
 
 const pakyawanIcon = (
   <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -58,61 +40,63 @@ type ServiceDashboardProps = {
 export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
   return (
     <section className="service-dashboard" aria-label="Bislig Ride services">
-      <header className="service-greeting">
-        <div className="service-greeting-copy">
-          <p className="eyebrow">Bislig Ride</p>
-          <h1>What do you need <span className="hero-accent">today?</span></h1>
-          <p className="subtitle">Choose how you want to move around Bislig City.</p>
-        </div>
+      <header className="home-hero">
+        <p className="home-hero-eyebrow">Bislig Ride</p>
+        <h1 className="home-hero-title">
+          What do you need <span className="home-hero-accent">today?</span>
+        </h1>
+        <p className="home-hero-subtitle">Choose how you want to move around Bislig City.</p>
       </header>
 
-      <div className="service-layout">
-        <div className="service-layout-ride">
-          <ServiceCard
-            variant="primary"
-            badge="Popular"
-            title="Ride Now"
-            description="On-demand rides around Bislig City & Bislig"
-            icon={rideIcon}
-            onSelect={onSelectRideNow}
-          />
-        </div>
+      <button type="button" className="ride-now-card" onClick={onSelectRideNow}>
+        <span className="ride-now-badge">Popular</span>
+        <span className="ride-now-title">Ride Now</span>
+        <span className="ride-now-copy">Get moving around Bislig City.</span>
+        <span className="ride-now-arrow" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14" />
+            <path d="m13 6 6 6-6 6" />
+          </svg>
+        </span>
+      </button>
 
-        <div className="service-rail" aria-label="Other ways to move">
-          <p className="service-rail-label">Other ways to move</p>
-          <div className="service-rail-rows">
-            <ServiceCard
-              title="Pasabuy"
-              description="Get items shopped & handed over in Bislig"
-              icon={pasabuyIcon}
-              compact
-              disabled
-              badge="Coming soon"
-            />
-            <ServiceCard
-              href="/pakyawan"
-              title="Pakyawan"
-              description="Reserve a vehicle for long-distance or out-of-town trips, family travel, and group transportation."
-              icon={pakyawanIcon}
-              compact
-            />
-            <ServiceCard
-              href="/car-rentals"
-              title="Car Rentals"
-              description="Self-drive cars & vans by the day"
-              icon={carRentalIcon}
-              compact
-            />
-            <ServiceCard
-              href="/pa-deliver"
-              title="Pa-deliver"
-              description="Send packages across Bislig"
-              icon={deliverIcon}
-              compact
-            />
-          </div>
+      <section className="other-ways" aria-label="Other ways to move">
+        <p className="other-ways-label">Other ways to move</p>
+        <div className="other-ways-rows">
+          <a href="/pakyawan" className="other-ways-row">
+            <span className="other-ways-icon" aria-hidden="true">
+              {pakyawanIcon}
+            </span>
+            <span className="other-ways-copy">
+              <strong>Pakyawan</strong>
+              <small>Reserve a vehicle for longer trips.</small>
+            </span>
+            <span className="other-ways-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a href="/pa-deliver" className="other-ways-row">
+            <span className="other-ways-icon" aria-hidden="true">
+              {deliverIcon}
+            </span>
+            <span className="other-ways-copy">
+              <strong>Pa-deliver</strong>
+              <small>Send packages across Bislig.</small>
+            </span>
+            <span className="other-ways-arrow" aria-hidden="true">→</span>
+          </a>
+
+          <a href="/car-rentals" className="other-ways-row">
+            <span className="other-ways-icon" aria-hidden="true">
+              {carRentalIcon}
+            </span>
+            <span className="other-ways-copy">
+              <strong>Car Rentals</strong>
+              <small>Rent a vehicle by the day.</small>
+            </span>
+            <span className="other-ways-arrow" aria-hidden="true">→</span>
+          </a>
         </div>
-      </div>
+      </section>
 
       <ServiceCarousel onSelectRideNow={onSelectRideNow} />
     </section>
