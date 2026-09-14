@@ -69,6 +69,21 @@ const resolvePresenceErrorMessage = (error: unknown, offline: boolean): string =
     return error.message
   }
 
+  // A Supabase RPC failure frequently arrives as a PostgrestError whose
+  // `message` is empty while the real cause sits in `details` (or `code`)
+  // — e.g. set_driver_presence raising 42501 (driver not ACTIVE / grant or
+  // signature issue). `instanceof Error && message` alone would swallow
+  // these into the misleading GPS text below, so surface them first.
+  if (error && typeof error === 'object') {
+    const message = (error as { message?: unknown }).message
+    const details = (error as { details?: unknown }).details
+    const hint = (error as { hint?: unknown }).hint
+    const candidate = message || details || hint
+    if (typeof candidate === 'string' && candidate) {
+      return candidate
+    }
+  }
+
   return offline
     ? 'Unable to go offline right now. Please try again.'
     : 'Unable to go online right now. Check your connection and GPS, then try again.'
