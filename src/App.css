@@ -4736,7 +4736,7 @@ a.secondary-action {
   }
 
   .beta-indicator {
-    margin-left: auto;
+    display: none;
   }
 
   .brand-logo {
@@ -4930,7 +4930,7 @@ a.secondary-action {
     border: 0;
     border-radius: 12px;
     background: transparent;
-    color: rgba(255, 255, 255, 0.88);
+    color: var(--color-white);
     text-decoration: none;
     font: inherit;
     font-weight: 600;
