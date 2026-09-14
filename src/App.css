@@ -12743,6 +12743,36 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   .customer-layout .service-dashboard {
     gap: 34px;
   }
+
+  .customer-layout .ride-now-card {
+    min-height: clamp(158px, 38vw, 172px);
+    gap: 8px;
+    padding: 18px 20px;
+    justify-content: flex-end;
+  }
+
+  .customer-layout .ride-now-badge {
+    padding: 4px 10px;
+    font-size: 0.56rem;
+  }
+
+  .customer-layout .ride-now-title {
+    margin-top: 2px;
+    font-size: clamp(1.7rem, 8vw, 2.1rem);
+  }
+
+  .customer-layout .ride-now-copy {
+    max-width: 22ch;
+    font-size: 0.82rem;
+    line-height: 1.4;
+  }
+
+  .customer-layout .ride-now-arrow {
+    right: 18px;
+    bottom: 18px;
+    width: 48px;
+    height: 48px;
+  }
 }
 
 /* --- Desktop — centered premium product column --- */
