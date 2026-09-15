@@ -25,6 +25,7 @@ import {
   declineRideOffer,
   fetchPendingOffer,
   setDriverPresence,
+  subscribeToAssignedRides,
   subscribeToDriverOffers,
 } from '../lib/dispatch'
 import {
@@ -540,9 +541,14 @@ useEffect(() => {
       void refreshRides()
     }, 5000)
 
+    const unsubscribeAssignedRides = subscribeToAssignedRides(driverId, () => {
+      void refreshRides()
+    })
+
     return () => {
       mounted = false
       window.clearInterval(timer)
+      unsubscribeAssignedRides()
     }
   }, [driverOnline, driverId])
 

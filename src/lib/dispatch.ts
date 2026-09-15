@@ -96,6 +96,28 @@ export async function fetchPendingOffer(driverId: string): Promise<PendingOffer 
   return { offer, ride }
 }
 
+export function subscribeToAssignedRides(driverId: string, callback: () => void): () => void {
+  const channel = supabase
+    .channel(`driver-assigned-rides-${driverId}`)
+    .on(
+      'postgres_changes',
+      {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'rides',
+        filter: `driver_id=eq.${driverId},status=eq.accepted`,
+      },
+      () => {
+        callback()
+      },
+    )
+    .subscribe()
+
+  return () => {
+    void supabase.removeChannel(channel)
+  }
+}
+
 export function subscribeToDriverOffers(
   driverId: string,
   callback: (pending: PendingOffer) => void,
