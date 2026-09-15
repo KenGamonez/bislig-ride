@@ -90,6 +90,9 @@ customer_auth_id: null,
 }
 
 const rideIdStorageKey = 'bislig-ride-last-ride-id'
+
+const RIDE_REDISPATCH_POLL_INTERVAL_MS = 15000
+const MAX_REDISPATCH_GRACE_RETRIES = 15
 const passengerShareStorageKey = (rideId: string) => `bislig-ride-customer-share-${rideId}`
 
 const renderStars = (average: number) => (
@@ -189,6 +192,9 @@ const [rating, setRating] = useState(0)
   const showChatRef = useRef(false)
   const handledChatMessageIdsRef = useRef<Set<string>>(new Set())
   const chatToastTimerRef = useRef<number | null>(null)
+  const restoreTripDispatchInFlightRef = useRef(false)
+  const searchingRedispatchInFlightRef = useRef(false)
+  const searchingRedispatchAttemptsRef = useRef(0)
 
   const handleBottomNavChange = (tab: MobileBottomNavTab) => {
     setBottomNavTab(tab)
@@ -251,6 +257,23 @@ const restoreRide = async () => {
         setRide(latestRide)
         setPhase(mapRideStatusToPhase(latestRide.status))
 
+        if (latestRide.status === 'requested' && !restoreTripDispatchInFlightRef.current) {
+          restoreTripDispatchInFlightRef.current = true
+
+          try {
+            const redispatchResult = await dispatchRide(latestRide.id)
+            if (redispatchResult.ride_status === 'no_driver') {
+              setPhase('no_driver')
+            } else {
+              setPhase(mapRideStatusToPhase(latestRide.status))
+            }
+          } catch (error) {
+            console.error('Unable to re-dispatch restored ride:', error)
+          } finally {
+            restoreTripDispatchInFlightRef.current = false
+          }
+        }
+
         if (
           latestRide.status === 'accepted' ||
           latestRide.status === 'arrived' ||
@@ -276,6 +299,68 @@ const restoreRide = async () => {
 
     void restoreRide()
   }, [])
+
+  useEffect(() => {
+    if (
+      phase !== 'searching' ||
+      ride.status !== 'requested' ||
+      searchingRedispatchInFlightRef.current
+    ) {
+      return
+    }
+
+    searchingRedispatchAttemptsRef.current = 0
+    searchingRedispatchInFlightRef.current = false
+
+    const redispatch = async (): Promise<void> => {
+      if (
+        phase !== 'searching' ||
+        ride.status !== 'requested' ||
+        searchingRedispatchInFlightRef.current
+      ) {
+        return
+      }
+
+      searchingRedispatchInFlightRef.current = true
+
+      try {
+        const result = await dispatchRide(ride.id)
+
+        if (result.ride_status === 'no_driver') {
+          setPhase('no_driver')
+        } else {
+          setPhase(mapRideStatusToPhase(ride.status))
+        }
+      } catch (error) {
+        console.error('Unable to keep searching for a driver:', error)
+      } finally {
+        searchingRedispatchInFlightRef.current = false
+      }
+    }
+
+    const onTick = (): void => {
+      if (
+        phase !== 'searching' ||
+        ride.status !== 'requested' ||
+        searchingRedispatchInFlightRef.current
+      ) {
+        return
+      }
+
+      if (searchingRedispatchAttemptsRef.current >= MAX_REDISPATCH_GRACE_RETRIES) {
+        return
+      }
+
+      searchingRedispatchAttemptsRef.current += 1
+      void redispatch()
+    }
+
+    const timer = window.setInterval(onTick, RIDE_REDISPATCH_POLL_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [phase, ride.id, ride.status])
 
   const formValues = useMemo(
     () => ({
