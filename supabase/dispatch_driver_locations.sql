@@ -17,7 +17,15 @@
 -- enforceable even if a future code path tries to double-book.
 
 -- ---------------------------------------------------------------------------
--- 1. Presence columns (latitude/longitude/updated_at already exist)
+-- 1. Presence columns
+--
+-- latitude/longitude/updated_at already exist, but latitude/longitude were
+-- created NOT NULL in the dashboard. Under the active-ride GPS model a
+-- driver goes Online with NO GPS and without storing coordinates, so the
+-- presence row must be allowed to exist without a position. The columns are
+-- relaxed to nullable; a recorded position is still required wherever
+-- dispatch genuinely needs it (see the explicit is-not-null gates in
+-- dispatch_accept_offer.sql).
 -- ---------------------------------------------------------------------------
 
 alter table public.driver_locations
@@ -25,6 +33,10 @@ alter table public.driver_locations
   add column if not exists is_available boolean not null default true,
   add column if not exists auto_accept boolean not null default false,
   add column if not exists current_ride_id uuid;
+
+alter table public.driver_locations
+  alter column latitude drop not null,
+  alter column longitude drop not null;
 
 do $$
 begin

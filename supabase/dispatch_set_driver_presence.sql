@@ -4,11 +4,13 @@
 -- toggles persist here. Everything is derived from the authenticated session
 -- (drivers.auth_user_id), so a driver can only ever write their own row.
 --
--- Going online is ATOMIC: when the client supplies the first GPS fix
--- (p_latitude/p_longitude), position + presence are written in this single
--- call. The driver is never marked online without a fresh recorded position.
--- Availability/auto-accept toggles and go-offline omit the coordinates and
--- fall back to an existing, already-shared driver_locations position.
+-- Going online works WITHOUT GPS: presence is written independently of any
+-- coordinates, so a driver can go online with no recorded position at all.
+-- When the client still supplies a position (p_latitude/p_longitude) it is
+-- recorded here (backward compatible with the old atomic go-online write),
+-- but it is never required. Going offline and the availability/auto-accept
+-- toggles also omit the coordinates. The driver_locations row is keyed on
+-- driver_id alone, so presence never depends on (or writes) latitude/longitude.
 
 create or replace function public.set_driver_presence(
   p_online boolean,
