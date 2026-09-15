@@ -93,6 +93,7 @@ const rideIdStorageKey = 'bislig-ride-last-ride-id'
 
 const RIDE_REDISPATCH_POLL_INTERVAL_MS = 15000
 const MAX_REDISPATCH_GRACE_RETRIES = 15
+const DISPATCH_RETRY_DELAY_MS = 2000
 const passengerShareStorageKey = (rideId: string) => `bislig-ride-customer-share-${rideId}`
 
 const renderStars = (average: number) => (
@@ -195,6 +196,7 @@ const [rating, setRating] = useState(0)
   const restoreTripDispatchInFlightRef = useRef(false)
   const searchingRedispatchInFlightRef = useRef(false)
   const searchingRedispatchAttemptsRef = useRef(0)
+  const immediateDispatchRetryTimerRef = useRef<number | null>(null)
 
   const handleBottomNavChange = (tab: MobileBottomNavTab) => {
     setBottomNavTab(tab)
@@ -239,6 +241,15 @@ const [rating, setRating] = useState(0)
     void getCustomerAuthId()
       .then(setCustomerAuthId)
       .catch((error) => console.error('Unable to establish Rider session:', error))
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (immediateDispatchRetryTimerRef.current !== null) {
+        window.clearTimeout(immediateDispatchRetryTimerRef.current)
+        immediateDispatchRetryTimerRef.current = null
+      }
+    }
   }, [])
 
 useEffect(() => {
@@ -868,6 +879,34 @@ destination_address: formValues.destination,
         }
       } catch (error) {
         console.error('Unable to dispatch ride:', error)
+
+        if (immediateDispatchRetryTimerRef.current === null) {
+          immediateDispatchRetryTimerRef.current = window.setTimeout(() => {
+            immediateDispatchRetryTimerRef.current = null
+
+            void (async () => {
+              try {
+                const latestRide = await fetchRideById(createdRide.id)
+                if (!latestRide || latestRide.status !== 'requested') {
+                  return
+                }
+              } catch (verifyError) {
+                console.error('Unable to verify ride before retry dispatch:', verifyError)
+                return
+              }
+
+              try {
+                const result = await dispatchRide(createdRide.id)
+
+                if (result.ride_status === 'no_driver') {
+                  setPhase('no_driver')
+                }
+              } catch (retryError) {
+                console.error('Unable to retry dispatch ride:', retryError)
+              }
+            })()
+          }, DISPATCH_RETRY_DELAY_MS)
+        }
       }
     } catch (error) {
       console.error('Unable to create ride:', error)
