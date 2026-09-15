@@ -19,7 +19,7 @@ import {
   requestNotificationPermission,
   showBrowserNotification,
 } from '../lib/notifications'
-import { subscribeToPassengerLocation } from '../lib/passengerLocations'
+import { startRideLocationWatch, subscribeToRideLocation } from '../lib/rideLocation'
 import {
   acceptRideOffer,
   declineRideOffer,
@@ -267,6 +267,7 @@ export function DriverExperience({
   const [driverStatusBlocked, setDriverStatusBlocked] = useState(false)
   const statusHintTimerRef = useRef<number | null>(null)
   const [passengerLocation, setPassengerLocation] = useState<{ latitude: number; longitude: number } | null>(null)
+  const [rideLocationNote, setRideLocationNote] = useState('')
   const [chatUnread, setChatUnread] = useState(0)
   const [chatToast, setChatToast] = useState<{ id: string; from: string; preview: string } | null>(null)
   const showChatRef = useRef(false)
@@ -626,14 +627,48 @@ useEffect(() => {
   useEffect(() => {
     const activePhases: DriverPhase[] = ['heading_to_pickup', 'arrived', 'in_progress']
 
-    if (!activeRide?.id || !activePhases.includes(phase)) {
+    if (!activeRide?.id || !driverAuthId || !activePhases.includes(phase)) {
       return
     }
 
-    return subscribeToPassengerLocation(activeRide.id, (location) => {
-      setPassengerLocation({ latitude: location.latitude, longitude: location.longitude })
+    return subscribeToRideLocation(activeRide.id, (message) => {
+      if (message.user === driverAuthId) {
+        return
+      }
+
+      setPassengerLocation({ latitude: message.latitude, longitude: message.longitude })
     })
-  }, [activeRide?.id, phase])
+  }, [activeRide?.id, driverAuthId, phase])
+
+  useEffect(() => {
+    const activePhases: DriverPhase[] = ['heading_to_pickup', 'arrived', 'in_progress']
+
+    if (!activeRide?.id || !driverAuthId || !activePhases.includes(phase)) {
+      stopTrackingRef.current?.()
+      stopTrackingRef.current = null
+      return
+    }
+
+    stopTrackingRef.current = startRideLocationWatch(activeRide.id, {
+      user: driverAuthId,
+      onLocation: () => {
+        setRideLocationNote('')
+      },
+      onError: (error) => {
+        if (error.code === error.PERMISSION_DENIED || error.code === error.POSITION_UNAVAILABLE) {
+          setRideLocationNote("Live location is unavailable. The passenger won't see your live position.")
+        }
+      },
+      onUnsupported: () => {
+        setRideLocationNote('Live location is not supported on this device.')
+      },
+    })
+
+    return () => {
+      stopTrackingRef.current?.()
+      stopTrackingRef.current = null
+    }
+  }, [activeRide?.id, driverAuthId, phase])
 
   useEffect(() => {
     if (!activeRide?.id) {
@@ -1739,6 +1774,7 @@ const renderOnlineState = () => (
       </div>
 
       <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
+      {rideLocationNote ? <p className="driver-location-note">{rideLocationNote}</p> : null}
 
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
@@ -1786,6 +1822,7 @@ const renderOnlineState = () => (
       </div>
 
       <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
+      {rideLocationNote ? <p className="driver-location-note">{rideLocationNote}</p> : null}
 
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>
@@ -1844,6 +1881,7 @@ const renderOnlineState = () => (
       </div>
 
       <div className="driver-map-panel"><MapView className="ride-map" height={260} driverLatitude={driverLocation?.latitude} driverLongitude={driverLocation?.longitude} pickupLatitude={passengerLocation?.latitude ?? activeRide?.pickup_lat} pickupLongitude={passengerLocation?.longitude ?? activeRide?.pickup_lng} /></div>
+      {rideLocationNote ? <p className="driver-location-note">{rideLocationNote}</p> : null}
 
       <div className="driver-contact-actions">
         <button type="button" className="secondary-action cancel-action" onClick={() => setShowCancelModal(true)}>Cancel Ride</button>

@@ -1,8 +1,15 @@
-// Bislig Ride — Driver go-online flow simulation harness.
-// Extracts the REAL production functions from the source files and drives them
-// with a mocked navigator.geolocation + mocked Supabase client, so the GPS gate
-// (a driver must have a GPS fix BEFORE presence can be set online) is verified
-// without a device or a live database.
+// Bislig Ride — GPS flow harness (v2: active-ride live location only).
+//
+// Product rules under test:
+//   - Going Online/Offline must NOT require GPS: no navigator.geolocation use,
+//     no position passed into the presence RPC, no location tracking started.
+//   - GPS is used ONLY during an active ride (heading_to_pickup / arrived /
+//     in_progress): the assigned driver broadcasts live position on the private
+//     Realtime Broadcast channel `ride:{ride_id}` and the passenger subscribes
+//     to that same channel for the driver marker. Sharing stops when the ride
+//     ends (completed / cancelled / driver offline).
+//   - Location payloads are minimal (user, latitude, longitude, timestamp) and
+//     throttled.
 //
 // Run: npm run test:gps  (Node 24 runs TS directly; no test framework needed)
 
@@ -15,8 +22,8 @@ const here = dirname(fileURLToPath(import.meta.url))
 const root = resolve(here, '..')
 
 const driverExp = readFileSync(join(root, 'src', 'pages', 'DriverExperience.tsx'), 'utf8')
-const driverPresence = readFileSync(join(root, 'src', 'lib', 'driverPresence.ts'), 'utf8')
-const presenceSql = readFileSync(join(root, 'supabase', 'dispatch_set_driver_presence.sql'), 'utf8')
+const riderExp = readFileSync(join(root, 'src', 'pages', 'CustomerExperience.tsx'), 'utf8')
+const rideLoc = readFileSync(join(root, 'src', 'lib', 'rideLocation.ts'), 'utf8')
 
 let failures = 0
 
@@ -139,6 +146,7 @@ function extractBody(text: string, marker: string): string {
 
 function stripAsAssertions(code: string): string {
   return code
+    .replace(/\s*:\s*number\b/g, '')
     .replace(/\s+as\s+[^)\]]+?(?=\))/g, '')
     .replace(
       /\s*:\s*[A-Za-z][\w$]*(?:\s*[|&]\s*[A-Za-z][\w$]*)*\s*(?==|=>|\))/g,
@@ -147,23 +155,13 @@ function stripAsAssertions(code: string): string {
 }
 
 // ---------------------------------------------------------------------------
-// Sandbox factory: mocks the browser + supabase + react-state pieces.
+// Go-online / go-offline sandbox: mocks presence RPC + a geolocation spy that
+// MUST stay untouched (going online must not touch navigator.geolocation).
 // ---------------------------------------------------------------------------
-type GeoMode = 'success' | 'denied' | 'unavailable' | 'timeout' | 'none'
-
-function makeSandbox(opts: {
-  geoMode: GeoMode
-  fix: { latitude: number; longitude: number }
-  presenceResult?: 'ok' | 'rpcerror' | 'nofix'
-  initialOnline?: boolean
-}) {
+function makePresenceSandbox(opts: { initialOnline?: boolean }) {
   const callLog: string[] = []
-  const calls: Record<string, number> = {}
   const state: Record<string, unknown> = {}
-  const activeWatches = new Set<number>()
-  let watchSeq = 0
-
-  const quietConsole = { ...console, error: (..._a: unknown[]) => {} }
+  const quietConsole = { ...console, error: () => {} }
 
   const sandbox: Record<string, unknown> = {
     console: quietConsole,
@@ -178,33 +176,24 @@ function makeSandbox(opts: {
     Number,
     Object,
     Error,
-    HEARTBEAT_INTERVAL_MS: 20_000,
-    FRESH_WINDOW_MS: 45_000,
-    STALE_WINDOW_MS: 120_000,
   }
 
-  // --- react-style state: driverOnline etc. live in the sandbox; setters
-  // --- update both the value (same-render semantics) and the state record.
   const defineState = (name: string, initial: unknown) => {
     sandbox[name] = initial
     state[name] = initial
-    const setterName = `set${name[0].toUpperCase()}${name.slice(1)}`
-    const setter = (value: unknown) => {
-      calls[setterName] = (calls[setterName] ?? 0) + 1
+    const setter = `set${name[0].toUpperCase()}${name.slice(1)}`
+    sandbox[setter] = (value: unknown) => {
       state[name] = value
       sandbox[name] = value
     }
-    sandbox[setterName] = setter
   }
 
   ;[
     ['transitioning', false],
     ['driverOnline', opts.initialOnline ?? false],
-    ['driverId', '6b239660-14ae-4fea-82c0-905420260077'],
+    ['driverId', 'd1'],
     ['driverIsAvailable', true],
     ['driverAutoAccept', false],
-    ['driverLocation', null],
-    ['lastLocationFixIso', null],
     ['presenceError', ''],
     ['request', null],
     ['pendingOffer', null],
@@ -217,396 +206,299 @@ function makeSandbox(opts: {
   const stopTrackingRef = { current: null as (() => void) | null }
   sandbox['stopTrackingRef'] = stopTrackingRef
 
-  // --- navigator.geolocation mock ---
-  const geolocationMock = {
-    getCurrentPosition: (
-      success: (pos: unknown) => void,
-      error?: (err: unknown) => void,
-    ) => {
-      calls['getCurrentPosition'] = (calls['getCurrentPosition'] ?? 0) + 1
+  // Spy: records ANY geolocation touch. Go-online must record none.
+  const geolocationSpy = {
+    getCurrentPosition: () => {
       callLog.push('getCurrentPosition')
-      if (opts.geoMode === 'success') {
-        success({
-          coords: {
-            latitude: opts.fix.latitude,
-            longitude: opts.fix.longitude,
-            accuracy: 20,
-          },
-        })
-      } else if (opts.geoMode === 'none') {
-        // no response: never resolves/rejects
-      } else {
-        const code =
-          opts.geoMode === 'denied' ? 1 : opts.geoMode === 'unavailable' ? 2 : 3
-        ;(error as (e: unknown) => void)({
-          code,
-          message: `Geolocation error ${code}`,
-        })
-      }
     },
-    watchPosition: (
-      success: (pos: unknown) => void,
-      _error?: unknown,
-    ) => {
-      calls['watchPosition'] = (calls['watchPosition'] ?? 0) + 1
+    watchPosition: () => {
       callLog.push('watchPosition')
-      const id = ++watchSeq
-      activeWatches.add(id)
-      success({
-        coords: {
-          latitude: opts.fix.latitude,
-          longitude: opts.fix.longitude,
-          accuracy: 20,
-        },
-      })
-      return id
+      return 0
     },
-    clearWatch: (id: number) => {
-      calls['clearWatch'] = (calls['clearWatch'] ?? 0) + 1
-      activeWatches.delete(id)
+    clearWatch: () => {
+      callLog.push('clearWatch')
     },
   }
-
-  sandbox['navigator'] = { geolocation: geolocationMock }
+  sandbox['navigator'] = { geolocation: geolocationSpy }
   sandbox['window'] = { setInterval, clearInterval }
 
-  if (opts.initialOnline) {
-    const id = ++watchSeq
-    activeWatches.add(id)
-    stopTrackingRef.current = () => geolocationMock.clearWatch(id)
+  const presenceResult = {
+    setDriverPresence: async (
+      online: boolean,
+      available: boolean,
+      autoAccept: boolean,
+      latitude?: number | null,
+      longitude?: number | null,
+    ) => {
+      callLog.push(`setDriverPresence:${online}`)
+      sandbox['__presenceArgs'] = { online, available, autoAccept, latitude, longitude }
+      return { is_online: online, is_available: available, auto_accept: autoAccept }
+    },
+    resolvePresenceErrorMessage: () => 'error',
   }
 
-  // --- Supabase mocks ---
-  sandbox['updateDriverLocation'] = async (driverId: string, latitude: number, longitude: number) => {
-    calls['updateDriverLocation'] = (calls['updateDriverLocation'] ?? 0) + 1
-    callLog.push('updateDriverLocation')
-    state['driverLocation'] = { latitude, longitude }
-    return { driver_id: driverId, latitude, longitude, updated_at: new Date().toISOString() }
+  sandbox['setDriverPresence'] = presenceResult.setDriverPresence
+  sandbox['resolvePresenceErrorMessage'] = presenceResult.resolvePresenceErrorMessage
+
+  const toggleBody = stripAsAssertions(
+    extractBody(driverExp, 'const handleToggleOnline = async () => {'),
+  )
+  vm.runInNewContext(`globalThis.__toggle = async function()${toggleBody}`, sandbox)
+
+  return {
+    sandbox,
+    state,
+    stopTrackingRef,
+    callLog,
+    toggle: sandbox.__toggle as () => Promise<void>,
   }
+}
 
-  // Mirrors dispatch_set_driver_presence.sql semantics: going online requires
-  // a position. The client passes the first GPS fix inline, so presence and the
-  // position write happen in the SAME RPC (atomic go-online).
-  sandbox['setDriverPresence'] = async (
-    online: boolean,
-    available: boolean,
-    autoAccept: boolean,
-    latitude?: number | null,
-    longitude?: number | null,
-  ) => {
-    calls['setDriverPresence'] = (calls['setDriverPresence'] ?? 0) + 1
-    callLog.push('setDriverPresence')
+// ---------------------------------------------------------------------------
+// Scenario G1/G2 — going online/offline never touches GPS.
+// ---------------------------------------------------------------------------
+console.log('\n--- Go online / offline: NO GPS involved ---')
+{
+  const s = makePresenceSandbox({ initialOnline: false })
+  await s.toggle()
 
-    if (online) {
-      if (opts.presenceResult === 'rpcerror') {
-        const err = new Error(
-          'Only an ACTIVE driver with a shared location can set presence.',
-        ) as Error & { code: string }
-        err.code = '42501'
-        throw err
-      }
-      if (
-        !(typeof latitude === 'number' && typeof longitude === 'number') ||
-        opts.presenceResult === 'nofix'
-      ) {
-        const err = new Error(
-          'A driver position is required before going online.',
-        ) as Error & { code: string }
-        err.code = '42501'
-        throw err
-      }
-      state['driverLocation'] = { latitude, longitude }
+  assert('driver goes online', s.state['driverOnline'], true)
+  assert('phase becomes online', s.state['phase'], 'online')
+  assert('presence RPC called once', s.callLog.filter((x) => x === 'setDriverPresence:true').length, 1)
+  assert(
+    'no latitude passed to presence RPC',
+    (s.sandbox['__presenceArgs'] as { latitude: unknown }).latitude,
+    undefined,
+  )
+  assert(
+    'no longitude passed to presence RPC',
+    (s.sandbox['__presenceArgs'] as { longitude: unknown }).longitude,
+    undefined,
+  )
+  assert('getCurrentPosition NOT called', s.callLog.includes('getCurrentPosition'), false)
+  assert('watchPosition NOT called', s.callLog.includes('watchPosition'), false)
+  assert('no tracking started on go-online', s.stopTrackingRef.current, null)
+}
+
+{
+  const s = makePresenceSandbox({ initialOnline: true })
+  await s.toggle()
+
+  assert('driver goes offline', s.state['driverOnline'], false)
+  assert('phase becomes offline', s.state['phase'], 'offline')
+  assert('presence RPC called once with offline', s.callLog.filter((x) => x === 'setDriverPresence:false').length, 1)
+  assert('getCurrentPosition NOT called', s.callLog.includes('getCurrentPosition'), false)
+  assert('watchPosition NOT called', s.callLog.includes('watchPosition'), false)
+}
+
+// ---------------------------------------------------------------------------
+// Runtime test: startRideLocationWatch (private broadcast channel).
+// ---------------------------------------------------------------------------
+console.log('\n--- Active-ride live location watch ---')
+{
+  const broadcasts: Array<{ channel: string; event: string; payload: unknown }> = []
+  const channels: Array<{ statusCb: ((status: string) => void) | null }> = []
+  const removed: unknown[] = []
+
+  const geoFixers: {
+    success: ((pos: unknown) => void) | null
+    error: ((err: unknown) => void) | null
+  } = { success: null, error: null }
+  let watchSeq = 0
+  let clearedWatchId: unknown = null
+
+  let clock = Date.now()
+  const FakeDate = class extends Date {
+    static now() {
+      return clock
     }
-
-    return {
-      driver_id: 'd',
-      is_online: online,
-      is_available: available,
-      auto_accept: autoAccept,
-    }
   }
 
-  // --- compile REAL extracted functions into the SAME sandbox ---
-  const hasGeoBody = stripAsAssertions(extractBody(driverPresence, 'export function hasGeolocation'))
-  const reqFixBody = stripAsAssertions(extractBody(driverPresence, 'export function requestFirstFix'))
-  const startTrackingBody = stripAsAssertions(
-    extractBody(driverPresence, 'export function startDriverLocationTracking'),
-  )
-  const statusBody = stripAsAssertions(
-    extractBody(driverPresence, 'export function driverLocationStatus'),
-  )
-  const resolveErrBody = stripAsAssertions(
-    extractBody(
-      driverExp,
-      'const resolvePresenceErrorMessage = (error: unknown, offline: boolean): string => {',
-    ),
-  )
+  const sandbox: Record<string, unknown> = {
+    console: { ...console, error: () => {} },
+    Date: FakeDate,
+    Math,
+    Number,
+    Promise,
+    RIDE_LOCATION_EVENT: 'location',
+    RIDE_LOCATION_THROTTLE_MS: 3000,
+    RIDE_LOCATION_MIN_MOVE: 0.00008,
+    rideLocationChannel: (rideId: string) => `ride:${rideId}`,
+    navigator: {
+      geolocation: {
+        watchPosition: (success: (pos: unknown) => void, error?: (err: unknown) => void) => {
+          geoFixers.success = success
+          geoFixers.error = error ?? null
+          return ++watchSeq
+        },
+        clearWatch: (id: number) => {
+          clearedWatchId = id
+        },
+      },
+    },
+    supabase: {
+      channel: (name: string) => {
+        const channel = {
+          statusCb: null as ((status: string) => void) | null,
+          send: (message: { type: string; event: string; payload: unknown }) => {
+            broadcasts.push({ channel: name, event: message.event, payload: message.payload })
+            return true
+          },
+          subscribe: (cb: (status: string) => void) => {
+            channel.statusCb = cb
+            channels.push(channel)
+            return channel
+          },
+        }
+        return channel
+      },
+      removeChannel: (channel: unknown) => {
+        removed.push(channel)
+      },
+    },
+  }
 
-  vm.runInNewContext(`globalThis.__hasGeolocation = function()${hasGeoBody}`, sandbox)
-  vm.runInNewContext(`globalThis.__requestFirstFix = function(timeoutMs = 15000)${reqFixBody}`, sandbox)
-  vm.runInNewContext(`globalThis.__startTracking = function(driverId, callbacks)${startTrackingBody}`, sandbox)
-  vm.runInNewContext(`globalThis.__driverLocationStatus = function()${statusBody}`, sandbox)
+  const body = stripAsAssertions(
+    extractBody(rideLoc, 'export function startRideLocationWatch'),
+  )
   vm.runInNewContext(
-    `globalThis.__resolvePresenceErrorMessage = function(error, offline)${resolveErrBody}`,
+    `globalThis.__startRideLocationWatch = function(rideId, options)${body}`,
     sandbox,
   )
 
-  const hasGeolocation = (): boolean =>
-    (sandbox.__hasGeolocation as () => boolean)()
-  const requestFirstFix = (t?: number) =>
-    (sandbox.__requestFirstFix as (t?: number) => Promise<unknown>)(t)
-  const startTracking = (driverId: string, cb: unknown) =>
-    (sandbox.__startTracking as (d: string, c: unknown) => () => void)(driverId, cb)
+  const collectedLocations: Array<{ latitude: number; longitude: number }> = []
+  const errors: unknown[] = []
 
-  sandbox['hasGeolocation'] = hasGeolocation
-  sandbox['requestFirstFix'] = requestFirstFix
-  sandbox['startDriverLocationTracking'] = startTracking
-  sandbox['resolvePresenceErrorMessage'] = (error: unknown, offline: boolean): string =>
-    (sandbox.__resolvePresenceErrorMessage as (e: unknown, off: boolean) => string)(error, offline)
+  const stop = (sandbox.__startRideLocationWatch as (r: string, o: unknown) => () => void)(
+    'ride-0001',
+    {
+      user: 'user-1',
+      onLocation: (latitude: number, longitude: number) => {
+        collectedLocations.push({ latitude, longitude })
+      },
+      onError: (err: unknown) => {
+        errors.push(err)
+      },
+    },
+  )
 
-  return { sandbox, calls, state, activeWatches, stopTrackingRef, callLog, setValue: state }
+  assert('watchPosition started exactly once', watchSeq, 1)
+
+  // Fix arrives BEFORE the channel is subscribed: queued, not sent yet.
+  geoFixers.success!({
+    coords: { latitude: 8.2152, longitude: 126.3166, accuracy: 20 },
+  })
+  assert('location callback fires on the queued fix', collectedLocations.length, 1)
+  assert('no broadcast before subscribe', broadcasts.length, 0)
+
+  // Channel reports SUBSCRIBED -> queued first fix is published.
+  channels[0].statusCb!('SUBSCRIBED')
+  assert('first fix broadcast on the private ride channel', broadcasts.length, 1)
+  assert('channel name is ride:{ride_id}', broadcasts[0].channel, 'ride:ride-0001')
+  assert('event name is location', broadcasts[0].event, 'location')
+  const first = broadcasts[0].payload as { user: string; latitude: number; longitude: number; timestamp: number }
+  assert('payload user is the driver', first.user, 'user-1')
+  assert('payload latitude matches', first.latitude, 8.2152)
+  assert('payload longitude matches', first.longitude, 126.3166)
+  assert('payload has a timestamp', typeof first.timestamp, 'number')
+
+  // Stationary fix < 3s later: throttled out.
+  geoFixers.success!({
+    coords: { latitude: 8.2152, longitude: 126.3166, accuracy: 20 },
+  })
+  assert('stationary fix is throttled', broadcasts.length, 1)
+
+  // Move past the throttle window, then a moved fix: published.
+  clock = clock + 4000
+  geoFixers.success!({
+    coords: { latitude: 8.216, longitude: 126.317, accuracy: 20 },
+  })
+  assert('moved fix is published', broadcasts.length, 2)
+  assert('location callback fires on every fix', collectedLocations.length, 3)
+
+  // Geolocation error is surfaced without stopping the ride.
+  geoFixers.error!({ code: 1, message: 'denied' })
+  assert('watch error surfaced to caller', errors.length, 1)
+
+  // Stop: clears the watcher and removes the channel.
+  stop()
+  assert('clearWatch called with the watch id', clearedWatchId, watchSeq)
+  assert('channel removed on stop', removed.length, 1)
+  assert('stop is repeatable no-op safe', typeof stop, 'function')
 }
 
-function buildToggle(sandbox: Record<string, unknown>) {
+console.log('\n--- Geolocation unsupported ---')
+{
+  const unsupportedCalls: string[] = []
+  const sandbox: Record<string, unknown> = {
+    console: { ...console, error: () => {} },
+    Date,
+    Math,
+    RIDE_LOCATION_EVENT: 'location',
+    RIDE_LOCATION_THROTTLE_MS: 3000,
+    RIDE_LOCATION_MIN_MOVE: 0.00008,
+    rideLocationChannel: (rideId: string) => `ride:${rideId}`,
+    navigator: { geolocation: null },
+    supabase: {
+      channel: () => ({ subscribe: () => {}, send: () => true, removeChannel: () => {} }),
+      removeChannel: () => {},
+    },
+  }
   const body = stripAsAssertions(
-    extractBody(driverExp, 'const handleToggleOnline = async () => {'),
+    extractBody(rideLoc, 'export function startRideLocationWatch'),
   )
-  vm.runInNewContext(`globalThis.__toggle = async function()${body}`, sandbox)
-  return sandbox.__toggle as () => Promise<void>
-}
-
-async function runToggle(opts: Parameters<typeof makeSandbox>[0]) {
-  const { sandbox, calls, state, activeWatches, stopTrackingRef, callLog } = makeSandbox(opts)
-  const toggle = buildToggle(sandbox)
-  await toggle()
-  return { sandbox, calls, state, activeWatches, stopTrackingRef, callLog }
-}
-
-type ToggleResult = Awaited<ReturnType<typeof runToggle>>
-
-const defaultFix = { latitude: 8.2152, longitude: 126.3166 }
-
-// ---------------------------------------------------------------------------
-// Scenario A — GPS succeeds: atomic go-online in one RPC.
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario A: GPS success, atomic go-online ---')
-{
-  const { state, calls, stopTrackingRef, callLog } = await runToggle({
-    geoMode: 'success',
-    fix: defaultFix,
-  })
-
-  assert('driver goes online (setDriverOnline(true))', state['driverOnline'], true)
-  assert('phase becomes online', state['phase'], 'online')
-  assert('presence RPC called exactly once', calls['setDriverPresence'] ?? 0, 1)
-  assert(
-    'the first GPS fix is passed INTO the presence RPC (position + presence in one call)',
-    callLog.filter((step) => step === 'setDriverPresence').length,
-    1,
+  vm.runInNewContext(
+    `globalThis.__startRideLocationWatch = function(rideId, options)${body}`,
+    sandbox,
   )
-  assert(
-    'atomic ordering: getCurrentPosition -> setDriverPresence -> watchPosition -> updateDriverLocation',
-    JSON.stringify(callLog),
-    JSON.stringify(['getCurrentPosition', 'setDriverPresence', 'watchPosition', 'updateDriverLocation']),
+  const stop = (sandbox.__startRideLocationWatch as (r: string, o: unknown) => () => void)(
+    'ride-0002',
+    {
+      user: 'user-2',
+      onUnsupported: () => {
+        unsupportedCalls.push('called')
+      },
+    },
   )
-  assert('presenceError cleared', state['presenceError'] ?? '', '')
-  assert(
-    'latitude recorded from the first fix',
-    (state['driverLocation'] as { latitude: number } | null)?.latitude ?? 0,
-    8.2152,
-  )
-  assert(
-    'tracking started once (watchPosition called once)',
-    calls['watchPosition'] ?? 0,
-    1,
-  )
-  assert(
-    'tracking stop function stored in stopTrackingRef.current',
-    typeof stopTrackingRef.current,
-    'function',
-  )
+  assert('onUnsupported notified', unsupportedCalls.length, 1)
+  assert('stop still returned (no-op)', typeof stop, 'function')
+  stop()
 }
 
 // ---------------------------------------------------------------------------
-// Scenario B — GPS permission denied (code 1).
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario B: GPS permission denied ---')
-{
-  const { state, calls, stopTrackingRef } = await runToggle({
-    geoMode: 'denied',
-    fix: defaultFix,
-  })
-
-  assert('driver stays offline', state['driverOnline'], false)
-  assertMatch('GPS denied error surfaced', String(state['presenceError'] ?? ''), 'Location permission was denied')
-  assert('no location published', calls['updateDriverLocation'] ?? 0, 0)
-  assert('presence RPC not called', calls['setDriverPresence'] ?? 0, 0)
-  assert('no tracking started', calls['watchPosition'] ?? 0, 0)
-  assert('stop function not set', stopTrackingRef.current, null)
-}
-
-// ---------------------------------------------------------------------------
-// Scenario C — GPS unavailable (code 2).
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario C: GPS unavailable ---')
-{
-  const { state, calls, stopTrackingRef } = await runToggle({
-    geoMode: 'unavailable',
-    fix: defaultFix,
-  })
-
-  assert('driver stays offline', state['driverOnline'], false)
-  assertMatch('GPS unavailable error surfaced', String(state['presenceError'] ?? ''), 'could not be determined')
-  assert('presence RPC not called', calls['setDriverPresence'] ?? 0, 0)
-  assert('no track started', calls['watchPosition'] ?? 0, 0)
-  assert('stop function not set', stopTrackingRef.current, null)
-}
-
-// ---------------------------------------------------------------------------
-// Scenario D — GPS timeout (code 3).
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario D: GPS timeout ---')
-{
-  const { state, calls, stopTrackingRef } = await runToggle({
-    geoMode: 'timeout',
-    fix: defaultFix,
-  })
-
-  assert('driver stays offline', state['driverOnline'], false)
-  assertMatch('GPS timeout error surfaced', String(state['presenceError'] ?? ''), 'timed out')
-  assert('presence RPC not called', calls['setDriverPresence'] ?? 0, 0)
-  assert('no track started', calls['watchPosition'] ?? 0, 0)
-  assert('stop function not set', stopTrackingRef.current, null)
-}
-
-// ---------------------------------------------------------------------------
-// Scenario E — GPS succeeds but the presence RPC rejects (driver not active).
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario E: GPS success, presence RPC rejects (inactive driver) ---')
-{
-  const { state, calls, stopTrackingRef } = await runToggle({
-    geoMode: 'success',
-    fix: defaultFix,
-    presenceResult: 'rpcerror',
-  })
-
-  assert('driver stays offline', state['driverOnline'], false)
-  assertMatch(
-    'presence RPC error surfaced',
-    String(state['presenceError'] ?? ''),
-    'Only an ACTIVE driver with a shared location can set presence.',
-  )
-  assert('no tracking started', calls['watchPosition'] ?? 0, 0)
-  assert('stop function not set', stopTrackingRef.current, null)
-}
-
-// ---------------------------------------------------------------------------
-// Scenario E2 — the RPC refuses to go online without a recorded position.
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario E2: presence RPC requires a position ---')
-{
-  const { state, stopTrackingRef } = await runToggle({
-    geoMode: 'success',
-    fix: defaultFix,
-    presenceResult: 'nofix',
-  })
-
-  assert('driver stays offline', state['driverOnline'], false)
-  assertMatch(
-    'position-required error surfaced',
-    String(state['presenceError'] ?? ''),
-    'A driver position is required before going online.',
-  )
-  assert('stop function not set', stopTrackingRef.current, null)
-}
-
-// ---------------------------------------------------------------------------
-// Scenario F — tracking starts exactly once.
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario F: tracking starts exactly once on success ---')
-{
-  const { calls, stopTrackingRef, activeWatches } = await runToggle({
-    geoMode: 'success',
-    fix: defaultFix,
-  })
-
-  assert('watchPosition invoked exactly once', calls['watchPosition'] ?? 0, 1)
-  assert('exactly one active watcher', activeWatches.size, 1)
-  assert('stop function stored after success', typeof stopTrackingRef.current, 'function')
-}
-
-// ---------------------------------------------------------------------------
-// Scenario G — going offline cleans up; no duplicate watcher.
-// ---------------------------------------------------------------------------
-console.log('\n--- Scenario G: offline cleanup, no duplicate watchers ---')
-{
-  const online1 = await runToggle({ geoMode: 'success', fix: defaultFix })
-  assert('online #1: driver online', online1.state['driverOnline'], true)
-  assert('online #1: one active watcher', online1.activeWatches.size, 1)
-
-  const offline = await runToggle({
-    geoMode: 'success',
-    fix: defaultFix,
-    initialOnline: true,
-  })
-  await offlineStateCheck(offline)
-
-  const online2 = await runToggle({ geoMode: 'success', fix: defaultFix })
-  assert('online #2: driver online again', online2.state['driverOnline'], true)
-  assert('online #2: one active watcher (no duplicates)', online2.activeWatches.size, 1)
-}
-
-async function offlineStateCheck(o: ToggleResult) {
-  assert('offline: driver offline', o.state['driverOnline'], false)
-  assert('offline: stopTrackingRef.current cleared to null', o.stopTrackingRef.current, null)
-  assert('offline: clearWatch invoked', o.calls['clearWatch'] ?? 0, 1)
-}
-
-// ---------------------------------------------------------------------------
-// Source shape guards (regression: the gate + single-RPC path stay intact)
+// Source shape guards (regressions against the product rules).
 // ---------------------------------------------------------------------------
 console.log('\n--- Source shape guards ---')
-assertMatch('GPS gate: requestFirstFix on go-online', driverExp, 'const fix = await requestFirstFix()')
-assertMatch(
-  'atomic go-online passes the fix into the presence RPC',
-  driverExp,
-  'await setDriverPresence(true, driverIsAvailable, driverAutoAccept, fix.latitude, fix.longitude)',
-)
-assertNotMatch(
-  'no separate updateDriverLocation on the go-online critical path',
-  driverExp,
-  'updateDriverLocation(driverId, fix.latitude, fix.longitude)',
-)
-assertMatch('location tracking starts after presence', driverExp, 'startDriverLocationTracking(driverId, {')
-assertMatch('tracking is stopped on go-offline', driverExp, 'stopTrackingRef.current?.()')
-assertMatch('go-offline still calls the presence RPC', driverExp, 'await setDriverPresence(false, false, driverAutoAccept)')
 
-// SQL guards: the RPC must accept the inline position and require it online.
-assertMatch(
-  'SQL accepts optional p_latitude',
-  presenceSql,
-  'p_latitude double precision default null',
-)
-assertMatch(
-  'SQL accepts optional p_longitude',
-  presenceSql,
-  'p_longitude double precision default null',
-)
-assertMatch(
-  'SQL writes the position into driver_locations when going online with a fix',
-  presenceSql,
-  'insert into public.driver_locations (driver_id, latitude, longitude)',
-)
-assertMatch(
-  'SQL rejects go-online without a recorded position',
-  presenceSql,
-  'A driver position is required before going online.',
-)
-assertMatch(
-  'SQL still requires an ACTIVE driver',
-  presenceSql,
-  'Only an ACTIVE driver with a shared location can set presence.',
-)
+// Driver side
+assertNotMatch('go-online never calls requestFirstFix', driverExp, 'requestFirstFix')
+assertNotMatch('go-online never calls getCurrentPosition', driverExp, 'getCurrentPosition')
+assertNotMatch('driver page never calls startDriverLocationTracking', driverExp, 'startDriverLocationTracking')
+assertNotMatch('driver page no longer subscribes to passenger_locations', driverExp, 'subscribeToPassengerLocation')
+assertMatch('driver subscribes to the private ride channel', driverExp, 'subscribeToRideLocation(activeRide.id, (message) => {')
+assertMatch('driver starts the ride location watch on an active ride', driverExp, 'startRideLocationWatch(activeRide.id, {')
+assertMatch('driver ride-location gated to active phases', driverExp, "['heading_to_pickup', 'arrived', 'in_progress']")
+assertMatch('driver track progress still calls presence offline RPC', driverExp, 'await setDriverPresence(false, false, driverAutoAccept)')
+
+// Rider side
+assertNotMatch('rider page no longer subscribes to driver_locations', riderExp, 'subscribeToDriverLocation')
+assertNotMatch('rider page no longer upserts passenger_locations', riderExp, 'updatePassengerLocation')
+assertMatch('rider subscribes to the same private ride channel', riderExp, 'subscribeToRideLocation(ride.id, (message) => {')
+assertMatch('rider shares on the same private ride channel', riderExp, 'startRideLocationWatch(ride.id, {')
+assertMatch('rider driver marker still rendered from live location', riderExp, 'driverLatitude={driverLocation?.latitude}')
+assertMatch('rider ride-location gated to active statuses', riderExp, "['accepted', 'arrived', 'in_progress']")
+
+// rideLocation lib
+assertMatch('private channel config used', rideLoc, "config: { private: true }")
+assertMatch('channel prefix is ride:', rideLoc, "RIDE_LOCATION_CHANNEL_PREFIX = 'ride:'")
+assertMatch('broadcast event is location', rideLoc, "RIDE_LOCATION_EVENT = 'location'")
+assertMatch('broadcasts are throttled', rideLoc, 'RIDE_LOCATION_THROTTLE_MS = 3000')
+assertMatch('payload carries the user id', rideLoc, 'user: options.user')
+assertMatch('payload carries latitude', rideLoc, 'latitude,')
+assertMatch('payload carries longitude', rideLoc, 'longitude,')
+assertMatch('payload carries timestamp', rideLoc, 'timestamp,')
+assertMatch('watchPosition used for live tracking', rideLoc, 'navigator.geolocation.watchPosition')
+assertMatch('watcher cleaned up on stop', rideLoc, 'navigator.geolocation.clearWatch')
 
 console.log('\n')
 if (failures === 0) {

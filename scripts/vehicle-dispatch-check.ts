@@ -44,6 +44,7 @@ const adminUi = read('src/pages/AdminExperience.tsx')
 const ridesLib = read('src/lib/rides.ts')
 const rideTypes = read('src/types/ride.ts')
 const fareLib = read('src/lib/fare.ts')
+const i18n = read('src/lib/i18n.tsx')
 
 let failures = 0
 
@@ -87,9 +88,14 @@ assert(
   ['1 passenger'],
 )
 assertMatch(
-  'customer UI note says exactly 1 passenger',
+  'customer UI note says exactly 1 passenger (via i18n key)',
   customerUi,
-  'Motorcycle rides carry exactly 1 passenger.',
+  `t('book.motorcycleNote')`,
+)
+assertMatch(
+  'i18n maps the motorcycle note to exactly 1 passenger',
+  i18n,
+  `'book.motorcycleNote': 'Motorcycle rides carry exactly 1 passenger.'`,
 )
 assertTrue(
   'customer UI auto-forces count back to 1 when Vehicle = Motorcycle',
@@ -156,8 +162,13 @@ assertTrue('migration is additive only (no drops)', !/\bdrop\s+table|drop\s+colu
 console.log('--- 9. GPS go-online gate is untouched ---')
 assertMatch('presence RPC still the 5-arg set_driver_presence', presenceSql, `public.set_driver_presence`)
 assertTrue(
-  'dispatch still requires a GPS fix fresher than 60s',
-  dispatchSql.includes(`dl.updated_at >= now() - interval '60 seconds'`),
+  'dispatch does NOT require a GPS fix fresher than 60s',
+  !dispatchSql.includes(`dl.updated_at >= now() - interval '60 seconds'`),
+)
+assertTrue(
+  'dispatch does NOT gate candidates on a recorded GPS position',
+  !dispatchSql.includes('dl.latitude is not null') &&
+    !dispatchSql.includes('dl.longitude is not null'),
 )
 assertTrue('migration does not touch driver_locations', !migration.includes('driver_locations'))
 

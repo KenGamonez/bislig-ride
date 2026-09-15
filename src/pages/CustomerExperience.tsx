@@ -26,8 +26,7 @@ import {
 } from '../lib/fare'
 import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
-import { subscribeToDriverLocation } from '../lib/driverLocations'
-import { updatePassengerLocation } from '../lib/passengerLocations'
+import { startRideLocationWatch, subscribeToRideLocation } from '../lib/rideLocation'
 import { playChatNotification } from '../lib/notifications'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
@@ -594,15 +593,19 @@ void loadAssignedDriver()
   useEffect(() => {
     const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
 
-    if (!ride.driver_id || !activeStatuses.includes(ride.status)) {
+    if (!ride.id || !ride.driver_id || !customerAuthId || !activeStatuses.includes(ride.status)) {
       setDriverLocation(null)
       return
     }
 
-    return subscribeToDriverLocation(ride.driver_id, (location) => {
-      setDriverLocation({ latitude: location.latitude, longitude: location.longitude })
+    return subscribeToRideLocation(ride.id, (message) => {
+      if (message.user === customerAuthId) {
+        return
+      }
+
+      setDriverLocation({ latitude: message.latitude, longitude: message.longitude })
     })
-  }, [ride.driver_id, ride.status])
+  }, [ride.id, ride.driver_id, customerAuthId, ride.status])
 
   useEffect(() => {
     showChatRef.current = showChat
@@ -611,59 +614,21 @@ void loadAssignedDriver()
   useEffect(() => {
     const activeStatuses: Ride['status'][] = ['accepted', 'arrived', 'in_progress']
 
-    if (!ride.id || !customerAuthId || !activeStatuses.includes(ride.status) || !passengerLocationShared || !navigator.geolocation) {
+    if (!ride.id || !customerAuthId || !activeStatuses.includes(ride.status) || !passengerLocationShared) {
       return
     }
 
-    let mounted = true
-    let watchId = 0
-    let lastLatitude = 0
-    let lastLongitude = 0
-    let lastPublishedAt = 0
-
-    const onPosition = (position: GeolocationPosition) => {
-      const { latitude, longitude } = position.coords
-
-      if (!mounted) {
-        return
-      }
-
-      setPassengerLiveLocation({ latitude, longitude })
-      setPassengerLocationError('')
-
-      const now = Date.now()
-      const moved = Math.abs(latitude - lastLatitude) >= 0.00008 || Math.abs(longitude - lastLongitude) >= 0.00008
-
-      if (!moved || now - lastPublishedAt < 3000) {
-        return
-      }
-
-      lastLatitude = latitude
-      lastLongitude = longitude
-      lastPublishedAt = now
-
-      void updatePassengerLocation(ride.id, latitude, longitude).catch((error) => {
-        console.error('Unable to update passenger location:', error)
-      })
-    }
-
-    const onError = (error: GeolocationPositionError) => {
-      console.error('Unable to get passenger location:', error)
-
-      if (mounted) {
+    return startRideLocationWatch(ride.id, {
+      user: customerAuthId,
+      onLocation: (latitude, longitude) => {
+        setPassengerLiveLocation({ latitude, longitude })
+        setPassengerLocationError('')
+      },
+      onError: (error) => {
+        console.error('Unable to get passenger location:', error)
         setPassengerLocationError(t('err.liveLocationOff'))
-      }
-    }
-
-    watchId = navigator.geolocation.watchPosition(onPosition, onError, { enableHighAccuracy: true })
-
-    return () => {
-      mounted = false
-
-      if (watchId !== 0) {
-        navigator.geolocation.clearWatch(watchId)
-      }
-    }
+      },
+    })
   }, [ride.id, customerAuthId, ride.status, passengerLocationShared, t])
 
   useEffect(() => {

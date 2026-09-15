@@ -2797,6 +2797,17 @@ a.secondary-action {
   height: 260px !important;
 }
 
+.driver-location-note {
+  margin: -6px 0 18px;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--color-gray-50);
+  color: var(--text-secondary);
+  font-size: 0.74rem;
+  line-height: 1.4;
+}
+
 .history-list li small {
   color: var(--text-secondary);
   font-size: 0.72rem;
