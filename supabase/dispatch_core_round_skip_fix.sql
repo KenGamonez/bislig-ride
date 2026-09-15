@@ -84,7 +84,7 @@ begin
   -- retired lazily and the search rolls forward to the next candidate.
   update public.ride_offers
      set status = 'expired', decided_at = now()
-   where ride_id = p_ride_id
+   where public.ride_offers.ride_id = p_ride_id
      and status = 'offered'
      and expires_at <= now();
 
@@ -94,7 +94,7 @@ begin
   select coalesce(max(dispatch_round), 0)
     into v_last_round
     from public.ride_offers
-   where ride_id = p_ride_id;
+   where public.ride_offers.ride_id = p_ride_id;
 
   -- Candidate pool = online active drivers with no active ride (regardless of
   -- GPS freshness). Used to distinguish "no drivers at all" from "drivers
@@ -156,7 +156,7 @@ begin
   if v_candidate.auto_accept then
     update public.ride_offers
        set status = 'withdrawn', decided_at = now()
-     where ride_id = p_ride_id
+     where public.ride_offers.ride_id = p_ride_id
        and status = 'offered';
 
     update public.rides
@@ -180,7 +180,7 @@ begin
   else
     update public.ride_offers
        set status = 'withdrawn', decided_at = now()
-     where ride_id = p_ride_id
+     where public.ride_offers.ride_id = p_ride_id
        and status = 'offered';
 
     insert into public.ride_offers
