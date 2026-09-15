@@ -924,7 +924,14 @@ const handleSubmitRating = async () => {
     setIsSubmittingRating(true)
 
     try {
-      const alreadyRated = await hasRatedRide(ride.id, customerAuthId ?? (await getCustomerAuthId()))
+      const currentAuthId = customerAuthId ?? (await getCustomerAuthId())
+
+      if (ride.customer_auth_id && currentAuthId !== ride.customer_auth_id) {
+        setRatingError(t('rating.ownerOnly'))
+        return
+      }
+
+      const alreadyRated = await hasRatedRide(ride.id, currentAuthId)
 
       if (alreadyRated) {
         setRatingSubmitted(true)
@@ -962,6 +969,14 @@ setRatingSubmitted(true)
     let mounted = true
 
     const checkExistingRating = async () => {
+      if (ride.customer_auth_id && customerAuthId !== ride.customer_auth_id) {
+        if (mounted) {
+          setRatingSubmitted(false)
+          setRatingError(t('rating.ownerOnly'))
+        }
+        return
+      }
+
       const alreadyRated = await hasRatedRide(ride.id, customerAuthId)
 
       if (mounted) {
@@ -974,7 +989,7 @@ setRatingSubmitted(true)
     return () => {
       mounted = false
     }
-  }, [phase, ride.id, customerAuthId])
+  }, [phase, ride.id, ride.customer_auth_id, customerAuthId, t])
 
   const handleConfirmCancellation = async (reason: string) => {
     if (!ride.id || !customerAuthId || cancelSubmitting) {
@@ -1023,7 +1038,7 @@ setRatingSubmitted(true)
     setRatingSubmitted(false)
     setRatingError('')
     setCancellation(null)
-    setLauncherView(false)
+    setLauncherView(true)
     setOpenMobileSection(null)
     resetForm()
   }
@@ -1911,6 +1926,10 @@ onClick={() => setRating(star)}
             disabled={rating === 0 || isSubmittingRating}
           >
             {isSubmittingRating ? t('rating.submitting') : t('rating.submit')}
+          </button>
+
+          <button type="button" className="secondary-action" onClick={handleBackToHome}>
+            {t('form.backHome')}
           </button>
         </>
       ) : (
