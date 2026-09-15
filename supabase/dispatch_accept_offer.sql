@@ -5,7 +5,8 @@
 --
 --   * the ride row is locked FOR UPDATE (serializes with dispatch/cancel),
 --   * only a live, unexpired offer issued to THIS driver may convert,
---   * eligibility + GPS freshness are re-verified at accept time, and
+--   * eligibility (online, available, no active ride) is re-verified at accept
+--     time — GPS is NOT required to accept a ride, and
 --   * the one-live-offer invariant means a second driver can never accept the
 --     same ride — they get a controlled "no longer available" error instead.
 
@@ -90,11 +91,8 @@ begin
       and dl.is_online = true
       and dl.is_available = true
       and dl.current_ride_id is null
-      and dl.latitude is not null
-      and dl.longitude is not null
-      and dl.updated_at >= now() - interval '60 seconds'
   ) then
-    raise exception 'You are no longer eligible for this ride. Refresh your location and try again.'
+    raise exception 'You are no longer eligible for this ride.'
       using errcode = 'XX001';
   end if;
 
