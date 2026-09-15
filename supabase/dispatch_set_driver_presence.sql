@@ -69,6 +69,7 @@ begin
        and status = 'offered';
   end if;
 
+  return query
   insert into public.driver_locations (driver_id, is_online, is_available, auto_accept)
   values (v_driver_id, p_online, v_effective_available, coalesce(p_auto_accept, false))
   on conflict (driver_id)
