@@ -12752,7 +12752,27 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .service-dashboard {
-    gap: 34px;
+    gap: 28px;
+  }
+
+  .customer-layout .home-hero {
+    gap: 10px;
+  }
+
+  .customer-layout .home-hero-eyebrow {
+    font-size: 0.62rem;
+  }
+
+  .customer-layout .home-hero-title {
+    font-size: clamp(1.45rem, 6.4vw, 1.9rem);
+    line-height: 1.04;
+    letter-spacing: -0.035em;
+  }
+
+  .customer-layout .home-hero-subtitle {
+    max-width: 30ch;
+    font-size: 0.85rem;
+    line-height: 1.45;
   }
 
   .customer-layout .ride-now-card {
@@ -12802,8 +12822,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .ride-now-card {
-    min-height: 460px;
-    padding: 40px 34px;
+    min-height: 300px;
+    padding: 32px 34px;
   }
 
   .customer-layout .ride-now-arrow {
