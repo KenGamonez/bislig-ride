@@ -4,6 +4,7 @@ type LocationInputProps = {
   placeholder: string
   error?: string
   onChange: (value: string) => void
+  list?: string
 }
 
 export function LocationInput({
@@ -12,6 +13,7 @@ export function LocationInput({
   placeholder,
   error,
   onChange,
+  list,
 }: LocationInputProps) {
   return (
     <label className="field-block">
@@ -22,6 +24,7 @@ export function LocationInput({
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
+        list={list}
       />
       {error ? <span className="field-error">{error}</span> : null}
     </label>
