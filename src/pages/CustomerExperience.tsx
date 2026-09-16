@@ -23,6 +23,7 @@ import {
   computeFare,
   DEFAULT_FARE_LEVEL,
   formatCentavos,
+  mangagoyDestinationMatrix,
 } from '../lib/fare'
 import { fetchDriverById } from '../lib/drivers'
 import type { DriverProfile } from '../types/driver'
@@ -1157,12 +1158,18 @@ setRatingSubmitted(true)
 
 <div className="destination-field-block">
             <LocationInput
+              list="dest-suggestions"
               label={t('book.destination')}
               value={formData.destination}
               placeholder={t('book.whereTo')}
               error={validationErrors.destination}
               onChange={(value) => handleInput('destination', value)}
             />
+            <datalist id="dest-suggestions">
+              {mangagoyDestinationMatrix.map((row) => (
+                <option key={row.name} value={row.name} />
+              ))}
+            </datalist>
           </div>
 </div>
       </section>
