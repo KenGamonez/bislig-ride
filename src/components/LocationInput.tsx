@@ -24,7 +24,7 @@ export function LocationInput({
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        list={list}
+        list={list ? list : undefined}
       />
       {error ? <span className="field-error">{error}</span> : null}
     </label>
