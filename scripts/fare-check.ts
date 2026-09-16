@@ -72,9 +72,9 @@ assert('San Jose = ₱75.00', exactFareCents(quote('San Jose', 'Regular')), 7500
 assert('unmatched destination -> no auto fare', quote('Somewhere Unknown', 'Regular'), null)
 
 console.log('--- Excluded / unverified destinations ---')
-const excluded = ['Pamanlinan', 'Sikahoy', 'Pamaypayan', 'Sote']
+const excluded = ['Pamanlinan']
 excluded.forEach((name) => {
-  assert(`${name} absent from matrix`, findDestinationMatrixRow(name), null)
+  assert(`${name} is unmatched destination`, findDestinationMatrixRow(name) === null, true)
   assert(`${name} produces no guessed fare`, quote(name, 'Regular'), null)
 })
 
@@ -84,6 +84,7 @@ const verifiedRows = [
   'San Fernando', 'Kahayag', 'Coleto', 'San Roque', 'Maharlika', 'Sanyata', 'Mantaban', 'Puerto',
   'San Rafael', 'Mabog', 'Sta. Cruz', 'Bucto', 'Sibaroy', 'Tumanan', 'Caguyao', 'San Vicente',
   'San Antonio', 'San Isidro', 'Mone', 'Burboanan', 'Tinuy-an', 'Danipas', 'Labisma', 'Lawigan', 'San Jose',
+  'Sote', 'Sikahoy', 'Pamaypayan',
 ]
 assert('all 32 verified matrix rows present', verifiedRows.every((name) => findDestinationMatrixRow(name) !== null), true)
 

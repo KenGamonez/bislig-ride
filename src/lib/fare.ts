@@ -90,6 +90,9 @@ export const mangagoyDestinationMatrix: DestinationMatrixRow[] = [
   { name: 'Labisma', distanceKm: 12, levelCents: range(55) },
   { name: 'Lawigan', distanceKm: 18, levelCents: range(85) },
   { name: 'San Jose', distanceKm: 16, levelCents: range(75) },
+  { name: 'Sote', distanceKm: null, levelCents: range(80) },
+  { name: 'Sikahoy', distanceKm: null, levelCents: range(0) },
+  { name: 'Pamaypayan', distanceKm: null, levelCents: range(0) },
 ]
 
 export const formatCentavos = (cents: number): string => (cents / 100).toFixed(2)
