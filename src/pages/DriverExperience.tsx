@@ -1735,20 +1735,11 @@ const renderOnlineState = () => (
       </div>
 
 <div className="ride-info-grid">
-        <div><span>Passenger</span><strong>{request?.customer_name}</strong></div>
+        <div><span>Passengers</span><strong>{request?.passenger_count} · {request?.passenger_type ?? 'Regular'}</strong></div>
         <div><span>Vehicle</span><strong>{formatVehicleType(request?.vehicle_type)}</strong></div>
-        <div><span>Passengers</span><strong>{request?.passenger_count}</strong></div>
-        <div><span>Passenger type</span><strong>{request?.passenger_type ?? 'Regular'}</strong></div>
-        <div><span>Phone</span><strong>{request?.customer_phone}</strong></div>
-        <div><span>Requested</span><strong>{request ? new Date(request.created_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' }) : ''}</strong></div>
       </div>
 
       {renderRideStops(request)}
-
-      <div className="passenger-reputation" aria-label="Passenger rating">
-        <span>Passenger rating</span>
-        {renderPassengerReputationRow()}
-      </div>
 
       {requestError ? (
         <p className="form-error-message" role="alert">
@@ -1765,11 +1756,11 @@ const renderOnlineState = () => (
       ) : null}
 
 <div className="action-row request-actions">
-        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning || offerExpired} autoFocus={!offerExpired}>
-          {offerExpired ? 'Offer Expired' : 'Accept Ride'}
-        </button>
         <button type="button" className="secondary-action" onClick={handleDecline} disabled={transitioning || offerExpired}>
           Decline
+        </button>
+        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning || offerExpired} autoFocus={!offerExpired}>
+          {offerExpired ? 'Offer Expired' : 'Accept Ride'}
         </button>
         {offerExpired ? (
           <button type="button" className="secondary-action" onClick={handleDismissExpiredOffer}>
