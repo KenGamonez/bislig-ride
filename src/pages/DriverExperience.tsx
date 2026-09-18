@@ -199,6 +199,35 @@ const renderRideStops = (ride: Ride | null) => {
   )
 }
 
+const MOBILE_VIEWPORT_QUERY = '(max-width: 767px)'
+
+function useIsMobileViewport(): boolean {
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
+      ? window.matchMedia(MOBILE_VIEWPORT_QUERY).matches
+      : false,
+  )
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
+      return
+    }
+
+    const query = window.matchMedia(MOBILE_VIEWPORT_QUERY)
+    const onChange = (event: MediaQueryListEvent) => {
+      setIsMobile(event.matches)
+    }
+
+    query.addEventListener('change', onChange)
+
+    return () => {
+      query.removeEventListener('change', onChange)
+    }
+  }, [])
+
+  return isMobile
+}
+
 export function DriverExperience({
   onBack,
   view,
@@ -237,6 +266,11 @@ export function DriverExperience({
   const [offerSecondsLeft, setOfferSecondsLeft] = useState(0)
 
   const locationStatus = !driverOnline ? 'lost' : driverLocationStatus(lastLocationFixIso)
+  const isMobileViewport = useIsMobileViewport()
+  // Mobile only: while waiting for the next ride, the Ride Queue card leads
+  // and the profile follows. Everywhere else (desktop, offline, active ride)
+  // keeps the existing profile-first order.
+  const queueFirst = isMobileViewport && phase === 'online'
 
   const offerExpired = phase === 'incoming_request' && Boolean(pendingOffer) && offerSecondsLeft === 0
   const stopTrackingRef = useRef<(() => void) | null>(null)
@@ -2179,7 +2213,7 @@ const renderOnlineState = () => (
         </div>
       </header>
 
-      {renderSummary()}
+      {queueFirst ? null : renderSummary()}
 
       {showChangePassword ? (
         <section className="driver-card account-panel">
@@ -2247,6 +2281,8 @@ const renderOnlineState = () => (
         {phase === 'in_progress' ? renderInProgressState() : null}
         {phase === 'completed' ? renderCompletedState() : null}
       </div>
+
+      {queueFirst ? renderSummary() : null}
 
       {cancellationNotice ? (
         <section className="ride-cancelled-notice" role="alert">
