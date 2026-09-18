@@ -4346,6 +4346,63 @@ a.secondary-action {
   flex: 0.8;
 }
 
+/* Incoming ride request overlay sheet (driver). Reuses the existing
+   request card; presentation only — all state stays in DriverExperience. */
+.ride-request-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.55);
+  animation: request-overlay-in 0.2s ease-out;
+}
+
+.ride-request-sheet {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 16px);
+  overflow-y: auto;
+  animation: request-sheet-in 0.25s ease-out;
+}
+
+.ride-request-sheet > .driver-card {
+  margin-bottom: 0;
+  border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+}
+
+@media (min-width: 640px) {
+  .ride-request-overlay {
+    align-items: center;
+    padding: 24px;
+  }
+
+  .ride-request-sheet {
+    max-height: calc(100dvh - 48px);
+  }
+
+  .ride-request-sheet > .driver-card {
+    border-radius: var(--radius-lg);
+  }
+}
+
+@keyframes request-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes request-sheet-in {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ride-request-overlay,
+  .ride-request-sheet {
+    animation: none;
+  }
+}
+
 .driver-contact-actions {
   display: grid;
   grid-template-columns: 1fr 1fr;

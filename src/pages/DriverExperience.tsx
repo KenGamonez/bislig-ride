@@ -241,6 +241,7 @@ export function DriverExperience({
   const offerExpired = phase === 'incoming_request' && Boolean(pendingOffer) && offerSecondsLeft === 0
   const stopTrackingRef = useRef<(() => void) | null>(null)
   const handledOfferIdsRef = useRef<Set<string>>(new Set())
+  const dismissedOfferIdsRef = useRef<Set<string>>(new Set())
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelSubmitting, setCancelSubmitting] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -519,7 +520,7 @@ useEffect(() => {
         completedRideIdRef.current = null
         lastActiveRideIdRef.current = null
 
-        if (pendingOfferResult) {
+        if (pendingOfferResult && !dismissedOfferIdsRef.current.has(pendingOfferResult.offer.id)) {
           handledOfferIdsRef.current.add(pendingOfferResult.offer.id)
           setPendingOffer((current) =>
             current?.offer.id === pendingOfferResult.offer.id ? current : pendingOfferResult,
@@ -708,7 +709,10 @@ return unsubscribe
     }
 
     const unsubscribe = subscribeToDriverOffers(driverId, (pending) => {
-      if (handledOfferIdsRef.current.has(pending.offer.id)) {
+      if (
+        handledOfferIdsRef.current.has(pending.offer.id) ||
+        dismissedOfferIdsRef.current.has(pending.offer.id)
+      ) {
         return
       }
 
@@ -747,6 +751,19 @@ return unsubscribe
       unsubscribe()
     }
   }, [driverAuthId, driverId, driverOnline])
+
+  useEffect(() => {
+    if (phase !== 'incoming_request' || !pendingOffer) {
+      return
+    }
+
+    const previousOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+    }
+  }, [phase, pendingOffer])
 
   useEffect(() => {
     if (phase !== 'incoming_request' || !pendingOffer) {
@@ -882,6 +899,7 @@ const handleToggleOnline = async () => {
         stopTrackingRef.current = null
         completedRideIdRef.current = null
         lastActiveRideIdRef.current = null
+        dismissedOfferIdsRef.current.clear()
         setRequest(null)
         setPendingOffer(null)
         setActiveRide(null)
@@ -931,6 +949,20 @@ const handleToggleOnline = async () => {
       setPresenceError('Unable to update auto-accept right now. Please try again.')
     } finally {
       setTransitioning(false)
+    }
+  }
+
+  const handleDismissExpiredOffer = () => {
+    if (pendingOffer) {
+      dismissedOfferIdsRef.current.add(pendingOffer.offer.id)
+    }
+
+    setPendingOffer(null)
+    setRequest(null)
+    setRequestError('')
+
+    if (driverOnline) {
+      setPhase('online')
     }
   }
 
@@ -1256,6 +1288,7 @@ const displayedDriver = driverProfile ?? demoDriver
 
       if (pending && !activeRideRef.current) {
         handledOfferIdsRef.current.add(pending.offer.id)
+        dismissedOfferIdsRef.current.delete(pending.offer.id)
         setRequestError('')
         setPendingOffer(pending)
         setRequest(pending.ride)
@@ -1732,12 +1765,17 @@ const renderOnlineState = () => (
       ) : null}
 
 <div className="action-row request-actions">
-        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning || offerExpired}>
+        <button type="button" className="primary-action accept-cta" onClick={handleAcceptRide} disabled={transitioning || offerExpired} autoFocus={!offerExpired}>
           {offerExpired ? 'Offer Expired' : 'Accept Ride'}
         </button>
         <button type="button" className="secondary-action" onClick={handleDecline} disabled={transitioning || offerExpired}>
           Decline
         </button>
+        {offerExpired ? (
+          <button type="button" className="secondary-action" onClick={handleDismissExpiredOffer}>
+            Dismiss
+          </button>
+        ) : null}
       </div>
     </section>
   )
@@ -2202,10 +2240,17 @@ const renderOnlineState = () => (
         </section>
       ) : null}
 
+      {phase === 'incoming_request' && pendingOffer ? (
+        <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Incoming ride request">
+          <div className="ride-request-sheet">
+            {renderIncomingRequest()}
+          </div>
+        </div>
+      ) : null}
+
       <div className="driver-operations">
         {phase === 'offline' ? renderOfflineState() : null}
         {phase === 'online' ? renderOnlineState() : null}
-        {phase === 'incoming_request' ? renderIncomingRequest() : null}
         {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
         {phase === 'arrived' ? renderArrivedState() : null}
         {phase === 'in_progress' ? renderInProgressState() : null}
