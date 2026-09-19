@@ -24,6 +24,9 @@ import {
   validatePasswordStrength,
 } from '../lib/driverAccounts'
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
+import { fetchPakyawanBookings, quotePakyawanBooking } from '../lib/scheduledBookings'
+import type { PakyawanBooking } from '../types/scheduledBooking'
+import { formatCentavos } from '../lib/fare'
 import { formatVehicleCapacity, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
@@ -39,7 +42,7 @@ type AdminPayment = {
   paymentMethod: string
   status: string
 }
-type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications' | 'contact-messages'
+type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications' | 'contact-messages' | 'pakyawan'
 
 type DriverDraft = {
   name: string
@@ -236,6 +239,7 @@ const adminTabs: { key: AdminTab; label: string }[] = [
   { key: 'payments', label: 'Payments' },
   { key: 'driver-applications', label: 'Driver Applications' },
   { key: 'contact-messages', label: 'Contact Messages' },
+  { key: 'pakyawan', label: 'Pakyawan' },
 ]
 
 const rideStatusLabels: Record<AdminRide['status'], string> = {
@@ -302,6 +306,13 @@ export function AdminExperience({
   const [cancellations, setCancellations] = useState<AdminCancellation[]>([])
   const [isLoadingCancellations, setIsLoadingCancellations] = useState(false)
   const [cancellationError, setCancellationError] = useState('')
+  const [pakyawanBookings, setPakyawanBookings] = useState<PakyawanBooking[]>([])
+  const [selectedPakyawanBookingId, setSelectedPakyawanBookingId] = useState('')
+  const [pakyawanError, setPakyawanError] = useState('')
+  const [isLoadingPakyawan, setIsLoadingPakyawan] = useState(false)
+  const [quotePesos, setQuotePesos] = useState('')
+  const [quoteError, setQuoteError] = useState('')
+  const [isQuoting, setIsQuoting] = useState(false)
   const [cancellationFilter, setCancellationFilter] = useState<'all' | 'rider' | 'driver'>('all')
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -439,6 +450,48 @@ useEffect(() => {
       .finally(() => setIsLoadingCancellations(false))
   }, [activeTab, isLoggedIn])
 
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'pakyawan') return
+    setIsLoadingPakyawan(true)
+    setPakyawanError('')
+    fetchPakyawanBookings()
+      .then((items) => {
+        setPakyawanBookings(items)
+        setSelectedPakyawanBookingId((current) => current || items[0]?.id || '')
+      })
+      .catch(() => setPakyawanError('Unable to load Pakyawan bookings. Check admin access and try again.'))
+      .finally(() => setIsLoadingPakyawan(false))
+  }, [activeTab, isLoggedIn])
+
+  const handleQuotePakyawan = async () => {
+    if (isQuoting || !selectedPakyawanBooking || selectedPakyawanBooking.status !== 'pending') {
+      return
+    }
+
+    const cleaned = quotePesos.replace(/[₱,\s]/g, '')
+    const pesos = Number(cleaned)
+
+    if (!cleaned || !Number.isFinite(pesos) || pesos <= 0) {
+      setQuoteError('Enter a valid price in pesos.')
+      return
+    }
+
+    setIsQuoting(true)
+    setQuoteError('')
+
+    try {
+      await quotePakyawanBooking(selectedPakyawanBooking.id, Math.round(pesos * 100))
+      const items = await fetchPakyawanBookings()
+      setPakyawanBookings(items)
+      setQuotePesos('')
+    } catch (error) {
+      console.error('Unable to quote Pakyawan booking:', error)
+      setQuoteError(error instanceof Error && error.message ? error.message : 'Unable to submit the quote. Please try again.')
+    } finally {
+      setIsQuoting(false)
+    }
+  }
+
   const filteredDrivers = useMemo(() => {
     return drivers.filter((driver) => {
       const matchesSearch =
@@ -486,6 +539,9 @@ useEffect(() => {
   const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
   const selectedContactMessage = contactMessages.find((message) => message.id === selectedContactMessageId)
+  const selectedPakyawanBooking = pakyawanBookings.find((booking) => booking.id === selectedPakyawanBookingId)
+  const pakyawanDriverName = (driverId: string | null) =>
+    driverId ? (drivers.find((driver) => driver.id === driverId)?.name ?? driverId.slice(0, 8)) : 'Not assigned'
 
   useEffect(() => {
     if (manageContextId !== selectedDriverId) {
@@ -1971,6 +2027,46 @@ useEffect(() => {
             <button type="button" className="secondary-action compact-button" disabled={selectedContactMessage.status === 'replied'} onClick={() => void handleContactMessageStatusChange(selectedContactMessage.id, 'replied')}>Mark as Replied</button>
             <button type="button" className="secondary-action compact-button" disabled={selectedContactMessage.status === 'archived'} onClick={() => void handleContactMessageStatusChange(selectedContactMessage.id, 'archived')}>Archive</button>
           </div></> : <div className="empty-state-box"><p>Select a message to view details.</p></div>}</aside>
+        </section>
+      ) : null}
+
+      {activeTab === 'pakyawan' ? (
+        <section className="admin-layout admin-grid-two">
+          <div className="admin-panel">
+            <div className="panel-header-row"><h3>Pakyawan Bookings</h3></div>
+            {pakyawanError ? <p className="form-error-message submit-error">{pakyawanError}</p> : null}
+            {isLoadingPakyawan ? <p className="muted-copy">Loading Pakyawan bookings...</p> : pakyawanBookings.length === 0 ? <div className="empty-state-box"><p>No Pakyawan bookings found.</p></div> : (
+              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Booking</th><th>Date</th><th>Pickup Time</th><th>Customer</th><th>Phone</th><th>Price</th><th>Status</th></tr></thead><tbody>
+                {pakyawanBookings.map((booking) => <tr key={booking.id} onClick={() => { setSelectedPakyawanBookingId(booking.id); setQuotePesos(''); setQuoteError('') }} className={selectedPakyawanBookingId === booking.id ? 'selected-row' : ''}>
+                  <td><code className="ride-id-cell" title={booking.id}>{booking.id.slice(0, 8)}…</code></td><td>{booking.booking_date}</td><td>{booking.pickup_time}</td><td>{booking.customer_name}</td><td>{booking.customer_phone}</td>
+                  <td>{typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? `₱${formatCentavos(booking.price_cents)}` : 'Not quoted'}</td>
+                  <td><span className={`status-pill ${booking.status}`}>{booking.status}</span></td>
+                </tr>)}
+              </tbody></table></div>
+            )}
+          </div>
+          <aside className="admin-panel detail-panel">{selectedPakyawanBooking ? <><div className="panel-header-row"><h3>Booking Details</h3></div><div className="detail-grid">
+            <div><span>Booking</span><strong>{selectedPakyawanBooking.id.slice(0, 8)}…</strong></div><div><span>Status</span><strong>{selectedPakyawanBooking.status}</strong></div><div><span>Booking Date</span><strong>{selectedPakyawanBooking.booking_date}</strong></div><div><span>Pickup Time</span><strong>{selectedPakyawanBooking.pickup_time}</strong></div><div><span>Customer</span><strong>{selectedPakyawanBooking.customer_name}</strong></div><div><span>Phone</span><strong>{selectedPakyawanBooking.customer_phone}</strong></div><div><span>Pickup Location</span><strong>{selectedPakyawanBooking.pickup_location}</strong></div><div><span>Destination</span><strong>{selectedPakyawanBooking.destination}</strong></div><div><span>Passengers</span><strong>{selectedPakyawanBooking.passengers}</strong></div><div><span>Trip Type</span><strong>{selectedPakyawanBooking.trip_type}</strong></div><div><span>Estimated Hours</span><strong>{selectedPakyawanBooking.estimated_hours ?? 'Not provided'}</strong></div><div><span>Vehicle Preference</span><strong>{selectedPakyawanBooking.vehicle_preference || 'Not provided'}</strong></div><div><span>Price</span><strong>{typeof selectedPakyawanBooking.price_cents === 'number' && Number.isFinite(selectedPakyawanBooking.price_cents) ? `₱${formatCentavos(selectedPakyawanBooking.price_cents)}` : 'Not quoted'}</strong></div><div><span>Driver</span><strong>{pakyawanDriverName(selectedPakyawanBooking.driver_id)}</strong></div>            <div><span>Special Requests</span><strong>{selectedPakyawanBooking.special_requests || 'None'}</strong></div><div><span>Created</span><strong>{new Date(selectedPakyawanBooking.created_at).toLocaleString()}</strong></div>
+          </div>{selectedPakyawanBooking.status === 'pending' ? <div className="quote-box">
+            <span className="field-label">Quote Price</span>
+            <div className="quote-row">
+              <span aria-hidden="true">₱</span>
+              <input
+                className="input-field slim-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                aria-label="Quote price in pesos"
+                value={quotePesos}
+                disabled={isQuoting}
+                onChange={(event) => { setQuotePesos(event.target.value); setQuoteError('') }}
+              />
+              <button type="button" className="secondary-action compact-button" disabled={isQuoting} onClick={() => void handleQuotePakyawan()}>
+                {isQuoting ? 'Quoting...' : 'Quote Booking'}
+              </button>
+            </div>
+            {quoteError ? <span className="field-error">{quoteError}</span> : null}
+          </div> : null}</> : <div className="empty-state-box"><p>Select a booking to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>

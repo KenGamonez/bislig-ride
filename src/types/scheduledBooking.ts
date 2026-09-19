@@ -20,6 +20,9 @@ export type PakyawanBooking = PakyawanBookingInsert & {
   status: 'pending' | 'quoted' | 'confirmed' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
   driver_id: string | null
   vehicle_id: string | null
+  vehicle_preference: string | null
+  price_cents: number | null
   created_at: string
   updated_at: string
 }
+

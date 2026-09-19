@@ -1,7 +1,8 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
-import { createPakyawanBooking } from '../lib/scheduledBookings'
-import { pakyawanTripTypes, type PakyawanTripType } from '../types/scheduledBooking'
+import { confirmPakyawanBooking, createPakyawanBooking, getPakyawanBooking } from '../lib/scheduledBookings'
+import { pakyawanTripTypes, type PakyawanBooking, type PakyawanTripType } from '../types/scheduledBooking'
+import { formatCentavos } from '../lib/fare'
 import { useLanguage } from '../lib/i18n'
 
 const routeToView = (nextView: AppViewMode) => {
@@ -57,6 +58,12 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [submitted, setSubmitted] = useState(false)
   const [step, setStep] = useState(1)
   const cardRef = useRef<HTMLFormElement>(null)
+  const [createdBooking, setCreatedBooking] = useState<{ id: string; accessToken: string } | null>(null)
+  const [trackedBooking, setTrackedBooking] = useState<PakyawanBooking | null>(null)
+  const [trackingError, setTrackingError] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [confirmError, setConfirmError] = useState('')
 
   const updateField = (field: keyof PakyawanBookingForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -138,7 +145,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     setIsSubmitting(true)
     setSubmitError('')
     try {
-      await createPakyawanBooking({
+      const created = await createPakyawanBooking({
         customer_id: null,
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone.trim(),
@@ -151,12 +158,80 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
         estimated_hours: form.estimated_hours ? Number(form.estimated_hours) : null,
         special_requests: form.special_requests.trim() || null,
       })
+      try {
+        window.localStorage.setItem(`bislig-ride-pakyawan-${created.id}`, created.access_token)
+      } catch {
+        // Private browsing or disabled storage — tracking still works for this session.
+      }
+      const initialTracked = { ...created } as PakyawanBooking & { access_token?: string }
+      delete initialTracked.access_token
+      setCreatedBooking({ id: created.id, accessToken: created.access_token })
+      setTrackedBooking(initialTracked)
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit pakyawan booking:', error)
       setSubmitError(t('pak.submitFailed'))
     } finally {
       setIsSubmitting(false)
+    }
+  }
+
+  const refreshBookingStatus = async () => {
+    if (!createdBooking || isRefreshing) {
+      return
+    }
+
+    setIsRefreshing(true)
+    setTrackingError('')
+
+    try {
+      const latest = await getPakyawanBooking(createdBooking.id, createdBooking.accessToken)
+      setTrackedBooking(latest)
+    } catch (error) {
+      console.error('Unable to refresh Pakyawan booking status:', error)
+      setTrackingError(t('pak.trackFailed'))
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!submitted || !createdBooking) {
+      return
+    }
+
+    const status = trackedBooking?.status
+    if (status !== undefined && status !== 'pending' && status !== 'quoted') {
+      return
+    }
+
+    void refreshBookingStatus()
+    const timer = window.setInterval(() => {
+      void refreshBookingStatus()
+    }, 10000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, createdBooking, trackedBooking?.status])
+
+  const handleConfirmBooking = async () => {
+    if (isConfirming || !createdBooking || !trackedBooking || trackedBooking.status !== 'quoted') {
+      return
+    }
+
+    setIsConfirming(true)
+    setConfirmError('')
+
+    try {
+      const confirmed = await confirmPakyawanBooking(createdBooking.id, createdBooking.accessToken)
+      setTrackedBooking(confirmed)
+    } catch (error) {
+      console.error('Unable to confirm Pakyawan booking:', error)
+      setConfirmError(error instanceof Error && error.message ? error.message : t('pak.confirmFailed'))
+    } finally {
+      setIsConfirming(false)
     }
   }
 
@@ -269,15 +344,62 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   }
 
   if (submitted) {
+    const status = trackedBooking?.status
+    const quotedCents = trackedBooking && typeof trackedBooking.price_cents === 'number' && Number.isFinite(trackedBooking.price_cents)
+      ? trackedBooking.price_cents
+      : null
+
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{t('pak.receivedEyebrow')}</p>
-            <h1>{t('pak.receivedTitle')}</h1>
-            <p>{t('pak.receivedBody1')}</p>
-            <p>{t('pak.receivedBody2')}</p>
+            <p className="eyebrow">{status === 'quoted' ? t('pak.quoteReady') : status === 'confirmed' ? t('pak.bookingConfirmed') : t('pak.receivedEyebrow')}</p>
+            <h1>{status === 'quoted' ? t('pak.quoteReady') : status === 'confirmed' ? t('pak.bookingConfirmed') : t('pak.receivedTitle')}</h1>
+            {status === 'confirmed' ? (
+              <p>{t('pak.confirmedBody')}</p>
+            ) : (
+              <>
+                <p>{t('pak.receivedBody1')}</p>
+                <p>{t('pak.receivedBody2')}</p>
+              </>
+            )}
+            {createdBooking ? (
+              <p className="booking-ref">{t('pak.bookingRef')}: {createdBooking.id.slice(0, 8)}…</p>
+            ) : null}
+            <div className="flow-fields">
+              <div className="flow-field-row">
+                <div className="field-block"><span className="field-label">{t('pak.tripDate')}</span><strong>{form.booking_date || '—'}</strong></div>
+                <div className="field-block"><span className="field-label">{t('pak.pickupTime')}</span><strong>{form.pickup_time || '—'}</strong></div>
+              </div>
+              <div className="flow-field-row">
+                <div className="field-block"><span className="field-label">{t('pak.pickupLocation')}</span><strong>{form.pickup_location || '—'}</strong></div>
+                <div className="field-block"><span className="field-label">{t('pak.destination')}</span><strong>{form.destination || '—'}</strong></div>
+              </div>
+            </div>
+            {quotedCents !== null ? (
+              <div className="fare-box">
+                <span className="field-label">{t('pak.quotedPrice')}</span>
+                <strong>₱{formatCentavos(quotedCents)}</strong>
+              </div>
+            ) : (
+              <div className="fare-box">
+                <span className="field-label">{t('pak.quotedPrice')}</span>
+                <strong>{t('pak.waitingQuote')}</strong>
+              </div>
+            )}
+            {trackingError ? <p className="form-error-message submit-error">{trackingError}</p> : null}
+            {status === 'quoted' ? (
+              <>
+                {confirmError ? <p className="form-error-message submit-error">{confirmError}</p> : null}
+                <button type="button" className="primary-action request-ride-action" disabled={isConfirming} onClick={() => void handleConfirmBooking()}>
+                  {isConfirming ? t('pak.confirming') : t('pak.confirmBooking')}
+                </button>
+              </>
+            ) : null}
+            <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshBookingStatus()}>
+              {isRefreshing ? t('pak.checkingStatus') : t('pak.refreshStatus')}
+            </button>
             <button type="button" className="primary-action" onClick={onBack}>
               {t('pak.backToRide')}
             </button>

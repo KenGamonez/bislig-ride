@@ -1,0 +1,63 @@
+-- Bislig Ride: table-level grants unblocking the existing Pakyawan workflow.
+-- Run this file in the Supabase SQL editor (idempotent — GRANT is re-runnable).
+--
+-- Problem (verified live 2026-09-19):
+--
+--   public.pakyawan_bookings has RLS policies but ZERO table-level GRANTs for
+--   anon/authenticated (only REFERENCES/TRIGGER/TRUNCATE). PostgreSQL checks
+--   GRANTs before RLS, so every client call failed with 42501 even though the
+--   policies are correct. Compare public.rides, which carries full data grants.
+--
+-- What this adds (minimum required by the code that already exists):
+--
+--   1. GRANT INSERT ON public.pakyawan_bookings TO anon
+--      Anonymous customers submit via createPakyawanBooking().
+--
+--   1b. GRANT SELECT ON public.pakyawan_bookings TO anon
+--      The existing client code intentionally uses
+--      insert(...).select().single() so the booker immediately receives the
+--      generated id + access_token required by the customer tracking flow.
+--      PostgreSQL/PostgREST requires SELECT privilege for the RETURNING
+--      clause, so INSERT alone leaves the call failing with 42501 (verified
+--      live). This grant exposes NO data: there is deliberately no anonymous
+--      SELECT RLS policy, so direct anonymous SELECTs still return zero rows;
+--      RLS remains the security boundary. Verified live after applying.
+--
+--   2. GRANT SELECT ON public.pakyawan_bookings TO authenticated
+--      Admin list (fetchPakyawanBookings) and eligible-driver list
+--      (fetchAvailablePakyawanBookings) both run as authenticated users.
+--
+--   3. GRANT UPDATE ON public.pakyawan_bookings TO authenticated
+--      Driver self-assign (acceptPakyawanBooking) performs a client-side
+--      UPDATE, so the existing driver UPDATE policy can only take effect
+--      with this grant. Nothing about that flow is redesigned here.
+--
+-- What this does NOT grant (deliberately):
+--
+--   - No anon SELECT / UPDATE / DELETE. Anonymous reads happen only through
+--     the token-gated get_/confirm_pakyawan_booking RPCs.
+--   - No authenticated DELETE. Nothing in the app deletes Pakyawan rows.
+--   - No GRANT ALL. No sequence/function/schema privileges (ids use
+--     gen_random_uuid() defaults; schema USAGE already exists; RPC EXECUTE
+--     grants were issued with each function).
+--
+-- Security boundary unchanged:
+--
+--   GRANTs only decide which roles may reach the table at all. Row-level
+--   access is still governed entirely by the existing 4 RLS policies, which
+--   this file does not touch: open INSERT, admin SELECT, eligible-driver
+--   SELECT of pending rows, eligible-driver UPDATE of pending rows.
+--   Nothing outside public.pakyawan_bookings is touched.
+
+grant select on public.pakyawan_bookings to authenticated;
+grant update on public.pakyawan_bookings to authenticated;
+
+-- Step 6: the customer-create RPC (pakyawan_customer_create.sql) replaced the
+-- only anonymous direct-table path (insert + RETURNING). The anonymous table
+-- grants below are therefore revoked; anonymous customers reach the table
+-- solely through the token-gated get_/confirm_ RPCs and the create RPC.
+-- Authenticated SELECT/UPDATE above remain required by the existing admin
+-- list, driver pending list, driver self-assign UPDATE, and the driver
+-- realtime subscription.
+revoke insert on public.pakyawan_bookings from anon;
+revoke select on public.pakyawan_bookings from anon;

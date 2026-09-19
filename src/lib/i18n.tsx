@@ -415,6 +415,18 @@ const en = {
   'pak.backToRide': 'Back to Ride Booking',
   'pak.submitFailed':
     'We could not submit your booking request right now. Please try again.',
+  'pak.bookingRef': 'Booking reference',
+  'pak.refreshStatus': 'Refresh status',
+  'pak.checkingStatus': 'Checking for updates...',
+  'pak.waitingQuote': 'Your price will appear here once our team reviews your request.',
+  'pak.quotedPrice': 'Quoted price',
+  'pak.quoteReady': 'Quote Ready',
+  'pak.confirmBooking': 'Confirm Booking',
+  'pak.confirming': 'Confirming...',
+  'pak.bookingConfirmed': 'Booking Confirmed',
+  'pak.confirmedBody': 'Your Pakyawan booking is confirmed. Our team will coordinate your driver and contact you with the details.',
+  'pak.trackFailed': 'We could not load your booking status. Please try again.',
+  'pak.confirmFailed': 'We could not confirm your booking. It may have already been updated — please refresh the status and try again.',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
@@ -986,6 +998,18 @@ const bi: Record<TranslationKey, string> = {
   'pak.backToRide': 'Balik sa Ride Booking',
   'pak.submitFailed':
     'Dili ma-submit karon ang imong booking request. Palihog sulayi og balik.',
+  'pak.bookingRef': 'Reperensya sa booking',
+  'pak.refreshStatus': 'I-refresh ang status',
+  'pak.checkingStatus': 'Gisusi ang mga update...',
+  'pak.waitingQuote': 'Mopakita diri ang imong presyo human ma-ribyu sa among team ang imong request.',
+  'pak.quotedPrice': 'Presyo nga gi-quote',
+  'pak.quoteReady': 'Andam na ang Presyo',
+  'pak.confirmBooking': 'Kumpirmahon ang Booking',
+  'pak.confirming': 'Nagkumpirma...',
+  'pak.bookingConfirmed': 'Nakumpirma ang Booking',
+  'pak.confirmedBody': 'Nakumpirma na ang imong Pakyawan booking. Mokoordinar ang among team sa imong driver ug kontakon ka namo sa mga detalye.',
+  'pak.trackFailed': 'Dili ma-load karon ang status sa imong booking. Palihog sulayi og balik.',
+  'pak.confirmFailed': 'Dili makumpirma karon ang imong booking. Basin na-update na kini — palihog i-refresh ang status ug sulayi og balik.',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
