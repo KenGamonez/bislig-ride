@@ -11,7 +11,7 @@ import { formatCentavos, MULTIPLE_DESTINATIONS_FARE_NOTE } from '../lib/fare'
 import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
-import { acceptPakyawanBooking, fetchAvailablePakyawanBookings } from '../lib/scheduledBookings'
+import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
 import {
   notificationPermission,
   playRequestChime,
@@ -42,7 +42,7 @@ import {
 } from '../lib/rides'
 import type { Ride, RideCancellation } from '../types/ride'
 import type { PendingOffer } from '../types/dispatch'
-import type { PakyawanBooking } from '../types/scheduledBooking'
+import type { PakyawanBooking, PakyawanOfferWithBooking } from '../types/scheduledBooking'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
@@ -298,6 +298,13 @@ export function DriverExperience({
   const [acceptedPakyawan, setAcceptedPakyawan] = useState<PakyawanBooking[]>([])
   const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
   const [pakyawanError, setPakyawanError] = useState('')
+  const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
+  const [pakyawanNow, setPakyawanNow] = useState(() => Date.now())
+  const [pakyawanPriceInputs, setPakyawanPriceInputs] = useState<Record<string, string>>({})
+  const [pakyawanPriceSubmittingId, setPakyawanPriceSubmittingId] = useState<string | null>(null)
+  const [pakyawanPriceError, setPakyawanPriceError] = useState<{ bookingId: string; message: string } | null>(null)
+  const [pakyawanLifecycleSubmittingId, setPakyawanLifecycleSubmittingId] = useState<string | null>(null)
+  const [pakyawanLifecycleError, setPakyawanLifecycleError] = useState<{ bookingId: string; message: string } | null>(null)
   const [notificationPermissionState, setNotificationPermissionState] = useState<NotificationPermission>(() => notificationPermission())
   const [showStatusHint, setShowStatusHint] = useState(false)
   const [driverStatusBlocked, setDriverStatusBlocked] = useState(false)
@@ -898,6 +905,193 @@ return unsubscribe
     }
   }, [driverAuthId, canAcceptPakyawan, driverOnline])
 
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptPakyawan) {
+      return
+    }
+
+    let mounted = true
+
+    const loadOffers = async () => {
+      try {
+        const items = await fetchDriverPakyawanOffers(driverId)
+        if (mounted) {
+          setPakyawanOffers(items)
+        }
+      } catch (error) {
+        console.error('Unable to load pakyawan offers:', error)
+        if (mounted) {
+          setPakyawanError('Unable to load Pakyawan offers right now.')
+        }
+      }
+    }
+
+    const refreshOffers = () => {
+      void loadOffers()
+    }
+
+    void loadOffers()
+
+    const channel = supabase
+      .channel(`driver-pakyawan-offers-${driverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'pakyawan_offers',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<PakyawanOfferWithBooking>
+
+          if (!incoming.id) {
+            refreshOffers()
+            return
+          }
+
+          refreshOffers()
+
+          const subtitle = 'A customer is requesting a Pakyawan trip.'
+
+          setNotifications((current) =>
+            current.some((item) => item.id === `pakyawan-offer-${incoming.id}`)
+              ? current
+              : [
+                  {
+                    id: `pakyawan-offer-${incoming.id}`,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'New Pakyawan offer',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('New Pakyawan offer', subtitle)
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pakyawan_offers',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        () => {
+          refreshOffers()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      mounted = false
+      void supabase.removeChannel(channel)
+    }
+  }, [driverId, driverAuthId, canAcceptPakyawan, driverOnline])
+
+  useEffect(() => {
+    if (pakyawanOffers.length === 0) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      setPakyawanNow(Date.now())
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [pakyawanOffers.length])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptPakyawan) {
+      return
+    }
+
+    let mounted = true
+
+    const loadHeldBookings = async () => {
+      try {
+        const items = await fetchDriverPakyawanBookings(driverId)
+        if (mounted) {
+          setAcceptedPakyawan((current) => {
+            const byId = new Map(current.map((booking) => [booking.id, booking]))
+
+            for (const item of items) {
+              byId.set(item.id, item)
+            }
+
+            return Array.from(byId.values()).slice(0, 10)
+          })
+        }
+      } catch (error) {
+        console.error('Unable to load held pakyawan bookings:', error)
+      }
+    }
+
+    void loadHeldBookings()
+
+    return () => {
+      mounted = false
+    }
+  }, [driverId, driverAuthId, canAcceptPakyawan])
+
+  const resolvePakyawanLifecycleError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/no longer assigned/i.test(message)) {
+      return 'This trip is no longer assigned to you.'
+    }
+
+    if (/cannot move to that status|invalid trip status/i.test(message)) {
+      return 'This trip cannot move to that status right now.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleAdvancePakyawanTrip = async (bookingId: string, nextStatus: PakyawanTripLifecycleStatus) => {
+    if (pakyawanLifecycleSubmittingId) {
+      return
+    }
+
+    setPakyawanLifecycleSubmittingId(bookingId)
+    setPakyawanLifecycleError(null)
+
+    try {
+      const updated = await advancePakyawanStatus(bookingId, nextStatus)
+
+      try {
+        const items = await fetchDriverPakyawanBookings(driverId)
+        setAcceptedPakyawan(items.slice(0, 10))
+      } catch {
+        setAcceptedPakyawan((current) =>
+          current.map((booking) => (booking.id === bookingId ? updated : booking)),
+        )
+      }
+    } catch (error) {
+      console.error('Unable to advance pakyawan trip:', error)
+      setPakyawanLifecycleError({ bookingId, message: resolvePakyawanLifecycleError(error) })
+
+      try {
+        const items = await fetchDriverPakyawanBookings(driverId)
+        setAcceptedPakyawan(items.slice(0, 10))
+      } catch (refreshError) {
+        console.error('Unable to refresh held pakyawan bookings:', refreshError)
+      }
+    } finally {
+      setPakyawanLifecycleSubmittingId(null)
+    }
+  }
+
 const handleToggleOnline = async () => {
     if (transitioning) {
       return
@@ -1344,7 +1538,11 @@ const displayedDriver = driverProfile ?? demoDriver
     try {
       const updated = await acceptPakyawanBooking(bookingId, driverId)
       setPakyawanRequests((current) => current.filter((booking) => booking.id !== bookingId))
-      setAcceptedPakyawan((current) => [updated, ...current].slice(0, 10))
+      setAcceptedPakyawan((current) =>
+        current.some((booking) => booking.id === updated.id)
+          ? current.map((booking) => (booking.id === updated.id ? updated : booking))
+          : [updated, ...current].slice(0, 10),
+      )
       setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
     } catch (error) {
       console.error('Unable to accept pakyawan request:', error)
@@ -1358,6 +1556,158 @@ const displayedDriver = driverProfile ?? demoDriver
     setPakyawanRequests((current) => current.filter((booking) => booking.id !== bookingId))
     setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
   }
+
+  const resolvePakyawanOfferError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/no longer available/i.test(message)) {
+      return 'This request is no longer available. It may have been taken by another driver.'
+    }
+
+    if (/no longer eligible/i.test(message)) {
+      return 'You are no longer eligible for this request.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleAcceptPakyawanOffer = async (offerId: string) => {
+    if (pakyawanSubmittingId) {
+      return
+    }
+
+    setPakyawanSubmittingId(offerId)
+    setPakyawanError('')
+
+    try {
+      const assigned = await acceptPakyawanOffer(offerId)
+      setPakyawanOffers((current) => current.filter((offer) => offer.id !== offerId))
+      setPakyawanRequests((current) => current.filter((booking) => booking.id !== assigned.id))
+      setAcceptedPakyawan((current) =>
+        current.some((booking) => booking.id === assigned.id)
+          ? current.map((booking) => (booking.id === assigned.id ? assigned : booking))
+          : [assigned, ...current].slice(0, 10),
+      )
+      setNotifications((current) => current.filter((item) => item.id !== `pakyawan-offer-${offerId}` && item.id !== `pakyawan-${assigned.id}`))
+    } catch (error) {
+      console.error('Unable to accept pakyawan offer:', error)
+      setPakyawanError(resolvePakyawanOfferError(error))
+
+      try {
+        const items = await fetchDriverPakyawanOffers(driverId)
+        setPakyawanOffers(items)
+      } catch (refreshError) {
+        console.error('Unable to refresh pakyawan offers:', refreshError)
+      }
+    } finally {
+      setPakyawanSubmittingId(null)
+    }
+  }
+
+  const handleDeclinePakyawanOffer = async (offerId: string) => {
+    if (pakyawanSubmittingId) {
+      return
+    }
+
+    setPakyawanSubmittingId(offerId)
+    setPakyawanError('')
+
+    try {
+      await declinePakyawanOffer(offerId)
+      setPakyawanOffers((current) => current.filter((offer) => offer.id !== offerId))
+      setNotifications((current) => current.filter((item) => item.id !== `pakyawan-offer-${offerId}`))
+    } catch (error) {
+      console.error('Unable to decline pakyawan offer:', error)
+      setPakyawanError(resolvePakyawanOfferError(error))
+
+      try {
+        const items = await fetchDriverPakyawanOffers(driverId)
+        setPakyawanOffers(items)
+      } catch (refreshError) {
+        console.error('Unable to refresh pakyawan offers:', refreshError)
+      }
+    } finally {
+      setPakyawanSubmittingId(null)
+    }
+  }
+
+  const resolvePakyawanPriceError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/not authorized/i.test(message)) {
+      return 'You are not authorized to price this booking.'
+    }
+
+    if (/no longer assigned/i.test(message)) {
+      return 'This booking is no longer assigned to you.'
+    }
+
+    if (/already been sent/i.test(message)) {
+      return 'The trip price has already been sent.'
+    }
+
+    if (/no longer waiting/i.test(message)) {
+      return 'This booking is no longer waiting for a trip price.'
+    }
+
+    if (/valid trip price/i.test(message)) {
+      return 'Please enter a valid trip price.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleSendPakyawanPrice = async (bookingId: string) => {
+    if (pakyawanPriceSubmittingId) {
+      return
+    }
+
+    const raw = (pakyawanPriceInputs[bookingId] ?? '').replace(/[₱,\s]/g, '')
+    const pesos = Number(raw)
+
+    if (!raw || !Number.isFinite(pesos) || pesos < 0) {
+      setPakyawanPriceError({ bookingId, message: 'Please enter a valid trip price.' })
+      return
+    }
+
+    setPakyawanPriceSubmittingId(bookingId)
+    setPakyawanPriceError(null)
+
+    try {
+      const updated = await setPakyawanDriverPrice(bookingId, Math.round(pesos * 100))
+      setAcceptedPakyawan((current) =>
+        current.map((booking) => (booking.id === bookingId ? updated : booking)),
+      )
+      setPakyawanPriceInputs((current) => {
+        const next = { ...current }
+        delete next[bookingId]
+        return next
+      })
+    } catch (error) {
+      console.error('Unable to send pakyawan trip price:', error)
+      setPakyawanPriceError({ bookingId, message: resolvePakyawanPriceError(error) })
+    } finally {
+      setPakyawanPriceSubmittingId(null)
+    }
+  }
+
+  const formatPakyawanOfferCountdown = (expiresAt: string): string => {
+    const remainingMs = new Date(expiresAt).getTime() - pakyawanNow
+
+    if (!Number.isFinite(remainingMs) || remainingMs <= 0) {
+      return 'Expiring...'
+    }
+
+    const totalSeconds = Math.ceil(remainingMs / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
+
+  const activePakyawanOffers = pakyawanOffers.filter(
+    (offer) => new Date(offer.expires_at).getTime() > pakyawanNow,
+  )
 
   const renderNotificationBell = () => (
     <div className="notification-wrap">
@@ -1470,6 +1820,51 @@ const displayedDriver = driverProfile ?? demoDriver
 
         {pakyawanError ? <p className="form-error-message">{pakyawanError}</p> : null}
 
+        {activePakyawanOffers.length === 0 ? null : (
+          <ul className="pakyawan-list">
+            {activePakyawanOffers.map((offer) => (
+              <li key={offer.id} className="pakyawan-item pakyawan-offer">
+                <div className="pakyawan-route">
+                  <span>{offer.booking.pickup_location}</span>
+                  <strong>→</strong>
+                  <span>{offer.booking.destination}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {offer.booking.booking_date} · {offer.booking.pickup_time}
+                  </span>
+                  <span>
+                    {offer.booking.passengers} passenger{offer.booking.passengers === 1 ? '' : 's'} · {offer.booking.trip_type}
+                  </span>
+                  <span>This request expires in: {formatPakyawanOfferCountdown(offer.expires_at)}</span>
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{offer.booking.customer_name}</span>
+                  <span>{offer.booking.customer_phone}</span>
+                </div>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptPakyawanOffer(offer.id)}
+                    disabled={pakyawanSubmittingId === offer.id}
+                  >
+                    {pakyawanSubmittingId === offer.id ? 'Accepting...' : 'Accept Request'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => void handleDeclinePakyawanOffer(offer.id)}
+                    disabled={pakyawanSubmittingId !== null}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
         {pakyawanRequests.length === 0 ? null : (
           <ul className="pakyawan-list">
             {pakyawanRequests.map((booking) => (
@@ -1531,6 +1926,107 @@ const displayedDriver = driverProfile ?? demoDriver
                   <span>
                     {booking.booking_date} · {booking.pickup_time}
                   </span>
+                  {booking.status === 'assigned' ? (
+                    <>
+                      <span>You&apos;re assigned to this trip. Next: wait for the passenger&apos;s booking confirmation.</span>
+                      <span>Status: ASSIGNED</span>
+                    </>
+                  ) : (
+                    <span>Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+                  )}
+                  {booking.status === 'assigned' && booking.driver_id === driverId ? (
+                    <div className="pakyawan-price-box">
+                      <span className="field-label">Next step: send your final trip price.</span>
+                      <div className="pakyawan-price-row">
+                        <span aria-hidden="true">₱</span>
+                        <input
+                          className="input-field slim-input"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          aria-label="Trip price in pesos"
+                          value={pakyawanPriceInputs[booking.id] ?? ''}
+                          disabled={pakyawanPriceSubmittingId === booking.id}
+                          onChange={(event) => {
+                            setPakyawanPriceInputs((current) => ({ ...current, [booking.id]: event.target.value }))
+                            setPakyawanPriceError((current) =>
+                              current && current.bookingId === booking.id ? null : current,
+                            )
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          disabled={pakyawanPriceSubmittingId === booking.id}
+                          onClick={() => void handleSendPakyawanPrice(booking.id)}
+                        >
+                          {pakyawanPriceSubmittingId === booking.id ? 'Sending...' : 'Send Price'}
+                        </button>
+                      </div>
+                      {pakyawanPriceError && pakyawanPriceError.bookingId === booking.id ? (
+                        <span className="field-error">{pakyawanPriceError.message}</span>
+                      ) : null}
+                    </div>
+                  ) : booking.status === 'quoted' &&
+                    typeof booking.price_cents === 'number' &&
+                    Number.isFinite(booking.price_cents) ? (
+                    <div className="pakyawan-price-box">
+                      <span className="field-label">Your trip price: ₱{formatCentavos(booking.price_cents)}</span>
+                      <span>Waiting for passenger confirmation.</span>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'scheduled' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={pakyawanLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_on_way')}
+                      >
+                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'On My Way'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'driver_on_way' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={pakyawanLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_arrived')}
+                      >
+                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : "I've Arrived"}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'driver_arrived' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={pakyawanLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'in_progress')}
+                      >
+                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Start Trip'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'in_progress' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={pakyawanLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'completed')}
+                      >
+                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Complete Trip'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.status === 'completed' ? <span>Trip completed.</span> : null}
+                  {pakyawanLifecycleError && pakyawanLifecycleError.bookingId === booking.id ? (
+                    <span className="field-error">{pakyawanLifecycleError.message}</span>
+                  ) : null}
                 </li>
               ))}
             </ul>

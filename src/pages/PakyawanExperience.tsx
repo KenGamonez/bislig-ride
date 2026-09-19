@@ -201,7 +201,15 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     }
 
     const status = trackedBooking?.status
-    if (status !== undefined && status !== 'pending' && status !== 'quoted') {
+    if (
+      status !== undefined &&
+      status !== 'pending' &&
+      status !== 'quoted' &&
+      status !== 'scheduled' &&
+      status !== 'driver_on_way' &&
+      status !== 'driver_arrived' &&
+      status !== 'in_progress'
+    ) {
       return
     }
 
@@ -354,10 +362,15 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{status === 'quoted' ? t('pak.quoteReady') : status === 'confirmed' ? t('pak.bookingConfirmed') : t('pak.receivedEyebrow')}</p>
-            <h1>{status === 'quoted' ? t('pak.quoteReady') : status === 'confirmed' ? t('pak.bookingConfirmed') : t('pak.receivedTitle')}</h1>
-            {status === 'confirmed' ? (
-              <p>{t('pak.confirmedBody')}</p>
+            <p className="eyebrow">{status === 'quoted' ? t('pak.quoteReady') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedEyebrow')}</p>
+            <h1>{status === 'quoted' ? t('pak.quoteReady') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedTitle')}</h1>
+            {status === 'confirmed' || status === 'scheduled' ? (
+              <>
+                <p>{t('pak.confirmedBody')}</p>
+                <p className="booking-status">{t('pak.statusLabel')}: {t('pak.statusScheduled')}</p>
+              </>
+            ) : status === 'driver_on_way' || status === 'driver_arrived' || status === 'in_progress' || status === 'completed' ? (
+              <p className="booking-status">{t('pak.statusLabel')}: {status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : t('pak.tripCompleted')}</p>
             ) : (
               <>
                 <p>{t('pak.receivedBody1')}</p>

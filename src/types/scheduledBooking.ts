@@ -17,12 +17,29 @@ export type PakyawanBookingInsert = {
 
 export type PakyawanBooking = PakyawanBookingInsert & {
   id: string
-  status: 'pending' | 'quoted' | 'confirmed' | 'assigned' | 'in_progress' | 'completed' | 'cancelled'
+  status: 'pending' | 'quoted' | 'confirmed' | 'assigned' | 'scheduled' | 'driver_on_way' | 'driver_arrived' | 'in_progress' | 'completed' | 'cancelled'
   driver_id: string | null
   vehicle_id: string | null
   vehicle_preference: string | null
   price_cents: number | null
   created_at: string
   updated_at: string
+}
+
+export type PakyawanOfferStatus = 'offered' | 'accepted' | 'declined' | 'expired' | 'withdrawn'
+
+export type PakyawanOffer = {
+  id: string
+  booking_id: string
+  driver_id: string
+  dispatch_round: number
+  status: PakyawanOfferStatus
+  offered_at: string
+  expires_at: string
+  decided_at: string | null
+}
+
+export type PakyawanOfferWithBooking = PakyawanOffer & {
+  booking: PakyawanBooking
 }
 

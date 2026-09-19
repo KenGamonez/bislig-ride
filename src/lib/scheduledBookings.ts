@@ -1,5 +1,5 @@
 ﻿import { supabase } from './supabase'
-import type { PakyawanBooking, PakyawanBookingInsert } from '../types/scheduledBooking'
+import type { PakyawanBooking, PakyawanBookingInsert, PakyawanOffer, PakyawanOfferWithBooking } from '../types/scheduledBooking'
 
 export async function createPakyawanBooking(booking: PakyawanBookingInsert) {
   const { data, error } = await supabase
@@ -75,6 +75,106 @@ export async function fetchPakyawanBookings(): Promise<PakyawanBooking[]> {
 export async function quotePakyawanBooking(bookingId: string, priceCents: number): Promise<PakyawanBooking> {
   const { data, error } = await supabase
     .rpc('admin_quote_pakyawan', { p_booking_id: bookingId, p_price_cents: priceCents })
+    .single()
+
+  if (error) throw error
+
+  return data as PakyawanBooking
+}
+
+const PAKYAWAN_OFFER_BOOKING_COLUMNS =
+  'id,customer_name,customer_phone,booking_date,pickup_time,pickup_location,destination,passengers,trip_type,estimated_hours,special_requests,status,driver_id,created_at'
+
+export async function fetchDriverPakyawanOffers(driverId: string): Promise<PakyawanOfferWithBooking[]> {
+  const { data, error } = await supabase
+    .from('pakyawan_offers')
+    .select(`id,booking_id,driver_id,dispatch_round,status,offered_at,expires_at,decided_at,booking:pakyawan_bookings(${PAKYAWAN_OFFER_BOOKING_COLUMNS})`)
+    .eq('driver_id', driverId)
+    .eq('status', 'offered')
+    .gt('expires_at', new Date().toISOString())
+    .order('expires_at', { ascending: true })
+
+  if (error) throw error
+
+  const rows = (data ?? []) as unknown as Array<{
+    id: string
+    booking_id: string
+    driver_id: string
+    dispatch_round: number
+    status: string
+    offered_at: string
+    expires_at: string
+    decided_at: string | null
+    booking: PakyawanBooking | PakyawanBooking[] | null
+  }>
+
+  const toBooking = (value: PakyawanBooking | PakyawanBooking[] | null): PakyawanBooking | null =>
+    Array.isArray(value) ? (value[0] ?? null) : value
+
+  return rows
+    .filter((row) => toBooking(row.booking) !== null)
+    .map((row) => ({
+      id: row.id,
+      booking_id: row.booking_id,
+      driver_id: row.driver_id,
+      dispatch_round: row.dispatch_round,
+      status: row.status as PakyawanOffer['status'],
+      offered_at: row.offered_at,
+      expires_at: row.expires_at,
+      decided_at: row.decided_at,
+      booking: toBooking(row.booking) as PakyawanBooking,
+    }))
+}
+
+export async function acceptPakyawanOffer(offerId: string): Promise<PakyawanBooking> {
+  const { data, error } = await supabase
+    .rpc('accept_pakyawan_offer', { p_offer_id: offerId })
+    .single()
+
+  if (error) throw error
+
+  return data as PakyawanBooking
+}
+
+export async function declinePakyawanOffer(offerId: string): Promise<PakyawanOffer> {
+  const { data, error } = await supabase
+    .rpc('decline_pakyawan_offer', { p_offer_id: offerId })
+    .single()
+
+  if (error) throw error
+
+  return data as PakyawanOffer
+}
+
+export async function setPakyawanDriverPrice(bookingId: string, priceCents: number): Promise<PakyawanBooking> {
+  const { data, error } = await supabase
+    .rpc('set_pakyawan_driver_price', { p_booking_id: bookingId, p_price_cents: priceCents })
+    .single()
+
+  if (error) throw error
+
+  return data as PakyawanBooking
+}
+
+export type PakyawanTripLifecycleStatus = 'scheduled' | 'driver_on_way' | 'driver_arrived' | 'in_progress' | 'completed'
+
+export async function fetchDriverPakyawanBookings(driverId: string): Promise<PakyawanBooking[]> {
+  const { data, error } = await supabase
+    .from('pakyawan_bookings')
+    .select('*')
+    .eq('driver_id', driverId)
+    .in('status', ['assigned', 'quoted', 'scheduled', 'driver_on_way', 'driver_arrived', 'in_progress'])
+    .order('booking_date', { ascending: true })
+    .order('pickup_time', { ascending: true })
+
+  if (error) throw error
+
+  return (data ?? []) as PakyawanBooking[]
+}
+
+export async function advancePakyawanStatus(bookingId: string, nextStatus: PakyawanTripLifecycleStatus): Promise<PakyawanBooking> {
+  const { data, error } = await supabase
+    .rpc('advance_pakyawan_status', { p_booking_id: bookingId, p_next_status: nextStatus })
     .single()
 
   if (error) throw error
