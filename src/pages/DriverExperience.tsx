@@ -1345,6 +1345,7 @@ const handleToggleOnline = async () => {
         setActiveRide(null)
         setDriverOnline(true)
         setPhase('online')
+        setDriverView('queue')
       } else {
         await setDriverPresence(false, false, driverAutoAccept)
         stopTrackingRef.current?.()
