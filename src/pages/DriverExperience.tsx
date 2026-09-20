@@ -92,6 +92,8 @@ const resolvePresenceErrorMessage = (error: unknown, offline: boolean): string =
 
 type DriverPhase = 'offline' | 'online' | 'incoming_request' | 'heading_to_pickup' | 'arrived' | 'in_progress' | 'completed'
 
+type DriverView = 'home' | 'queue' | 'profile' | 'pakyawan' | 'delivery'
+
 type DriverSummaryProfile = {
   name: string
   profilePhoto: string | null
@@ -202,35 +204,6 @@ const renderRideStops = (ride: Ride | null) => {
   )
 }
 
-const MOBILE_VIEWPORT_QUERY = '(max-width: 767px)'
-
-function useIsMobileViewport(): boolean {
-  const [isMobile, setIsMobile] = useState(() =>
-    typeof window !== 'undefined' && typeof window.matchMedia === 'function'
-      ? window.matchMedia(MOBILE_VIEWPORT_QUERY).matches
-      : false,
-  )
-
-  useEffect(() => {
-    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') {
-      return
-    }
-
-    const query = window.matchMedia(MOBILE_VIEWPORT_QUERY)
-    const onChange = (event: MediaQueryListEvent) => {
-      setIsMobile(event.matches)
-    }
-
-    query.addEventListener('change', onChange)
-
-    return () => {
-      query.removeEventListener('change', onChange)
-    }
-  }, [])
-
-  return isMobile
-}
-
 export function DriverExperience({
   onBack,
   view,
@@ -242,6 +215,7 @@ export function DriverExperience({
 }) {
   const [driverOnline, setDriverOnline] = useState(false)
   const [phase, setPhase] = useState<DriverPhase>('offline')
+  const [driverView, setDriverView] = useState<DriverView>('home')
   const [request, setRequest] = useState<Ride | null>(null)
   const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [transitioning, setTransitioning] = useState(false)
@@ -269,11 +243,6 @@ export function DriverExperience({
   const [offerSecondsLeft, setOfferSecondsLeft] = useState(0)
 
   const locationStatus = !driverOnline ? 'lost' : driverLocationStatus(lastLocationFixIso)
-  const isMobileViewport = useIsMobileViewport()
-  // Mobile only: while waiting for the next ride, the Ride Queue card leads
-  // and the profile follows. Everywhere else (desktop, offline, active ride)
-  // keeps the existing profile-first order.
-  const queueFirst = isMobileViewport && phase === 'online'
 
   const offerExpired = phase === 'incoming_request' && Boolean(pendingOffer) && offerSecondsLeft === 0
   const stopTrackingRef = useRef<(() => void) | null>(null)
@@ -3674,13 +3643,14 @@ const renderOnlineState = () => (
         </div>
       ) : null}
 
-      <button type="button" className="secondary-action compact-button driver-back-button" onClick={onBack}>
-        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-          <path d="M19 12H5" />
-          <path d="m12 19-7-7 7-7" />
-        </svg>
-        Back to Ride Booking
-      </button>
+      <div className="driver-back-row">
+        <button type="button" className="driver-back-arrow" onClick={onBack} aria-label="Back to Bislig Ride" title="Back to Bislig Ride">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M19 12H5" />
+            <path d="m12 19-7-7 7-7" />
+          </svg>
+        </button>
+      </div>
 
       <header className="driver-dash-header">
         <div className="driver-dash-copy">
@@ -3718,57 +3688,178 @@ const renderOnlineState = () => (
         </div>
       </header>
 
-      {queueFirst ? null : renderSummary()}
+      <nav className="driver-mini-nav" aria-label="Driver workspaces">
+        {([
+          { id: 'home', label: 'Home' },
+          { id: 'queue', label: 'Ride Queue' },
+          { id: 'profile', label: 'Profile' },
+          { id: 'pakyawan', label: 'Pakyawan', count: pakyawanRequests.length + activePakyawanOffers.length },
+          { id: 'delivery', label: 'Delivery', count: deliveryRequests.length + activeDeliveryOffers.length },
+        ] as const).map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            className={driverView === item.id ? 'secondary-action compact-button mini-nav-item is-active' : 'secondary-action compact-button mini-nav-item'}
+            onClick={() => setDriverView(item.id)}
+            aria-current={driverView === item.id ? 'page' : undefined}
+          >
+            {item.label}
+            {'count' in item && item.count > 0 ? <span className="mini-nav-badge">{item.count}</span> : null}
+          </button>
+        ))}
+      </nav>
 
-      {showChangePassword ? (
-        <section className="driver-card account-panel">
-          <div className="state-heading">
-            <div>
-              <p className="section-label">ACCOUNT SECURITY</p>
-              <h3>Change password</h3>
-              <p>Update the password you use to sign in.</p>
-            </div>
-            <button type="button" className="secondary-action compact-button" onClick={handleCloseChangePassword} disabled={changingPassword}>
-              Close
+      {driverView === 'home' ? (
+        <>
+          {phase === 'offline' ? (
+            <section className="driver-card work-state work-offline">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">AVAILABILITY</p>
+                  <h3>You&apos;re currently offline</h3>
+                  <p>Go online to start receiving requests, or review your recent activity below.</p>
+                </div>
+                <span className="state-badge offline-badge">OFFLINE</span>
+              </div>
+              <div className="work-cta">
+                <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
+                  {transitioning ? 'Going Online...' : 'Go Online'}
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {(activeRide || pendingOffer) && phase !== 'offline' ? (
+            <section className="driver-card work-state">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">ACTIVE RIDE</p>
+                  <h3>You have an active ride</h3>
+                  <p>Your trip is waiting in the Ride Queue workspace.</p>
+                </div>
+              </div>
+              <div className="work-cta">
+                <button type="button" className="secondary-action compact-button" onClick={() => setDriverView('queue')}>
+                  Open Ride Queue
+                </button>
+              </div>
+            </section>
+          ) : null}
+
+          {cancellationNotice ? (
+            <section className="ride-cancelled-notice" role="alert">
+              <div>
+                <strong>Ride cancelled by the passenger</strong>
+                <span>
+                  {activeRide
+                    ? `${activeRide.customer_name} cancelled this ride. `
+                    : 'Your passenger cancelled this ride. '}
+                  Reason: {cancellationNotice.reason}
+                </span>
+              </div>
+              <button type="button" onClick={() => setCancellationNotice(null)}>
+                Dismiss
+              </button>
+            </section>
+          ) : null}
+
+          {renderRecentRides()}
+        </>
+      ) : null}
+
+      {driverView === 'profile' ? (
+        <>
+          {renderSummary()}
+
+          <div className="account-actions-row">
+            <button
+              type="button"
+              className="secondary-action compact-button"
+              onClick={() => {
+                setShowChangePassword((current) => !current)
+                setPasswordError('')
+                setPasswordSuccess('')
+              }}
+              disabled={isLoggingOut}
+            >
+              Change Password
+            </button>
+            <button
+              type="button"
+              className="secondary-action compact-button"
+              onClick={() => void handleLogout()}
+              disabled={isLoggingOut}
+            >
+              {isLoggingOut ? 'Signing out...' : 'Logout'}
             </button>
           </div>
 
-          {passwordSuccess ? <p className="driver-password-success" role="status">{passwordSuccess}</p> : null}
+          {showChangePassword ? (
+            <section className="driver-card account-panel">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">ACCOUNT SECURITY</p>
+                  <h3>Change password</h3>
+                  <p>Update the password you use to sign in.</p>
+                </div>
+                <button type="button" className="secondary-action compact-button" onClick={handleCloseChangePassword} disabled={changingPassword}>
+                  Close
+                </button>
+              </div>
 
-          <form className="panel-form" onSubmit={(event) => { event.preventDefault(); void handleChangePasswordSubmit() }}>
-            <div className="form-grid">
-              <label className="field-block">
-                <span className="field-label">Current password</span>
-                <input className="input-field" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" disabled={changingPassword} />
-              </label>
-              <label className="field-block">
-                <span className="field-label">New password</span>
-                <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
-              </label>
-              <label className="field-block">
-                <span className="field-label">Confirm new password</span>
-                <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
-              </label>
-            </div>
+              {passwordSuccess ? <p className="driver-password-success" role="status">{passwordSuccess}</p> : null}
 
-            <p className="password-meta">{PASSWORD_HELP_TEXT}</p>
+              <form className="panel-form" onSubmit={(event) => { event.preventDefault(); void handleChangePasswordSubmit() }}>
+                <div className="form-grid">
+                  <label className="field-block">
+                    <span className="field-label">Current password</span>
+                    <input className="input-field" type="password" value={currentPassword} onChange={(event) => setCurrentPassword(event.target.value)} placeholder="••••••••" autoComplete="current-password" disabled={changingPassword} />
+                  </label>
+                  <label className="field-block">
+                    <span className="field-label">New password</span>
+                    <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={newPassword} onChange={(event) => setNewPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
+                  </label>
+                  <label className="field-block">
+                    <span className="field-label">Confirm new password</span>
+                    <input className="input-field" type={showPasswordFields ? 'text' : 'password'} value={confirmPassword} onChange={(event) => setConfirmPassword(event.target.value)} placeholder="••••••••" autoComplete="new-password" disabled={changingPassword} />
+                  </label>
+                </div>
 
-            <div className="form-actions">
-              <button type="button" className="link-button" onClick={() => setShowPasswordFields((current) => !current)} disabled={changingPassword}>
-                {showPasswordFields ? 'Hide passwords' : 'Show passwords'}
-              </button>
-            </div>
+                <p className="password-meta">{PASSWORD_HELP_TEXT}</p>
 
-            {passwordError ? <p className="form-error-message" role="alert">{passwordError}</p> : null}
+                <div className="form-actions">
+                  <button type="button" className="link-button" onClick={() => setShowPasswordFields((current) => !current)} disabled={changingPassword}>
+                    {showPasswordFields ? 'Hide passwords' : 'Show passwords'}
+                  </button>
+                </div>
 
-            <div className="form-actions">
-              <button type="submit" className="primary-action" disabled={changingPassword}>
-                {changingPassword ? 'Updating...' : 'Update Password'}
-              </button>
-            </div>
-          </form>
-        </section>
+                {passwordError ? <p className="form-error-message" role="alert">{passwordError}</p> : null}
+
+                <div className="form-actions">
+                  <button type="submit" className="primary-action" disabled={changingPassword}>
+                    {changingPassword ? 'Updating...' : 'Update Password'}
+                  </button>
+                </div>
+              </form>
+            </section>
+          ) : null}
+        </>
       ) : null}
+
+      {driverView === 'queue' ? (
+        <div className="driver-operations">
+          {phase === 'offline' ? renderOfflineState() : null}
+          {phase === 'online' ? renderOnlineState() : null}
+          {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
+          {phase === 'arrived' ? renderArrivedState() : null}
+          {phase === 'in_progress' ? renderInProgressState() : null}
+          {phase === 'completed' ? renderCompletedState() : null}
+        </div>
+      ) : null}
+
+      {driverView === 'pakyawan' ? renderPakyawanSection() : null}
+
+      {driverView === 'delivery' ? renderDeliverySection() : null}
 
       {phase === 'incoming_request' && pendingOffer ? (
         <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Incoming ride request">
@@ -3782,73 +3873,14 @@ const renderOnlineState = () => (
 
       {renderDeliveryTripOverlay()}
 
-      <div className="driver-operations">
-        {phase === 'offline' ? renderOfflineState() : null}
-        {phase === 'online' ? renderOnlineState() : null}
-        {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
-        {phase === 'arrived' ? renderArrivedState() : null}
-        {phase === 'in_progress' ? renderInProgressState() : null}
-        {phase === 'completed' ? renderCompletedState() : null}
-      </div>
-
-      {queueFirst ? renderSummary() : null}
-
-      {cancellationNotice ? (
-        <section className="ride-cancelled-notice" role="alert">
-          <div>
-            <strong>Ride cancelled by the passenger</strong>
-            <span>
-              {activeRide
-                ? `${activeRide.customer_name} cancelled this ride. `
-                : 'Your passenger cancelled this ride. '}
-              Reason: {cancellationNotice.reason}
-            </span>
-          </div>
-          <button type="button" onClick={() => setCancellationNotice(null)}>
-            Dismiss
-          </button>
-        </section>
-      ) : null}
-
-      {!driverOnline || phase === 'offline' ? renderRecentRides() : null}
-
-      <div className="account-actions-row">
-        <button
-          type="button"
-          className="secondary-action compact-button"
-          onClick={() => {
-            setShowChangePassword((current) => !current)
-            setPasswordError('')
-            setPasswordSuccess('')
-          }}
-          disabled={isLoggingOut}
-        >
-          Change Password
+      <div className="driver-mobile-actions">
+        <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning} aria-label={driverOnline ? 'Go offline' : 'Go online'}>
+          {driverOnline ? 'Go Offline' : 'Go Online'}
         </button>
-        <button
-          type="button"
-          className="secondary-action compact-button"
-          onClick={() => void handleLogout()}
-          disabled={isLoggingOut}
-        >
-          {isLoggingOut ? 'Signing out...' : 'Logout'}
+        <button type="button" className="secondary-action" onClick={handleOpenNotifications} aria-label={`Open notifications${unreadNotificationCount > 0 ? ` (${unreadNotificationCount} unread)` : ''}`}>
+          Notifications{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ''}
         </button>
       </div>
-
-      {renderPakyawanSection()}
-
-      {renderDeliverySection()}
-
-      {phase === 'online' || phase === 'offline' ? (
-        <div className="driver-mobile-actions">
-          <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning} aria-label={driverOnline ? 'Go offline' : 'Go online'}>
-            {driverOnline ? 'Go Offline' : 'Go Online'}
-          </button>
-          <button type="button" className="secondary-action" onClick={handleOpenNotifications} aria-label={`Open notifications${unreadNotificationCount > 0 ? ` (${unreadNotificationCount} unread)` : ''}`}>
-            Notifications{unreadNotificationCount > 0 ? ` (${unreadNotificationCount})` : ''}
-          </button>
-        </div>
-      ) : null}
 
       {showCancelModal && activeRide && (
         <CancelRideModal
