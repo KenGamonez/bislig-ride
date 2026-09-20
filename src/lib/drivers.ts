@@ -10,9 +10,10 @@ vehicle_type: string
   vehicle_model: string
   plate_number: string
   vehicle_capacity: number | null
-status: 'active' | 'inactive'
+  status: 'active' | 'inactive'
   availability: 'offline' | 'online' | 'busy'
   can_accept_pakyawan: boolean
+  can_accept_deliveries: boolean
   created_at: string
   auth_user_id: string | null
   username: string | null
@@ -43,6 +44,7 @@ export async function createDriver(driver: {
   status?: 'active' | 'inactive'
   availability?: 'offline' | 'online' | 'busy'
   can_accept_pakyawan?: boolean
+  can_accept_deliveries?: boolean
   vehicle_color?: string | null
   profile_photo_url?: string | null
   username?: string | null
@@ -73,6 +75,7 @@ export async function updateDriver(
     | 'status'
     | 'availability'
     | 'can_accept_pakyawan'
+    | 'can_accept_deliveries'
     | 'vehicle_color'
     | 'username'
     | 'auth_user_id'

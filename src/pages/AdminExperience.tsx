@@ -265,7 +265,7 @@ export function AdminExperience({
 }) {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [activeTab, setActiveTab] = useState<AdminTab>('overview')
-  const [drivers, setDrivers] = useState<AdminDriver[]>([])
+  const [drivers, setDrivers] = useState<(AdminDriver & { canAcceptDeliveries: boolean })[]>([])
   const [liveRides, setLiveRides] = useState<any[]>([])
   const [liveCustomers, setLiveCustomers] = useState<any[]>([])
       const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
@@ -326,7 +326,7 @@ export function AdminExperience({
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
 
-  const mapDriverRecord = (driver: DriverRecord): AdminDriver => ({
+  const mapDriverRecord = (driver: DriverRecord): AdminDriver & { canAcceptDeliveries: boolean } => ({
     id: driver.id,
     name: driver.full_name,
     phone: driver.phone,
@@ -347,6 +347,7 @@ export function AdminExperience({
     username: driver.username ?? '',
     authUserId: driver.auth_user_id ?? null,
     canAcceptPakyawan: Boolean(driver.can_accept_pakyawan),
+    canAcceptDeliveries: Boolean((driver as unknown as { can_accept_deliveries?: boolean }).can_accept_deliveries),
     recentRides: [],
   })
 
@@ -938,6 +939,23 @@ useEffect(() => {
     }
   }
 
+  const handleDeliveryToggle = async (driver: AdminDriver & { canAcceptDeliveries: boolean }) => {
+    const nextValue = !driver.canAcceptDeliveries
+
+    try {
+      setDriverError('')
+      const updated = await updateDriver(driver.id, { can_accept_deliveries: nextValue })
+      const mappedDriver = mapDriverRecord(updated)
+
+      setDrivers((current) =>
+        current.map((item) => item.id === driver.id ? mappedDriver : item),
+      )
+    } catch (error) {
+      console.error('Unable to update Pa-Deliver eligibility:', error)
+      setDriverError('Unable to update Pa-Deliver eligibility. Please try again.')
+    }
+  }
+
   const openManageAccount = (driver?: AdminDriver) => {
     const target = driver ?? selectedDriver
 
@@ -1438,6 +1456,7 @@ useEffect(() => {
                       <th>Presence</th>
                       <th>Login</th>
                       <th>Pakyawan</th>
+                      <th>Pa-Deliver</th>
                       <th>Actions</th>
                     </tr>
                   </thead>
@@ -1485,6 +1504,15 @@ useEffect(() => {
                             onClick={() => void handlePakyawanToggle(driver)}
                           >
                             {driver.canAcceptPakyawan ? 'Enabled' : 'Enable'}
+                          </button>
+                        </td>
+                        <td>
+                          <button
+                            type="button"
+                            className={(driver as unknown as { canAcceptDeliveries: boolean }).canAcceptDeliveries ? 'pakyawan-toggle enabled' : 'pakyawan-toggle'}
+                            onClick={() => void handleDeliveryToggle(driver as unknown as AdminDriver & { canAcceptDeliveries: boolean })}
+                          >
+                            {(driver as unknown as { canAcceptDeliveries: boolean }).canAcceptDeliveries ? 'Enabled' : 'Enable'}
                           </button>
                         </td>
                         <td className="action-buttons-cell">
@@ -1542,6 +1570,16 @@ useEffect(() => {
                       onClick={() => void handlePakyawanToggle(selectedDriver)}
                     >
                       {selectedDriver.canAcceptPakyawan ? 'Disable' : 'Enable'}
+                    </button>
+                  </strong></div>
+                  <div><span>Pa-Deliver</span><strong>
+                    {(selectedDriver as unknown as { canAcceptDeliveries: boolean }).canAcceptDeliveries ? 'Pa-Deliver Enabled' : 'Pa-Deliver Not Enabled'}
+                    <button
+                      type="button"
+                      className={(selectedDriver as unknown as { canAcceptDeliveries: boolean }).canAcceptDeliveries ? 'pakyawan-toggle enabled' : 'pakyawan-toggle'}
+                      onClick={() => void handleDeliveryToggle(selectedDriver as unknown as AdminDriver & { canAcceptDeliveries: boolean })}
+                    >
+                      {(selectedDriver as unknown as { canAcceptDeliveries: boolean }).canAcceptDeliveries ? 'Disable' : 'Enable Pa-Deliver'}
                     </button>
                   </strong></div>
                   <div><span>Recent rides</span><strong>{selectedDriver.recentRides.length}</strong></div>
