@@ -17,6 +17,35 @@ export async function fetchDriverDeliveries(driverId: string): Promise<DeliveryB
   return (data ?? []) as DeliveryBooking[]
 }
 
+export async function fetchAvailableDeliveries(): Promise<DeliveryBooking[]> {
+  const { data, error } = await supabase
+    .from('deliveries')
+    .select('*')
+    .in('status', ['pending', 'dispatching'])
+    .is('driver_id', null)
+    .order('preferred_date', { ascending: true })
+    .order('preferred_time', { ascending: true })
+
+  if (error) throw error
+
+  return (data ?? []) as DeliveryBooking[]
+}
+
+export async function acceptDeliveryBooking(deliveryId: string, driverId: string): Promise<DeliveryBooking> {
+  const { data, error } = await supabase
+    .from('deliveries')
+    .update({ status: 'assigned', driver_id: driverId })
+    .eq('id', deliveryId)
+    .in('status', ['pending', 'dispatching'])
+    .is('driver_id', null)
+    .select()
+    .single<DeliveryBooking>()
+
+  if (error) throw error
+
+  return data
+}
+
 export async function advanceDeliveryStatus(deliveryId: string, nextStatus: DeliveryLifecycleStatus): Promise<DeliveryBooking> {
   const { data, error } = await supabase
     .rpc('advance_delivery_status', { p_delivery_id: deliveryId, p_next_status: nextStatus })

@@ -12,7 +12,7 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
-import { acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchDriverDeliveries, fetchDriverDeliveryOffers, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDriverDeliveries, fetchDriverDeliveryOffers, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { buildDeliveryProofPath, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   notificationPermission,
@@ -299,6 +299,7 @@ export function DriverExperience({
   const [canAcceptPakyawan, setCanAcceptPakyawan] = useState(false)
   const [canAcceptDeliveries, setCanAcceptDeliveries] = useState(false)
   const [deliveryOffers, setDeliveryOffers] = useState<DeliveryOfferWithBooking[]>([])
+  const [deliveryRequests, setDeliveryRequests] = useState<DeliveryBooking[]>([])
   const [deliveryNow, setDeliveryNow] = useState(() => Date.now())
   const [deliveryError, setDeliveryError] = useState('')
   const [acceptedDeliveries, setAcceptedDeliveries] = useState<DeliveryBooking[]>([])
@@ -1024,6 +1025,80 @@ return unsubscribe
       window.clearInterval(timer)
     }
   }, [pakyawanOffers.length])
+
+  useEffect(() => {
+    if (!driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    let mounted = true
+
+    const loadDeliveryRequests = async () => {
+      try {
+        const items = await fetchAvailableDeliveries()
+        if (mounted) {
+          setDeliveryRequests(items)
+        }
+      } catch (error) {
+        console.error('Unable to load delivery requests:', error)
+        if (mounted) {
+          setDeliveryError('Unable to load delivery requests right now.')
+        }
+      }
+    }
+
+    void loadDeliveryRequests()
+
+    const channel = supabase
+      .channel('driver-deliveries-requests')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'deliveries',
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<DeliveryBooking>
+
+          if (!incoming.id) {
+            return
+          }
+
+          setDeliveryRequests((current) =>
+            current.some((booking) => booking.id === incoming.id)
+              ? current
+              : [incoming as DeliveryBooking, ...current],
+          )
+
+          const subtitle = `${incoming.pickup_address ?? 'Pickup'} → ${incoming.delivery_address ?? 'Destination'}`
+
+          setNotifications((current) => [
+            {
+              id: `delivery-${incoming.id}`,
+              kind: 'pakyawan',
+              rideId: null,
+              title: 'New delivery request',
+              subtitle,
+              seen: false,
+              createdAt: Date.now(),
+            },
+            ...current,
+          ])
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('New delivery request', subtitle)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      mounted = false
+      void supabase.removeChannel(channel)
+    }
+  }, [driverAuthId, canAcceptDeliveries, driverOnline])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptDeliveries) {
@@ -2001,6 +2076,36 @@ const displayedDriver = driverProfile ?? demoDriver
     }
   }
 
+  const handleAcceptDeliveryRequest = async (bookingId: string) => {
+    if (deliverySubmittingId) {
+      return
+    }
+
+    setDeliverySubmittingId(bookingId)
+    setDeliveryError('')
+
+    try {
+      const assigned = await acceptDeliveryBooking(bookingId, driverId)
+      setDeliveryRequests((current) => current.filter((booking) => booking.id !== bookingId))
+      setAcceptedDeliveries((current) =>
+        current.some((booking) => booking.id === assigned.id)
+          ? current.map((booking) => (booking.id === assigned.id ? assigned : booking))
+          : [assigned, ...current].slice(0, 10),
+      )
+      setNotifications((current) => current.filter((item) => item.id !== `delivery-${bookingId}`))
+    } catch (error) {
+      console.error('Unable to accept delivery request:', error)
+      setDeliveryError('This request could not be accepted. It may have been taken by another driver.')
+    } finally {
+      setDeliverySubmittingId(null)
+    }
+  }
+
+  const handleDeclineDeliveryRequest = (bookingId: string) => {
+    setDeliveryRequests((current) => current.filter((booking) => booking.id !== bookingId))
+    setNotifications((current) => current.filter((item) => item.id !== `delivery-${bookingId}`))
+  }
+
   const resolveDeliveryLifecycleError = (error: unknown): string => {
     const message = error instanceof Error ? error.message : ''
 
@@ -2129,15 +2234,62 @@ const displayedDriver = driverProfile ?? demoDriver
             <p className="section-label">DELIVERY REQUESTS</p>
             <h3>Pa-Deliver / package deliveries</h3>
             <p>
-              {activeDeliveryOffers.length > 0
-                ? 'Customers are requesting package deliveries in your area.'
+              {deliveryRequests.length > 0 || activeDeliveryOffers.length > 0
+                ? 'Customers are requesting package deliveries in your area. Accept a request to take it.'
                 : 'No new delivery requests right now.'}
             </p>
           </div>
-          <span className="state-badge pakyawan-badge">{activeDeliveryOffers.length}</span>
+          <span className="state-badge pakyawan-badge">{deliveryRequests.length + activeDeliveryOffers.length}</span>
         </div>
 
         {deliveryError ? <p className="form-error-message">{deliveryError}</p> : null}
+
+        {deliveryRequests.length === 0 ? null : (
+          <ul className="pakyawan-list">
+            {deliveryRequests.map((booking) => (
+              <li key={booking.id} className="pakyawan-item">
+                <div className="pakyawan-route">
+                  <span>{booking.pickup_address}</span>
+                  <strong>→</strong>
+                  <span>{booking.delivery_address}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {booking.preferred_date} · {booking.preferred_time}
+                  </span>
+                  <span>
+                    {booking.package_type} · {booking.package_size}
+                  </span>
+                  {booking.package_details ? (
+                    <span>{booking.package_details}</span>
+                  ) : null}
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{booking.sender_name}</span>
+                  <span>{booking.sender_phone}</span>
+                </div>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptDeliveryRequest(booking.id)}
+                    disabled={deliverySubmittingId === booking.id}
+                  >
+                    {deliverySubmittingId === booking.id ? 'Accepting...' : 'Accept'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => handleDeclineDeliveryRequest(booking.id)}
+                    disabled={deliverySubmittingId !== null}
+                  >
+                    Not now
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {activeDeliveryOffers.length === 0 ? null : (
           <ul className="pakyawan-list">
