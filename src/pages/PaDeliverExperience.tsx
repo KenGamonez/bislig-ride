@@ -1,5 +1,7 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
+import { createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
+import type { DeliveryBooking } from '../types/delivery'
 import { useLanguage } from '../lib/i18n'
 
 const routeToView = (nextView: AppViewMode) => {
@@ -52,6 +54,13 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [errors, setErrors] = useState<FormErrors>({})
   const [step, setStep] = useState(1)
   const [submitted, setSubmitted] = useState(false)
+  const [createdDeliveryId, setCreatedDeliveryId] = useState<string | null>(null)
+  const [createdAccessToken, setCreatedAccessToken] = useState<string | null>(null)
+  const [trackedDelivery, setTrackedDelivery] = useState<DeliveryBooking | null>(null)
+  const [trackingError, setTrackingError] = useState('')
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [submitError, setSubmitError] = useState('')
   const cardRef = useRef<HTMLFormElement>(null)
 
   const updateField = (name: keyof PaDeliverForm, value: string) => {
@@ -128,15 +137,83 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     goToStep(step + 1)
   }
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
     if (step < 3) {
       handleContinue()
       return
     }
-    if (!validate()) return
-    setSubmitted(true)
+    if (!validate() || isSubmitting) return
+    setIsSubmitting(true)
+    setSubmitError('')
+    try {
+      const created = await createDeliveryBooking({
+        customer_id: null,
+        sender_name: form.sender_name.trim(),
+        sender_phone: form.sender_phone.trim(),
+        package_type: form.package_type,
+        package_details: form.package_details.trim() || null,
+        package_size: form.package_size.trim(),
+        pickup_address: form.pickup_address.trim(),
+        delivery_address: form.delivery_address.trim(),
+        preferred_date: form.preferred_date,
+        preferred_time: form.preferred_time,
+      })
+      try {
+        window.localStorage.setItem(`bislig-ride-padeliver-${created.id}`, created.access_token)
+      } catch {
+        // Private browsing or disabled storage — the reference below still works for this session.
+      }
+      setCreatedDeliveryId(created.id)
+      setCreatedAccessToken(created.access_token)
+      setSubmitted(true)
+    } catch (error) {
+      console.error('Unable to submit delivery request:', error)
+      setSubmitError(t('pad.submitFailed'))
+    } finally {
+      setIsSubmitting(false)
+    }
   }
+
+  const refreshDeliveryStatus = async () => {
+    if (!createdDeliveryId || !createdAccessToken || isRefreshing) {
+      return
+    }
+
+    setIsRefreshing(true)
+    setTrackingError('')
+
+    try {
+      const latest = await getDeliveryBooking(createdDeliveryId, createdAccessToken)
+      setTrackedDelivery(latest)
+    } catch (error) {
+      console.error('Unable to refresh delivery status:', error)
+      setTrackingError(t('pad.trackFailed'))
+    } finally {
+      setIsRefreshing(false)
+    }
+  }
+
+  useEffect(() => {
+    if (!submitted || !createdDeliveryId || !createdAccessToken) {
+      return
+    }
+
+    const status = trackedDelivery?.status
+    if (status === 'delivered' || status === 'cancelled' || status === 'failed') {
+      return
+    }
+
+    void refreshDeliveryStatus()
+    const timer = window.setInterval(() => {
+      void refreshDeliveryStatus()
+    }, 10000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, createdDeliveryId, createdAccessToken, trackedDelivery?.status])
 
   const field = (
     name: keyof PaDeliverForm,
@@ -264,14 +341,32 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   }
 
   if (submitted) {
+    const status = trackedDelivery?.status
+
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{t('pad.receivedEyebrow')}</p>
-            <h1>{t('pad.receivedTitle')}</h1>
-            <p>{t('pad.receivedBody')}</p>
+            <p className="eyebrow">{status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
+            <h1>{status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
+            {status === 'assigned' || status === 'driver_on_way' || status === 'driver_arrived' || status === 'picked_up' || status === 'in_transit' || status === 'delivered' ? (
+              <p className="booking-status">{t('pad.statusLabel')}: {status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : t('pad.trackDelivered')}</p>
+            ) : status === 'no_driver' ? (
+              <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackNoDriver')}</p>
+            ) : (
+              <p>{t('pad.receivedBody')}</p>
+            )}
+            {createdDeliveryId ? (
+              <p className="booking-ref">{t('pad.bookingRef')}: {createdDeliveryId.slice(0, 8)}…</p>
+            ) : null}
+            {status === 'delivered' && trackedDelivery?.proof_available ? (
+              <p className="booking-status">{t('pad.proofAvailable')}</p>
+            ) : null}
+            {trackingError ? <p className="form-error-message submit-error">{trackingError}</p> : null}
+            <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshDeliveryStatus()}>
+              {isRefreshing ? t('pad.checkingStatus') : t('pad.refreshStatus')}
+            </button>
             <button type="button" className="primary-action" onClick={onBack}>
               {t('form.backHome')}
             </button>
@@ -345,10 +440,13 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                   {t('form.continue')} &rarr;
                 </button>
               ) : (
-                <button type="submit" className="primary-action request-ride-action">
-                  {t('pad.submit')} &rarr;
+                <button type="submit" className="primary-action request-ride-action" disabled={isSubmitting}>
+                  {isSubmitting ? t('pad.submitting') : <>{t('pad.submit')} &rarr;</>}
                 </button>
               )}
+              {step === 3 && submitError ? (
+                <p className="form-error-message submit-error">{submitError}</p>
+              ) : null}
               {step === 1 ? (
                 <button type="button" className="flow-back" onClick={onBack}>
                   &larr; {t('form.backHome')}

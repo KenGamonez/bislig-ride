@@ -12,6 +12,8 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
+import { acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchDriverDeliveries, fetchDriverDeliveryOffers, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { buildDeliveryProofPath, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   notificationPermission,
   playRequestChime,
@@ -43,6 +45,7 @@ import {
 import type { Ride, RideCancellation } from '../types/ride'
 import type { PendingOffer } from '../types/dispatch'
 import type { PakyawanBooking, PakyawanOfferWithBooking } from '../types/scheduledBooking'
+import type { DeliveryBooking, DeliveryOfferWithBooking } from '../types/delivery'
 
 const TEST_DRIVER_ID = '6b239660-14ae-4fea-82c0-905420260077'
 
@@ -294,6 +297,16 @@ export function DriverExperience({
   const [notifications, setNotifications] = useState<DriverNotificationItem[]>([])
   const [showNotifications, setShowNotifications] = useState(false)
   const [canAcceptPakyawan, setCanAcceptPakyawan] = useState(false)
+  const [canAcceptDeliveries, setCanAcceptDeliveries] = useState(false)
+  const [deliveryOffers, setDeliveryOffers] = useState<DeliveryOfferWithBooking[]>([])
+  const [deliveryNow, setDeliveryNow] = useState(() => Date.now())
+  const [deliveryError, setDeliveryError] = useState('')
+  const [acceptedDeliveries, setAcceptedDeliveries] = useState<DeliveryBooking[]>([])
+  const [deliverySubmittingId, setDeliverySubmittingId] = useState<string | null>(null)
+  const [deliveryLifecycleSubmittingId, setDeliveryLifecycleSubmittingId] = useState<string | null>(null)
+  const [deliveryLifecycleError, setDeliveryLifecycleError] = useState<{ deliveryId: string; message: string } | null>(null)
+  const [deliveryProof, setDeliveryProof] = useState<{ bookingId: string; file: File | null; previewUrl: string | null } | null>(null)
+  const [isUploadingProof, setIsUploadingProof] = useState(false)
   const [pakyawanRequests, setPakyawanRequests] = useState<PakyawanBooking[]>([])
   const [acceptedPakyawan, setAcceptedPakyawan] = useState<PakyawanBooking[]>([])
   const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
@@ -370,7 +383,7 @@ export function DriverExperience({
 
 const { data: driver, error: driverError } = await supabase
         .from('drivers')
-        .select('id, status, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, vehicle_capacity, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan')
+        .select('id, status, auth_user_id, full_name, email, username, vehicle_type, vehicle_model, vehicle_capacity, plate_number, profile_photo_url, rating_average, total_ratings, can_accept_pakyawan, can_accept_deliveries')
         .eq('auth_user_id', authUserId)
         .maybeSingle()
 
@@ -392,6 +405,7 @@ const { data: driver, error: driverError } = await supabase
         setDriverId(driver.id)
         setDriverAuthId(authUserId)
         setCanAcceptPakyawan(Boolean(driver.can_accept_pakyawan))
+        setCanAcceptDeliveries(Boolean((driver as { can_accept_deliveries?: boolean }).can_accept_deliveries))
         setDriverProfile({
           name: driver.full_name,
           profilePhoto: driver.profile_photo_url,
@@ -1010,6 +1024,145 @@ return unsubscribe
       window.clearInterval(timer)
     }
   }, [pakyawanOffers.length])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    let mounted = true
+
+    const loadDeliveryOffers = async () => {
+      try {
+        const items = await fetchDriverDeliveryOffers(driverId)
+        if (mounted) {
+          setDeliveryOffers(items)
+        }
+      } catch (error) {
+        console.error('Unable to load delivery offers:', error)
+        if (mounted) {
+          setDeliveryError('Unable to load delivery offers right now.')
+        }
+      }
+    }
+
+    const refreshDeliveryOffers = () => {
+      void loadDeliveryOffers()
+    }
+
+    void loadDeliveryOffers()
+
+    const channel = supabase
+      .channel(`driver-delivery-offers-${driverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'delivery_offers',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<DeliveryOfferWithBooking>
+
+          if (!incoming.id) {
+            refreshDeliveryOffers()
+            return
+          }
+
+          refreshDeliveryOffers()
+
+          const subtitle = 'A customer is requesting a package delivery.'
+
+          setNotifications((current) =>
+            current.some((item) => item.id === `delivery-offer-${incoming.id}`)
+              ? current
+              : [
+                  {
+                    id: `delivery-offer-${incoming.id}`,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'New delivery offer',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('New delivery offer', subtitle)
+          }
+        },
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'delivery_offers',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        () => {
+          refreshDeliveryOffers()
+        },
+      )
+      .subscribe()
+
+    return () => {
+      mounted = false
+      void supabase.removeChannel(channel)
+    }
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline])
+
+  useEffect(() => {
+    if (deliveryOffers.length === 0) {
+      return
+    }
+
+    const timer = window.setInterval(() => {
+      setDeliveryNow(Date.now())
+    }, 1000)
+
+    return () => {
+      window.clearInterval(timer)
+    }
+  }, [deliveryOffers.length])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    let mounted = true
+
+    const loadHeldDeliveries = async () => {
+      try {
+        const items = await fetchDriverDeliveries(driverId)
+        if (mounted) {
+          setAcceptedDeliveries((current) => {
+            const byId = new Map(current.map((booking) => [booking.id, booking]))
+
+            for (const item of items) {
+              byId.set(item.id, item)
+            }
+
+            return Array.from(byId.values()).slice(0, 10)
+          })
+        }
+      } catch (error) {
+        console.error('Unable to load held deliveries:', error)
+      }
+    }
+
+    void loadHeldDeliveries()
+
+    return () => {
+      mounted = false
+    }
+  }, [driverId, driverAuthId, canAcceptDeliveries])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -1784,6 +1937,377 @@ const displayedDriver = driverProfile ?? demoDriver
       ) : null}
     </div>
   )
+
+  const formatDeliveryOfferCountdown = (expiresAt: string): string => {
+    const remainingMs = new Date(expiresAt).getTime() - deliveryNow
+
+    if (!Number.isFinite(remainingMs) || remainingMs <= 0) {
+      return 'Expiring...'
+    }
+
+    const totalSeconds = Math.ceil(remainingMs / 1000)
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = totalSeconds % 60
+
+    return `${minutes}:${String(seconds).padStart(2, '0')}`
+  }
+
+  const activeDeliveryOffers = deliveryOffers.filter(
+    (offer) => new Date(offer.expires_at).getTime() > deliveryNow,
+  )
+
+  const resolveDeliveryAcceptError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/no longer available/i.test(message)) {
+      return 'This request is no longer available. It may have been taken by another driver.'
+    }
+
+    if (/no longer eligible/i.test(message)) {
+      return 'You are no longer eligible for this request.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleAcceptDeliveryOffer = async (offerId: string) => {
+    if (deliverySubmittingId) {
+      return
+    }
+
+    setDeliverySubmittingId(offerId)
+    setDeliveryError('')
+
+    try {
+      const assigned = await acceptDeliveryOffer(offerId)
+      setDeliveryOffers((current) => current.filter((offer) => offer.id !== offerId))
+      setAcceptedDeliveries((current) =>
+        current.some((booking) => booking.id === assigned.id)
+          ? current.map((booking) => (booking.id === assigned.id ? assigned : booking))
+          : [assigned, ...current].slice(0, 10),
+      )
+    } catch (error) {
+      console.error('Unable to accept delivery offer:', error)
+      setDeliveryError(resolveDeliveryAcceptError(error))
+
+      try {
+        const items = await fetchDriverDeliveryOffers(driverId)
+        setDeliveryOffers(items)
+      } catch (refreshError) {
+        console.error('Unable to refresh delivery offers:', refreshError)
+      }
+    } finally {
+      setDeliverySubmittingId(null)
+    }
+  }
+
+  const resolveDeliveryLifecycleError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/no longer assigned/i.test(message)) {
+      return 'This delivery is no longer assigned to you.'
+    }
+
+    if (/cannot move to that status|invalid delivery status/i.test(message)) {
+      return 'This delivery cannot move to that status right now.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleAdvanceDeliveryTrip = async (deliveryId: string, nextStatus: DeliveryLifecycleStatus) => {
+    if (deliveryLifecycleSubmittingId) {
+      return
+    }
+
+    setDeliveryLifecycleSubmittingId(deliveryId)
+    setDeliveryLifecycleError(null)
+
+    try {
+      const updated = await advanceDeliveryStatus(deliveryId, nextStatus)
+
+      try {
+        const items = await fetchDriverDeliveries(driverId)
+        setAcceptedDeliveries(items.slice(0, 10))
+      } catch {
+        setAcceptedDeliveries((current) =>
+          current.map((booking) => (booking.id === deliveryId ? updated : booking)),
+        )
+      }
+    } catch (error) {
+      console.error('Unable to advance delivery trip:', error)
+      setDeliveryLifecycleError({ deliveryId, message: resolveDeliveryLifecycleError(error) })
+
+      try {
+        const items = await fetchDriverDeliveries(driverId)
+        setAcceptedDeliveries(items.slice(0, 10))
+      } catch (refreshError) {
+        console.error('Unable to refresh held deliveries:', refreshError)
+      }
+    } finally {
+      setDeliveryLifecycleSubmittingId(null)
+    }
+  }
+
+  const handleSelectDeliveryProof = (bookingId: string, file: File | undefined) => {
+    if (!file) return
+
+    const validation = validateDeliveryProofImage(file)
+    if (!validation.valid) {
+      setDeliveryLifecycleError({ deliveryId: bookingId, message: validation.message ?? 'Please take or choose a valid photo.' })
+      return
+    }
+
+    setDeliveryProof((current) => {
+      if (current?.previewUrl) URL.revokeObjectURL(current.previewUrl)
+      return { bookingId, file, previewUrl: URL.createObjectURL(file) }
+    })
+    setDeliveryLifecycleError(null)
+  }
+
+  const handleCompleteDeliveryWithProof = async (bookingId: string) => {
+    if (isUploadingProof || !deliveryProof || deliveryProof.bookingId !== bookingId || !deliveryProof.file) {
+      return
+    }
+
+    setIsUploadingProof(true)
+    setDeliveryLifecycleError(null)
+
+    const path = buildDeliveryProofPath(bookingId, deliveryProof.file)
+
+    try {
+      await uploadDeliveryProof(path, deliveryProof.file)
+
+      try {
+        const updated = await completeDeliveryWithProof(bookingId, path)
+
+        try {
+          const items = await fetchDriverDeliveries(driverId)
+          setAcceptedDeliveries(items.slice(0, 10))
+        } catch {
+          setAcceptedDeliveries((current) =>
+            current.filter((booking) => booking.id !== bookingId).concat([updated]).slice(0, 10),
+          )
+        }
+
+        if (deliveryProof.previewUrl) URL.revokeObjectURL(deliveryProof.previewUrl)
+        setDeliveryProof(null)
+      } catch (rpcError) {
+        await removeDeliveryProof(path)
+        throw rpcError
+      }
+    } catch (error) {
+      console.error('Unable to complete delivery with proof:', error)
+      const message = error instanceof Error ? error.message : ''
+      setDeliveryLifecycleError({
+        deliveryId: bookingId,
+        message: /proof photo|proof upload|no longer assigned|cannot be completed/i.test(message)
+          ? message
+          : 'Something went wrong. Please try again.',
+      })
+
+      try {
+        const items = await fetchDriverDeliveries(driverId)
+        setAcceptedDeliveries(items.slice(0, 10))
+      } catch (refreshError) {
+        console.error('Unable to refresh held deliveries:', refreshError)
+      }
+    } finally {
+      setIsUploadingProof(false)
+    }
+  }
+
+  const renderDeliverySection = () => {
+    if (!canAcceptDeliveries) {
+      return null
+    }
+
+    return (
+      <section className="driver-card pakyawan-card">
+        <div className="state-heading">
+          <div>
+            <p className="section-label">DELIVERY REQUESTS</p>
+            <h3>Pa-Deliver / package deliveries</h3>
+            <p>
+              {activeDeliveryOffers.length > 0
+                ? 'Customers are requesting package deliveries in your area.'
+                : 'No new delivery requests right now.'}
+            </p>
+          </div>
+          <span className="state-badge pakyawan-badge">{activeDeliveryOffers.length}</span>
+        </div>
+
+        {deliveryError ? <p className="form-error-message">{deliveryError}</p> : null}
+
+        {activeDeliveryOffers.length === 0 ? null : (
+          <ul className="pakyawan-list">
+            {activeDeliveryOffers.map((offer) => (
+              <li key={offer.id} className="pakyawan-item pakyawan-offer">
+                <div className="pakyawan-route">
+                  <span>{offer.booking.pickup_address}</span>
+                  <strong>→</strong>
+                  <span>{offer.booking.delivery_address}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {offer.booking.preferred_date} · {offer.booking.preferred_time}
+                  </span>
+                  <span>
+                    {offer.booking.package_type} · {offer.booking.package_size}
+                  </span>
+                  <span>This request expires in: {formatDeliveryOfferCountdown(offer.expires_at)}</span>
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{offer.booking.sender_name}</span>
+                  <span>{offer.booking.sender_phone}</span>
+                </div>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptDeliveryOffer(offer.id)}
+                    disabled={deliverySubmittingId === offer.id}
+                  >
+                    {deliverySubmittingId === offer.id ? 'Accepting...' : 'Accept Request'}
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {acceptedDeliveries.length > 0 ? (
+          <div className="pakyawan-accepted">
+            <p className="section-label">ACCEPTED BY YOU</p>
+            <ul className="pakyawan-accepted-list">
+              {acceptedDeliveries.map((booking) => (
+                <li key={booking.id}>
+                  <strong>
+                    {booking.pickup_address} → {booking.delivery_address}
+                  </strong>
+                  <span>
+                    {booking.preferred_date} · {booking.preferred_time}
+                  </span>
+                  {booking.status === 'assigned' ? (
+                    <>
+                      <span>You&apos;re assigned to this delivery.</span>
+                      <span>Status: ASSIGNED</span>
+                    </>
+                  ) : (
+                    <span>Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+                  )}
+                  {booking.driver_id === driverId && booking.status === 'assigned' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={deliveryLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvanceDeliveryTrip(booking.id, 'driver_on_way')}
+                      >
+                        {deliveryLifecycleSubmittingId === booking.id ? 'Updating...' : 'On My Way'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'driver_on_way' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={deliveryLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvanceDeliveryTrip(booking.id, 'driver_arrived')}
+                      >
+                        {deliveryLifecycleSubmittingId === booking.id ? 'Updating...' : "I've Arrived"}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'driver_arrived' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={deliveryLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvanceDeliveryTrip(booking.id, 'picked_up')}
+                      >
+                        {deliveryLifecycleSubmittingId === booking.id ? 'Updating...' : 'Package Picked Up'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'picked_up' ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="primary-action compact-button"
+                        disabled={deliveryLifecycleSubmittingId === booking.id}
+                        onClick={() => void handleAdvanceDeliveryTrip(booking.id, 'in_transit')}
+                      >
+                        {deliveryLifecycleSubmittingId === booking.id ? 'Updating...' : 'Start Delivery'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'in_transit' ? (
+                    <div className="pakyawan-price-box">
+                      <span className="field-label">Take a photo to confirm delivery.</span>
+                      {deliveryProof?.bookingId === booking.id && deliveryProof.previewUrl ? (
+                        <>
+                          <img
+                            src={deliveryProof.previewUrl}
+                            alt="Delivery proof preview"
+                            className="proof-preview"
+                          />
+                          <div className="pakyawan-actions">
+                            <button
+                              type="button"
+                              className="primary-action compact-button"
+                              disabled={isUploadingProof}
+                              onClick={() => void handleCompleteDeliveryWithProof(booking.id)}
+                            >
+                              {isUploadingProof ? 'Uploading...' : 'Upload & Complete'}
+                            </button>
+                            <button
+                              type="button"
+                              className="secondary-action compact-button"
+                              disabled={isUploadingProof}
+                              onClick={() => {
+                                if (deliveryProof?.previewUrl) URL.revokeObjectURL(deliveryProof.previewUrl)
+                                setDeliveryProof({ bookingId: booking.id, file: null, previewUrl: null })
+                              }}
+                            >
+                              Retake
+                            </button>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="pakyawan-actions">
+                          <label className="primary-action compact-button" aria-disabled={isUploadingProof}>
+                            {isUploadingProof ? 'Uploading...' : 'Complete Delivery'}
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              capture="environment"
+                              hidden
+                              disabled={isUploadingProof}
+                              onChange={(event) => {
+                                handleSelectDeliveryProof(booking.id, event.target.files?.[0])
+                                event.target.value = ''
+                              }}
+                            />
+                          </label>
+                        </div>
+                      )}
+                    </div>
+                  ) : null}
+                  {booking.status === 'completed' ? <span>Delivered.</span> : null}
+                  {deliveryLifecycleError && deliveryLifecycleError.deliveryId === booking.id ? (
+                    <span className="field-error">{deliveryLifecycleError.message}</span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </section>
+    )
+  }
 
   const renderPakyawanSection = () => {
     if (!canAcceptPakyawan) {
@@ -2823,6 +3347,8 @@ const renderOnlineState = () => (
       </div>
 
       {renderPakyawanSection()}
+
+      {renderDeliverySection()}
 
       {phase === 'online' || phase === 'offline' ? (
         <div className="driver-mobile-actions">

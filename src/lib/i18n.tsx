@@ -465,6 +465,9 @@ const en = {
   'pad.contactNumber': 'Contact Number',
   'pad.continue': 'Continue',
   'pad.submit': 'Request Delivery',
+  'pad.submitting': 'Submitting request...',
+  'pad.bookingRef': 'Booking reference',
+  'pad.submitFailed': 'We could not submit your delivery request right now. Please try again.',
   'pad.finalNoteStrong': 'Delivery fee is confirmed after review.',
   'pad.finalNoteText':
     'Distance, package size, and urgency will be considered before the fee is confirmed.',
@@ -472,8 +475,19 @@ const en = {
   'pad.receivedTitle': 'Delivery Request Received',
   'pad.receivedBody':
     'Our team will confirm pickup details and the delivery fee with you before the package is booked.',
-
-  /* Car rentals */
+  'pad.statusLabel': 'Status',
+  'pad.refreshStatus': 'Refresh status',
+  'pad.checkingStatus': 'Checking for updates...',
+  'pad.trackFailed': 'We could not load your delivery status. Please try again.',
+  'pad.trackFinding': 'Finding a driver',
+  'pad.trackNoDriver': 'Unable to find a driver right now.',
+  'pad.trackAssigned': 'Driver Assigned',
+  'pad.trackOnWay': 'Driver is on the way',
+  'pad.trackArrived': 'Driver has arrived',
+  'pad.trackPickedUp': 'Package Picked Up',
+  'pad.trackInTransit': 'Out For Delivery',
+  'pad.trackDelivered': 'Delivered',
+  'pad.proofAvailable': 'Proof of delivery: Available',
   'car.title': 'Car Rentals',
   'car.titleAccent': '/ Pa-arkila',
   'car.eyebrow': 'Self-drive and chauffeur rentals',
@@ -1053,6 +1067,9 @@ const bi: Record<TranslationKey, string> = {
   'pad.contactNumber': 'Numero sa Kontak',
   'pad.continue': 'Padayon',
   'pad.submit': 'Mangayo og Delivery',
+  'pad.submitting': 'Gi-submit ang request...',
+  'pad.bookingRef': 'Reperensya sa booking',
+  'pad.submitFailed': 'Dili ma-submit karon ang imong delivery request. Palihog sulayi og balik.',
   'pad.finalNoteStrong': 'Ma-confirm ang delivery fee human sa pag-rivyu.',
   'pad.finalNoteText':
     'Hunahunaon ang gilay-on, kadako sa package, ug ka-dali sa pagdeliver sa dili pa ma-confirm ang fee.',
@@ -1060,6 +1077,19 @@ const bi: Record<TranslationKey, string> = {
   'pad.receivedTitle': 'Nadawat ang Delivery Request',
   'pad.receivedBody':
     'Kumpirmahon sa among team ang mga detalye sa pickup ug ang delivery fee uban kanimo sa dili pa ma-book ang package.',
+  'pad.statusLabel': 'Kahimtang',
+  'pad.refreshStatus': 'I-refresh ang status',
+  'pad.checkingStatus': 'Gisusi ang mga update...',
+  'pad.trackFailed': 'Dili ma-load karon ang status sa imong delivery. Palihog sulayi og balik.',
+  'pad.trackFinding': 'Nangita og driver',
+  'pad.trackNoDriver': 'Dili makakita og driver karon.',
+  'pad.trackAssigned': 'Na-assign ang Driver',
+  'pad.trackOnWay': 'Padulong na ang driver',
+  'pad.trackArrived': 'Miabot na ang driver',
+  'pad.trackPickedUp': 'Nakuha na ang Package',
+  'pad.trackInTransit': 'Padulong na i-deliver',
+  'pad.trackDelivered': 'Na-deliver na',
+  'pad.proofAvailable': 'Pamatuod sa pag-deliver: Anaa',
 
   /* Car rentals */
   'car.title': 'Pag-arkila og Sakyanan',

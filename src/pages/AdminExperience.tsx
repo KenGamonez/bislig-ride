@@ -26,6 +26,8 @@ import {
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
 import { fetchPakyawanBookings, quotePakyawanBooking } from '../lib/scheduledBookings'
 import type { PakyawanBooking } from '../types/scheduledBooking'
+import { fetchDeliveriesForAdmin, fetchDeliveryProofIds } from '../lib/deliveries'
+import type { DeliveryBooking } from '../types/delivery'
 import { formatCentavos } from '../lib/fare'
 import { formatVehicleCapacity, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
@@ -42,7 +44,7 @@ type AdminPayment = {
   paymentMethod: string
   status: string
 }
-type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications' | 'contact-messages' | 'pakyawan'
+type AdminTab = 'overview' | 'drivers' | 'customers' | 'active-rides' | 'ride-history' | 'payments' | 'driver-applications' | 'contact-messages' | 'pakyawan' | 'deliveries'
 
 type DriverDraft = {
   name: string
@@ -240,6 +242,7 @@ const adminTabs: { key: AdminTab; label: string }[] = [
   { key: 'driver-applications', label: 'Driver Applications' },
   { key: 'contact-messages', label: 'Contact Messages' },
   { key: 'pakyawan', label: 'Pakyawan' },
+  { key: 'deliveries', label: 'Deliveries' },
 ]
 
 const rideStatusLabels: Record<AdminRide['status'], string> = {
@@ -310,6 +313,12 @@ export function AdminExperience({
   const [selectedPakyawanBookingId, setSelectedPakyawanBookingId] = useState('')
   const [pakyawanError, setPakyawanError] = useState('')
   const [isLoadingPakyawan, setIsLoadingPakyawan] = useState(false)
+  const [deliveries, setDeliveries] = useState<DeliveryBooking[]>([])
+  const [selectedDeliveryId, setSelectedDeliveryId] = useState('')
+  const [deliveryError, setDeliveryError] = useState('')
+  const [isLoadingDeliveries, setIsLoadingDeliveries] = useState(false)
+  const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'active' | 'completed' | 'exceptions'>('all')
+  const [deliveryProofIds, setDeliveryProofIds] = useState<Set<string>>(new Set())
   const [quotePesos, setQuotePesos] = useState('')
   const [quoteError, setQuoteError] = useState('')
   const [isQuoting, setIsQuoting] = useState(false)
@@ -463,6 +472,23 @@ useEffect(() => {
       .finally(() => setIsLoadingPakyawan(false))
   }, [activeTab, isLoggedIn])
 
+  useEffect(() => {
+    if (!isLoggedIn || activeTab !== 'deliveries') return
+    setIsLoadingDeliveries(true)
+    setDeliveryError('')
+    fetchDeliveriesForAdmin()
+      .then((items) => {
+        setDeliveries(items)
+        setSelectedDeliveryId((current) => current || items[0]?.id || '')
+        return fetchDeliveryProofIds(items.map((item) => item.id))
+      })
+      .then((proofIds) => {
+        setDeliveryProofIds(proofIds)
+      })
+      .catch(() => setDeliveryError('Unable to load deliveries. Check admin access and try again.'))
+      .finally(() => setIsLoadingDeliveries(false))
+  }, [activeTab, isLoggedIn])
+
   const handleQuotePakyawan = async () => {
     if (isQuoting || !selectedPakyawanBooking || selectedPakyawanBooking.status !== 'pending') {
       return
@@ -542,6 +568,23 @@ useEffect(() => {
   const selectedPakyawanBooking = pakyawanBookings.find((booking) => booking.id === selectedPakyawanBookingId)
   const pakyawanDriverName = (driverId: string | null) =>
     driverId ? (drivers.find((driver) => driver.id === driverId)?.name ?? driverId.slice(0, 8)) : 'Not assigned'
+  const deliveryDriverName = (driverId: string | null) =>
+    driverId ? (drivers.find((driver) => driver.id === driverId)?.name ?? driverId.slice(0, 8)) : 'Not assigned'
+  const selectedDelivery = deliveries.find((delivery) => delivery.id === selectedDeliveryId)
+  const filteredDeliveries = useMemo(() => {
+    return deliveries.filter((delivery) => {
+      if (deliveryFilter === 'active') {
+        return ['pending', 'dispatching', 'assigned', 'driver_on_way', 'driver_arrived', 'picked_up', 'in_transit'].includes(delivery.status)
+      }
+      if (deliveryFilter === 'completed') {
+        return delivery.status === 'delivered'
+      }
+      if (deliveryFilter === 'exceptions') {
+        return ['no_driver', 'failed', 'cancelled'].includes(delivery.status)
+      }
+      return true
+    })
+  }, [deliveries, deliveryFilter])
 
   useEffect(() => {
     if (manageContextId !== selectedDriverId) {
@@ -2067,6 +2110,37 @@ useEffect(() => {
             </div>
             {quoteError ? <span className="field-error">{quoteError}</span> : null}
           </div> : null}</> : <div className="empty-state-box"><p>Select a booking to view details.</p></div>}</aside>
+        </section>
+      ) : null}
+      {activeTab === 'deliveries' ? (
+        <section className="admin-layout admin-grid-two">
+          <div className="admin-panel">
+            <div className="panel-header-row"><h3>Deliveries</h3></div>
+            <div className="toolbar-stack" role="group" aria-label="Delivery filters">
+              {(['all', 'active', 'completed', 'exceptions'] as const).map((filter) => (
+                <button
+                  key={filter}
+                  type="button"
+                  className={deliveryFilter === filter ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+                  onClick={() => setDeliveryFilter(filter)}
+                >
+                  {filter === 'all' ? 'All' : filter === 'active' ? 'Active' : filter === 'completed' ? 'Completed' : 'Exceptions'}
+                </button>
+              ))}
+            </div>
+            {deliveryError ? <p className="form-error-message submit-error">{deliveryError}</p> : null}
+            {isLoadingDeliveries ? <p className="muted-copy">Loading deliveries...</p> : filteredDeliveries.length === 0 ? <div className="empty-state-box"><p>No deliveries found.</p></div> : (
+              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Reference</th><th>Date</th><th>Package</th><th>Pickup</th><th>Destination</th><th>Status</th><th>Driver</th><th>Proof</th></tr></thead><tbody>
+                {filteredDeliveries.map((delivery) => <tr key={delivery.id} onClick={() => setSelectedDeliveryId(delivery.id)} className={selectedDeliveryId === delivery.id ? 'selected-row' : ''}>
+                  <td><code className="ride-id-cell" title={delivery.id}>{delivery.id.slice(0, 8)}…</code></td><td>{delivery.preferred_date}</td><td>{delivery.package_type}</td><td>{delivery.pickup_address}</td><td>{delivery.delivery_address}</td>
+                  <td><span className={`status-pill ${delivery.status}`}>{delivery.status}</span></td><td>{deliveryDriverName(delivery.driver_id)}</td><td>{deliveryProofIds.has(delivery.id) ? 'Available' : '—'}</td>
+                </tr>)}
+              </tbody></table></div>
+            )}
+          </div>
+          <aside className="admin-panel detail-panel">{selectedDelivery ? <><div className="panel-header-row"><h3>Delivery Details</h3></div><div className="detail-grid">
+            <div><span>Reference</span><strong>{selectedDelivery.id.slice(0, 8)}…</strong></div><div><span>Status</span><strong>{selectedDelivery.status}</strong></div><div><span>Date</span><strong>{selectedDelivery.preferred_date}</strong></div><div><span>Time</span><strong>{selectedDelivery.preferred_time}</strong></div><div><span>Sender</span><strong>{selectedDelivery.sender_name}</strong></div><div><span>Phone</span><strong>{selectedDelivery.sender_phone}</strong></div><div><span>Package Type</span><strong>{selectedDelivery.package_type}</strong></div><div><span>Package Details</span><strong>{selectedDelivery.package_details || 'None'}</strong></div><div><span>Package Size</span><strong>{selectedDelivery.package_size}</strong></div><div><span>Pickup</span><strong>{selectedDelivery.pickup_address}</strong></div><div><span>Destination</span><strong>{selectedDelivery.delivery_address}</strong></div><div><span>Driver</span><strong>{deliveryDriverName(selectedDelivery.driver_id)}</strong></div><div><span>Proof</span><strong>{deliveryProofIds.has(selectedDelivery.id) ? 'Available' : 'Not available'}</strong></div><div><span>Created</span><strong>{new Date(selectedDelivery.created_at).toLocaleString()}</strong></div><div><span>Updated</span><strong>{new Date(selectedDelivery.updated_at).toLocaleString()}</strong></div>
+          </div></> : <div className="empty-state-box"><p>Select a delivery to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>
