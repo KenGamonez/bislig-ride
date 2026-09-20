@@ -12,7 +12,7 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
-import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDriverDeliveries, fetchDriverDeliveryOffers, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDriverDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { buildDeliveryProofPath, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   notificationPermission,
@@ -307,6 +307,9 @@ export function DriverExperience({
   const [deliverySubmittingId, setDeliverySubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleSubmittingId, setDeliveryLifecycleSubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleError, setDeliveryLifecycleError] = useState<{ deliveryId: string; message: string } | null>(null)
+  const [deliveryPriceInputs, setDeliveryPriceInputs] = useState<Record<string, string>>({})
+  const [deliveryPriceSubmittingId, setDeliveryPriceSubmittingId] = useState<string | null>(null)
+  const [deliveryPriceError, setDeliveryPriceError] = useState<{ deliveryId: string; message: string } | null>(null)
   const [deliveryProof, setDeliveryProof] = useState<{ bookingId: string; file: File | null; previewUrl: string | null } | null>(null)
   const [isUploadingProof, setIsUploadingProof] = useState(false)
   const [pakyawanRequests, setPakyawanRequests] = useState<PakyawanBooking[]>([])
@@ -2120,6 +2123,62 @@ const displayedDriver = driverProfile ?? demoDriver
     setNotifications((current) => current.filter((item) => item.id !== `delivery-${bookingId}`))
   }
 
+  const resolveDeliveryPriceError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+
+    if (/no longer assigned/i.test(message)) {
+      return 'This delivery is no longer assigned to you.'
+    }
+
+    if (/already been sent/i.test(message)) {
+      return 'The delivery fee has already been sent.'
+    }
+
+    if (/no longer waiting/i.test(message)) {
+      return 'This delivery is no longer waiting for a delivery fee.'
+    }
+
+    if (/valid delivery fee/i.test(message)) {
+      return 'Please enter a valid delivery fee.'
+    }
+
+    return 'Something went wrong. Please try again.'
+  }
+
+  const handleSendDeliveryPrice = async (bookingId: string) => {
+    if (deliveryPriceSubmittingId) {
+      return
+    }
+
+    const raw = (deliveryPriceInputs[bookingId] ?? '').replace(/[₱,\s]/g, '')
+    const pesos = Number(raw)
+
+    if (!raw || !Number.isFinite(pesos) || pesos <= 0) {
+      setDeliveryPriceError({ deliveryId: bookingId, message: 'Please enter a valid delivery fee.' })
+      return
+    }
+
+    setDeliveryPriceSubmittingId(bookingId)
+    setDeliveryPriceError(null)
+
+    try {
+      const updated = await setDeliveryDriverPrice(bookingId, Math.round(pesos * 100))
+      setAcceptedDeliveries((current) =>
+        current.map((booking) => (booking.id === bookingId ? updated : booking)),
+      )
+      setDeliveryPriceInputs((current) => {
+        const next = { ...current }
+        delete next[bookingId]
+        return next
+      })
+    } catch (error) {
+      console.error('Unable to send delivery fee:', error)
+      setDeliveryPriceError({ deliveryId: bookingId, message: resolveDeliveryPriceError(error) })
+    } finally {
+      setDeliveryPriceSubmittingId(null)
+    }
+  }
+
   const resolveDeliveryLifecycleError = (error: unknown): string => {
     const message = error instanceof Error ? error.message : ''
 
@@ -2438,10 +2497,61 @@ const displayedDriver = driverProfile ?? demoDriver
                       <span>You&apos;re assigned to this delivery.</span>
                       <span>Status: ASSIGNED</span>
                     </>
+                  ) : booking.status === 'quoted' ? (
+                    <>
+                      <span>Delivery fee sent. Waiting for customer confirmation.</span>
+                      <span>Status: QUOTED</span>
+                    </>
+                  ) : booking.status === 'confirmed' ? (
+                    <>
+                      <span>Delivery confirmed. You can start the trip.</span>
+                      <span>Status: CONFIRMED</span>
+                    </>
                   ) : (
                     <span>Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
                   )}
                   {booking.driver_id === driverId && booking.status === 'assigned' ? (
+                    <div className="pakyawan-price-box">
+                      <span className="field-label">Next step: send your delivery fee.</span>
+                      <div className="pakyawan-price-row">
+                        <span aria-hidden="true">₱</span>
+                        <input
+                          className="input-field slim-input"
+                          type="text"
+                          inputMode="decimal"
+                          placeholder="0.00"
+                          aria-label="Delivery fee in pesos"
+                          value={deliveryPriceInputs[booking.id] ?? ''}
+                          disabled={deliveryPriceSubmittingId === booking.id}
+                          onChange={(event) => {
+                            setDeliveryPriceInputs((current) => ({ ...current, [booking.id]: event.target.value }))
+                            setDeliveryPriceError((current) =>
+                              current && current.deliveryId === booking.id ? null : current,
+                            )
+                          }}
+                        />
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          disabled={deliveryPriceSubmittingId === booking.id}
+                          onClick={() => void handleSendDeliveryPrice(booking.id)}
+                        >
+                          {deliveryPriceSubmittingId === booking.id ? 'Sending...' : 'Send Fee'}
+                        </button>
+                      </div>
+                      {deliveryPriceError && deliveryPriceError.deliveryId === booking.id ? (
+                        <span className="field-error">{deliveryPriceError.message}</span>
+                      ) : null}
+                    </div>
+                  ) : booking.status === 'quoted' &&
+                    typeof booking.price_cents === 'number' &&
+                    Number.isFinite(booking.price_cents) ? (
+                    <div className="pakyawan-price-box">
+                      <span className="field-label">Your delivery fee: ₱{formatCentavos(booking.price_cents)}</span>
+                      <span>Waiting for customer confirmation.</span>
+                    </div>
+                  ) : null}
+                  {booking.driver_id === driverId && booking.status === 'confirmed' ? (
                     <div className="pakyawan-actions">
                       <button
                         type="button"

@@ -13,6 +13,7 @@
     "test:driver-application": "node scripts/application-vehicle-type-check.ts",
     "test:gps": "node scripts/gps-flow-check.ts",
     "test:vehicle": "node scripts/vehicle-dispatch-check.ts",
+    "test:delivery-quote": "node scripts/delivery-quote-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

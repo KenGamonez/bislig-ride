@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
-import { createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
+import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
+import { formatCentavos } from '../lib/fare'
 import type { DeliveryBooking } from '../types/delivery'
 import { useLanguage } from '../lib/i18n'
 
@@ -61,6 +62,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
+  const [isConfirming, setIsConfirming] = useState(false)
+  const [confirmError, setConfirmError] = useState('')
   const cardRef = useRef<HTMLFormElement>(null)
 
   const updateField = (name: keyof PaDeliverForm, value: string) => {
@@ -175,6 +178,25 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     }
   }
 
+  const handleConfirmDelivery = async () => {
+    if (isConfirming || !createdDeliveryId || !createdAccessToken || !trackedDelivery || trackedDelivery.status !== 'quoted') {
+      return
+    }
+
+    setIsConfirming(true)
+    setConfirmError('')
+
+    try {
+      const confirmed = await confirmDeliveryQuote(createdDeliveryId, createdAccessToken)
+      setTrackedDelivery(confirmed)
+    } catch (error) {
+      console.error('Unable to confirm delivery:', error)
+      setConfirmError(error instanceof Error && error.message ? error.message : t('pad.confirmFailed'))
+    } finally {
+      setIsConfirming(false)
+    }
+  }
+
   const refreshDeliveryStatus = async () => {
     if (!createdDeliveryId || !createdAccessToken || isRefreshing) {
       return
@@ -214,6 +236,77 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, createdDeliveryId, createdAccessToken, trackedDelivery?.status])
+
+  useEffect(() => {
+    if (submitted) {
+      return
+    }
+
+    let cancelled = false
+
+    const restoreTrackedDelivery = async () => {
+      const prefix = 'bislig-ride-padeliver-'
+      const candidates: Array<{ id: string; token: string }> = []
+
+      try {
+        for (let i = 0; i < window.localStorage.length; i += 1) {
+          const key = window.localStorage.key(i)
+          const token = key ? window.localStorage.getItem(key) : null
+          if (key && key.startsWith(prefix) && token) {
+            candidates.push({ id: key.slice(prefix.length), token })
+          }
+        }
+      } catch {
+        return
+      }
+
+      for (const candidate of candidates) {
+        try {
+          const booking = await getDeliveryBooking(candidate.id, candidate.token)
+          if (cancelled) {
+            return
+          }
+
+          if (
+            booking.status === 'pending' ||
+            booking.status === 'dispatching' ||
+            booking.status === 'quoted' ||
+            booking.status === 'confirmed' ||
+            booking.status === 'assigned' ||
+            booking.status === 'driver_on_way' ||
+            booking.status === 'driver_arrived' ||
+            booking.status === 'picked_up' ||
+            booking.status === 'in_transit'
+          ) {
+            setCreatedDeliveryId(candidate.id)
+            setCreatedAccessToken(candidate.token)
+            setTrackedDelivery(booking)
+            setSubmitted(true)
+            return
+          }
+
+          try {
+            window.localStorage.removeItem(`${prefix}${candidate.id}`)
+          } catch {
+            // Private browsing or disabled storage — nothing to clean up.
+          }
+        } catch {
+          try {
+            window.localStorage.removeItem(`${prefix}${candidate.id}`)
+          } catch {
+            // Private browsing or disabled storage — nothing to clean up.
+          }
+        }
+      }
+    }
+
+    void restoreTrackedDelivery()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const field = (
     name: keyof PaDeliverForm,
@@ -342,15 +435,37 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
 
   if (submitted) {
     const status = trackedDelivery?.status
+    const quotedCents = trackedDelivery && typeof trackedDelivery.price_cents === 'number' && Number.isFinite(trackedDelivery.price_cents)
+      ? trackedDelivery.price_cents
+      : null
 
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
-            <h1>{status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
-            {status === 'assigned' || status === 'driver_on_way' || status === 'driver_arrived' || status === 'picked_up' || status === 'in_transit' || status === 'delivered' ? (
+            <p className="eyebrow">{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
+            <h1>{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
+            {status === 'quoted' ? (
+              <>
+                <p className="booking-status">{t('pad.statusLabel')}: {t('pad.quoteReady')}</p>
+                {quotedCents !== null ? (
+                  <p className="booking-fee">{t('pad.deliveryFee')}: ₱{formatCentavos(quotedCents)}</p>
+                ) : null}
+                <button type="button" className="primary-action" disabled={isConfirming} onClick={() => void handleConfirmDelivery()}>
+                  {isConfirming ? t('pad.confirming') : t('pad.confirmDelivery')}
+                </button>
+                {confirmError ? <p className="form-error-message submit-error">{confirmError}</p> : null}
+              </>
+            ) : status === 'confirmed' ? (
+              <>
+                <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackConfirmed')}</p>
+                {quotedCents !== null ? (
+                  <p className="booking-fee">{t('pad.deliveryFee')}: ₱{formatCentavos(quotedCents)}</p>
+                ) : null}
+                <p>{t('pad.confirmedBody')}</p>
+              </>
+            ) : status === 'assigned' || status === 'driver_on_way' || status === 'driver_arrived' || status === 'picked_up' || status === 'in_transit' || status === 'delivered' ? (
               <p className="booking-status">{t('pad.statusLabel')}: {status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : t('pad.trackDelivered')}</p>
             ) : status === 'no_driver' ? (
               <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackNoDriver')}</p>

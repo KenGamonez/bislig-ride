@@ -8,7 +8,7 @@ export async function fetchDriverDeliveries(driverId: string): Promise<DeliveryB
     .from('deliveries')
     .select('*')
     .eq('driver_id', driverId)
-    .in('status', ['assigned', 'driver_on_way', 'driver_arrived', 'picked_up', 'in_transit'])
+    .in('status', ['assigned', 'quoted', 'confirmed', 'driver_on_way', 'driver_arrived', 'picked_up', 'in_transit'])
     .order('preferred_date', { ascending: true })
     .order('preferred_time', { ascending: true })
 
@@ -93,6 +93,28 @@ export async function fetchDeliveryProofIds(deliveryIds: string[]): Promise<Set<
 export async function acceptDeliveryOffer(offerId: string): Promise<DeliveryBooking> {
   const { data, error } = await supabase
     .rpc('accept_delivery_offer', { p_offer_id: offerId })
+    .single()
+
+  if (error) throw error
+
+  const row = data as DeliveryBooking & { access_token?: string }
+  delete row.access_token
+  return row
+}
+
+export async function setDeliveryDriverPrice(deliveryId: string, priceCents: number): Promise<DeliveryBooking> {
+  const { data, error } = await supabase
+    .rpc('set_delivery_driver_price', { p_delivery_id: deliveryId, p_price_cents: priceCents })
+    .single()
+
+  if (error) throw error
+
+  return data as DeliveryBooking
+}
+
+export async function confirmDeliveryQuote(deliveryId: string, accessToken: string): Promise<DeliveryBooking> {
+  const { data, error } = await supabase
+    .rpc('confirm_delivery_quote', { p_delivery_id: deliveryId, p_access_token: accessToken })
     .single()
 
   if (error) throw error
