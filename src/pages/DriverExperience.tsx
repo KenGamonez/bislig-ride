@@ -828,10 +828,14 @@ return unsubscribe
     let mounted = true
 
     const loadRequests = async () => {
+      if (mounted) {
+        setPakyawanError('')
+      }
       try {
         const items = await fetchAvailablePakyawanBookings()
         if (mounted) {
           setPakyawanRequests(items)
+          setPakyawanError('')
         }
       } catch (error) {
         console.error('Unable to load pakyawan requests:', error)
@@ -902,10 +906,14 @@ return unsubscribe
     let mounted = true
 
     const loadOffers = async () => {
+      if (mounted) {
+        setPakyawanError('')
+      }
       try {
         const items = await fetchDriverPakyawanOffers(driverId)
         if (mounted) {
           setPakyawanOffers(items)
+          setPakyawanError('')
         }
       } catch (error) {
         console.error('Unable to load pakyawan offers:', error)
@@ -1008,10 +1016,14 @@ return unsubscribe
     let mounted = true
 
     const loadDeliveryRequests = async () => {
+      if (mounted) {
+        setDeliveryError('')
+      }
       try {
         const items = await fetchAvailableDeliveries()
         if (mounted) {
           setDeliveryRequests(items)
+          setDeliveryError('')
         }
       } catch (error) {
         console.error('Unable to load delivery requests:', error)
@@ -1087,10 +1099,14 @@ return unsubscribe
     let mounted = true
 
     const loadDeliveryOffers = async () => {
+      if (mounted) {
+        setDeliveryError('')
+      }
       try {
         const items = await fetchDriverDeliveryOffers(driverId)
         if (mounted) {
           setDeliveryOffers(items)
+          setDeliveryError('')
         }
       } catch (error) {
         console.error('Unable to load delivery offers:', error)
@@ -2475,7 +2491,17 @@ const displayedDriver = driverProfile ?? demoDriver
 
   const renderDeliverySection = () => {
     if (!canAcceptDeliveries) {
-      return null
+      return (
+        <section className="driver-card pakyawan-card pakyawan-disabled">
+          <div className="state-heading">
+            <div>
+              <p className="section-label">DELIVERY REQUESTS</p>
+              <h3>Pa-Deliver / package deliveries</h3>
+              <p>Delivery is not enabled for this account — contact admin.</p>
+            </div>
+          </div>
+        </section>
+      )
     }
 
     return (
@@ -2493,9 +2519,13 @@ const displayedDriver = driverProfile ?? demoDriver
           <span className="state-badge pakyawan-badge">{deliveryRequests.length + activeDeliveryOffers.length}</span>
         </div>
 
-        {deliveryError ? <p className="form-error-message">{deliveryError}</p> : null}
+        {deliveryError ? (
+          <p className="form-error-message">{deliveryError}</p>
+        ) : !driverOnline ? (
+          <p className="muted-copy">Go online to receive delivery requests.</p>
+        ) : null}
 
-        {deliveryRequests.length === 0 ? null : (
+        {deliveryError || !driverOnline || deliveryRequests.length === 0 ? null : (
           <ul className="pakyawan-list">
             {deliveryRequests.map((booking) => (
               <li key={booking.id} className="pakyawan-item">
@@ -2542,7 +2572,7 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {activeDeliveryOffers.length === 0 ? null : (
+        {deliveryError || !driverOnline || activeDeliveryOffers.length === 0 ? null : (
           <ul className="pakyawan-list">
             {activeDeliveryOffers.map((offer) => (
               <li key={offer.id} className="pakyawan-item pakyawan-offer">
@@ -2798,9 +2828,13 @@ const displayedDriver = driverProfile ?? demoDriver
           <span className="state-badge pakyawan-badge">{pakyawanRequests.length}</span>
         </div>
 
-        {pakyawanError ? <p className="form-error-message">{pakyawanError}</p> : null}
+        {pakyawanError ? (
+          <p className="form-error-message">{pakyawanError}</p>
+        ) : !driverOnline ? (
+          <p className="muted-copy">Go online to receive Pakyawan requests.</p>
+        ) : null}
 
-        {activePakyawanOffers.length === 0 ? null : (
+        {pakyawanError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
           <ul className="pakyawan-list">
             {activePakyawanOffers.map((offer) => (
               <li key={offer.id} className="pakyawan-item pakyawan-offer">
@@ -2845,7 +2879,7 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {pakyawanRequests.length === 0 ? null : (
+        {pakyawanError || !driverOnline || pakyawanRequests.length === 0 ? null : (
           <ul className="pakyawan-list">
             {pakyawanRequests.map((booking) => (
               <li key={booking.id} className="pakyawan-item">

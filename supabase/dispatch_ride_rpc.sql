@@ -50,7 +50,7 @@ set search_path = public
 as $$
 declare
   v_ride public.rides%rowtype;
-  v_acceptance_window interval := interval '45 seconds';
+  v_acceptance_window interval := interval '120 seconds';
   v_live_offer uuid;
   v_candidate record;
   v_candidate_pool integer;
