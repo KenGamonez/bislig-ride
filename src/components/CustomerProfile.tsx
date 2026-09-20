@@ -1,12 +1,10 @@
 import { useEffect, useState } from 'react'
-import { fetchDriverById, type DriverProfileView } from '../lib/drivers'
 import { fetchCustomerReputation, type ReputationSummary } from '../lib/reputation'
 import { fetchCustomerRideHistory } from '../lib/rides'
 import { getCustomerAuthId } from '../lib/supabase'
+import { formatCentavos } from '../lib/fare'
 import { useLanguage } from '../lib/i18n'
 import type { Ride } from '../types/ride'
-
-type DriverDetails = DriverProfileView | null
 
 const activeStatuses: Ride['status'][] = [
   'requested',
@@ -18,7 +16,6 @@ const activeStatuses: Ride['status'][] = [
 export function CustomerProfile() {
   const { t } = useLanguage()
   const [rides, setRides] = useState<Ride[]>([])
-  const [driverDetails, setDriverDetails] = useState<Record<string, DriverDetails>>({})
   const [isLoading, setIsLoading] = useState(true)
   const [reputation, setReputation] = useState<ReputationSummary | null>(null)
 
@@ -78,37 +75,11 @@ export function CustomerProfile() {
         }
 
         setRides(customerRides)
-
-        const driverIds = [
-          ...new Set(
-            customerRides
-              .map((ride) => ride.driver_id)
-              .filter((driverId): driverId is string => Boolean(driverId))
-              .map(String),
-          ),
-        ]
-
-        if (driverIds.length === 0) {
-          setDriverDetails({})
-          return
-        }
-
-        const results = await Promise.all(
-          driverIds.map(async (driverId) => {
-            const driver = await fetchDriverById(driverId)
-            return [driverId, driver] as const
-          }),
-        )
-
-        if (isMounted) {
-          setDriverDetails(Object.fromEntries(results))
-        }
       } catch (error) {
         console.error('Failed to load Rider rides:', error)
 
         if (isMounted) {
           setRides([])
-          setDriverDetails({})
         }
       } finally {
         if (isMounted) {
@@ -127,10 +98,20 @@ export function CustomerProfile() {
   const activeRide = rides.find((ride) => activeStatuses.includes(ride.status))
   const historyRides = rides.filter((ride) => ride.id !== activeRide?.id)
 
-  const renderRide = (ride: Ride, isActive = false) => {
-    const driver = ride.driver_id
-      ? driverDetails[String(ride.driver_id)]
-      : null
+  const formatRideDateTime = (ride: Ride) => {
+    const date = new Date(ride.created_at)
+    const localeDate = date.toLocaleDateString()
+    const localeTime = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    return `${localeDate} · ${localeTime}`
+  }
+
+  const formatFare = (cents: number | null | undefined) => {
+    if (typeof cents !== 'number' || !Number.isFinite(cents)) return null
+    return `₱${formatCentavos(cents)}`
+  }
+
+  const renderRide = (ride: Ride, _isActive = false) => {
+    const fare = formatFare(ride.fare_cents)
 
     return (
       <article
@@ -143,44 +124,10 @@ export function CustomerProfile() {
           </strong>
 
           <p>
-            {isActive
-              ? formatStatus(ride.status)
-              : new Date(ride.created_at).toLocaleDateString()}
-            {' '}
-            {isActive ? '' : formatStatus(ride.status)}
+            {formatRideDateTime(ride)} · {formatStatus(ride.status)}
           </p>
 
-{driver ? (
-            <>
-              <p>{t('profile.driver')} {driver.full_name}</p>
-
-              {driver.vehicle_type || driver.vehicle_model ? (
-                <p>
-                  {t('profile.vehicle')}{' '}
-                  {[driver.vehicle_type, driver.vehicle_model]
-                    .filter(Boolean)
-                    .join(' - ')}
-                </p>
-              ) : null}
-
-              {driver.vehicle_color ? (
-                <p>{t('profile.color')} {driver.vehicle_color}</p>
-              ) : null}
-
-              {driver.plate_number ? (
-                <p>{t('profile.plate')} {driver.plate_number}</p>
-              ) : null}
-
-              {driver.rating_average !== null &&
-              driver.rating_average !== undefined ? (
-                <p>
-                  {t('profile.driverRating', { rating: Number(driver.rating_average).toFixed(1) })}
-                </p>
-              ) : null}
-            </>
-          ) : isActive && ride.status !== 'requested' ? (
-            <p>{t('profile.driverLoading')}</p>
-          ) : null}
+          {fare ? <p>{fare}</p> : null}
 
           {ride.rating ? (
             <p>

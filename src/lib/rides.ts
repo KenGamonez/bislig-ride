@@ -233,3 +233,22 @@ export async function fetchCustomerRideHistory(): Promise<Ride[]> {
     return []
   }
 }
+
+export async function fetchDriverRideHistory(driverId: string): Promise<Ride[]> {
+  if (!driverId) return []
+
+  const { data, error } = await supabase
+    .from('rides')
+    .select('*')
+    .eq('driver_id', driverId)
+    .in('status', ['completed', 'cancelled'])
+    .order('created_at', { ascending: false })
+    .limit(20)
+
+  if (error) {
+    console.warn('Unable to fetch driver ride history:', error.message)
+    return []
+  }
+
+  return (data ?? []) as Ride[]
+}

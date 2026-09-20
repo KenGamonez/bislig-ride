@@ -13,6 +13,7 @@ import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../li
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
 import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDriverDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { fetchDriverRideHistory } from '../lib/rides'
 import { buildDeliveryProofPath, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   notificationPermission,
@@ -116,35 +117,14 @@ type DriverNotificationItem = {
   createdAt: number
 }
 
-const recentRides = [
-  {
-    id: 101,
-    passenger: 'Ana Ramos',
-    pickup: 'Barangay Tabon',
-    destination: 'Bislig City Public Market',
-    date: 'Today • 8:20 AM',
-    status: 'completed',
-    fare: '₱115',
-  },
-  {
-    id: 102,
-    passenger: 'Chris Lim',
-    pickup: 'Mangagoy',
-    destination: 'Alabel Road',
-    date: 'Today • 7:05 AM',
-    status: 'completed',
-    fare: '₱140',
-  },
-  {
-    id: 103,
-    passenger: 'Nina Flores',
-    pickup: 'Barangay San Roque',
-    destination: 'Bislig City Plaza',
-    date: 'Yesterday • 9:10 PM',
-    status: 'completed',
-    fare: '₱130',
-  },
-]
+type DriverHistoryRide = {
+  id: string
+  pickup: string
+  destination: string
+  date: string
+  status: string
+  fare: string
+}
 
 const renderStarRating = (average: number) => (
   <span className="rating-stars-inline" aria-hidden="true">
@@ -3102,7 +3082,7 @@ const renderSummary = () => (
       <div className="driver-stat-grid">
         <div className="driver-stat-tile">
           <span className="driver-stat-label">Completed rides</span>
-          <strong>{reputation ? reputation.completedRides : recentRides.length}</strong>
+          <strong>{reputation ? reputation.completedRides : driverHistoryRides.length}</strong>
           <small>All-time trips</small>
         </div>
         <div className="driver-stat-tile">
@@ -3584,40 +3564,103 @@ const renderOnlineState = () => (
     </section>
   )
 
-  const renderRecentRides = () => (
-    <section className="driver-card history-card">
-      <div className="section-heading">
-        <div>
-          <p className="section-label">RIDE HISTORY</p>
-          <h3>Recent trips</h3>
-        </div>
-        <span className="history-count">{recentRides.length} today</span>
-      </div>
+  const [driverHistoryRides, setDriverHistoryRides] = useState<Ride[]>([])
+  const [isLoadingDriverHistory, setIsLoadingDriverHistory] = useState(false)
 
-      <ul className="history-list">
-        {recentRides.map((ride) => (
-          <li key={ride.id} className="history-item">
-            <div className="history-main">
-              <div className="history-passenger">
-                <strong>{ride.passenger}</strong>
-                <span>{ride.date}</span>
-              </div>
-              <span className="completed-badge">{ride.status}</span>
-            </div>
-            <div className="history-route">
-              <span>{ride.pickup}</span>
-              <strong>→</strong>
-              <span>{ride.destination}</span>
-            </div>
-            <div className="history-footer">
-              <span>Completed trip</span>
-              <strong>{ride.fare}</strong>
-            </div>
-          </li>
-        ))}
-      </ul>
-    </section>
-  )
+  useEffect(() => {
+    if (!driverId) {
+      return
+    }
+
+    let cancelled = false
+    setIsLoadingDriverHistory(true)
+
+    void fetchDriverRideHistory(driverId)
+      .then((items) => {
+        if (!cancelled) {
+          setDriverHistoryRides(items)
+        }
+      })
+      .catch((error) => {
+        console.error('Unable to load driver ride history:', error)
+        if (!cancelled) {
+          setDriverHistoryRides([])
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setIsLoadingDriverHistory(false)
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [driverId])
+
+  const mapDriverHistoryRide = (ride: Ride): DriverHistoryRide => {
+    const date = new Date(ride.created_at)
+    const localeDate = date.toLocaleDateString()
+    const localeTime = date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })
+    const fare =
+      typeof ride.fare_cents === 'number' && Number.isFinite(ride.fare_cents)
+        ? `₱${formatCentavos(ride.fare_cents)}`
+        : ride.fare_cents === null
+          ? '—'
+          : fareDisplayFor(ride)
+    return {
+      id: ride.id,
+      pickup: ride.pickup_address,
+      destination: ride.destination_address,
+      date: `${localeDate} · ${localeTime}`,
+      status: ride.status,
+      fare,
+    }
+  }
+
+  const renderRecentRides = () => {
+    const historyRides = driverHistoryRides.map(mapDriverHistoryRide)
+
+    return (
+      <section className="driver-card history-card">
+        <div className="section-heading">
+          <div>
+            <p className="section-label">RIDE HISTORY</p>
+            <h3>Recent trips</h3>
+          </div>
+          <span className="history-count">{isLoadingDriverHistory ? '...' : `${historyRides.length} total`}</span>
+        </div>
+
+        {isLoadingDriverHistory ? (
+          <p className="muted-copy">Loading ride history...</p>
+        ) : historyRides.length === 0 ? (
+          <p className="muted-copy">No completed trips yet.</p>
+        ) : (
+          <ul className="history-list">
+            {historyRides.map((ride) => (
+              <li key={ride.id} className="history-item">
+                <div className="history-main">
+                  <div className="history-passenger">
+                    <span>{ride.date}</span>
+                  </div>
+                  <span className="completed-badge">{ride.status}</span>
+                </div>
+                <div className="history-route">
+                  <span>{ride.pickup}</span>
+                  <strong>→</strong>
+                  <span>{ride.destination}</span>
+                </div>
+                <div className="history-footer">
+                  <span>{ride.status === 'cancelled' ? 'Cancelled trip' : 'Completed trip'}</span>
+                  <strong>{ride.fare}</strong>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
+    )
+  }
 
   if (driverStatusBlocked) {
     return (
