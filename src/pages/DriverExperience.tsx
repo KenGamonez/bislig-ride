@@ -1456,6 +1456,7 @@ const handleToggleOnline = async () => {
       setActiveRide(acceptedRide)
       setRequest(null)
       setPhase('heading_to_pickup')
+      setDriverView('queue')
     } catch (error) {
       console.error('Unable to accept ride offer:', error)
       const message = error instanceof Error ? error.message : 'Unable to accept this ride.'

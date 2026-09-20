@@ -10945,10 +10945,40 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   line-height: 1;
 }
 
+@media (max-width: 480px) {
+  .driver-mini-nav {
+    gap: 6px;
+  }
+
+  .mini-nav-item {
+    padding-inline: 10px;
+    font-size: 0.78rem;
+  }
+}
+
+@media (max-width: 390px) {
+  .driver-mini-nav {
+    gap: 4px;
+  }
+
+  .mini-nav-item {
+    padding-inline: 8px;
+    font-size: 0.75rem;
+    min-height: 34px;
+  }
+
+  .mini-nav-badge {
+    margin-left: 4px;
+    min-width: 16px;
+    height: 16px;
+    font-size: 0.62rem;
+  }
+}
+
 /* Header banner */
 .driver-dash-header {
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   display: flex;
   align-items: center;
   justify-content: space-between;
