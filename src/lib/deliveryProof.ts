@@ -55,3 +55,13 @@ export async function removeDeliveryProof(path: string): Promise<void> {
     console.error('Unable to clean up delivery proof upload:', error)
   }
 }
+
+export async function getDeliveryProofSignedUrl(path: string, expiresInSeconds = 60): Promise<string> {
+  const { data, error } = await supabase.storage
+    .from(deliveryProofBucket)
+    .createSignedUrl(path, expiresInSeconds)
+
+  if (error || !data?.signedUrl) throw error ?? new Error('Unable to load the proof photo.')
+
+  return data.signedUrl
+}

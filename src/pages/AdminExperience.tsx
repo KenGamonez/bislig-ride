@@ -26,7 +26,8 @@ import {
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
 import { fetchPakyawanBookings, quotePakyawanBooking } from '../lib/scheduledBookings'
 import type { PakyawanBooking } from '../types/scheduledBooking'
-import { fetchDeliveriesForAdmin, fetchDeliveryProofIds } from '../lib/deliveries'
+import { fetchDeliveriesForAdmin, fetchDeliveryProofIds, fetchDeliveryProofPaths } from '../lib/deliveries'
+import { getDeliveryProofSignedUrl } from '../lib/deliveryProof'
 import type { DeliveryBooking } from '../types/delivery'
 import { formatCentavos } from '../lib/fare'
 import { formatVehicleCapacity, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
@@ -34,6 +35,9 @@ import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverAp
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
 import { supabase } from '../lib/supabase'
 import type { Session } from '@supabase/supabase-js'
+
+const DELIVERY_ACTIVE_STATUSES = ['pending', 'dispatching', 'assigned', 'quoted', 'confirmed', 'driver_on_way', 'driver_arrived', 'picked_up', 'in_transit']
+const DELIVERY_EXCEPTION_STATUSES = ['no_driver', 'failed', 'cancelled']
 
 
 type AdminPayment = {
@@ -319,6 +323,8 @@ export function AdminExperience({
   const [isLoadingDeliveries, setIsLoadingDeliveries] = useState(false)
   const [deliveryFilter, setDeliveryFilter] = useState<'all' | 'active' | 'completed' | 'exceptions'>('all')
   const [deliveryProofIds, setDeliveryProofIds] = useState<Set<string>>(new Set())
+  const [deliveryProofPaths, setDeliveryProofPaths] = useState<Record<string, string>>({})
+  const [deliveryProofImages, setDeliveryProofImages] = useState<Record<string, { url?: string; failed?: boolean }>>({})
   const [quotePesos, setQuotePesos] = useState('')
   const [quoteError, setQuoteError] = useState('')
   const [isQuoting, setIsQuoting] = useState(false)
@@ -481,10 +487,12 @@ useEffect(() => {
       .then((items) => {
         setDeliveries(items)
         setSelectedDeliveryId((current) => current || items[0]?.id || '')
-        return fetchDeliveryProofIds(items.map((item) => item.id))
+        const ids = items.map((item) => item.id)
+        return Promise.all([fetchDeliveryProofIds(ids), fetchDeliveryProofPaths(ids)] as const)
       })
-      .then((proofIds) => {
+      .then(([proofIds, proofPaths]) => {
         setDeliveryProofIds(proofIds)
+        setDeliveryProofPaths(proofPaths)
       })
       .catch(() => setDeliveryError('Unable to load deliveries. Check admin access and try again.'))
       .finally(() => setIsLoadingDeliveries(false))
@@ -575,17 +583,75 @@ useEffect(() => {
   const filteredDeliveries = useMemo(() => {
     return deliveries.filter((delivery) => {
       if (deliveryFilter === 'active') {
-        return ['pending', 'dispatching', 'assigned', 'driver_on_way', 'driver_arrived', 'picked_up', 'in_transit'].includes(delivery.status)
+        return DELIVERY_ACTIVE_STATUSES.includes(delivery.status)
       }
       if (deliveryFilter === 'completed') {
         return delivery.status === 'delivered'
       }
       if (deliveryFilter === 'exceptions') {
-        return ['no_driver', 'failed', 'cancelled'].includes(delivery.status)
+        return DELIVERY_EXCEPTION_STATUSES.includes(delivery.status)
       }
       return true
     })
   }, [deliveries, deliveryFilter])
+  const deliveryCounters = useMemo(() => {
+    const active = deliveries.filter((delivery) => DELIVERY_ACTIVE_STATUSES.includes(delivery.status)).length
+    const delivered = deliveries.filter((delivery) => delivery.status === 'delivered').length
+    const exceptions = deliveries.filter((delivery) => DELIVERY_EXCEPTION_STATUSES.includes(delivery.status)).length
+    return [
+      { label: 'Total Deliveries', value: String(deliveries.length), accent: true },
+      { label: 'Active', value: String(active) },
+      { label: 'Delivered', value: String(delivered) },
+      { label: 'Exceptions', value: String(exceptions) },
+    ]
+  }, [deliveries])
+  const deliveriesPerDriver = useMemo(() => {
+    const byId = new Map<string, { total: number; active: number }>()
+    for (const delivery of deliveries) {
+      if (!delivery.driver_id) continue
+      const driver = drivers.find((item) => item.id === delivery.driver_id)
+      if (!driver) continue
+      const entry = byId.get(driver.id) ?? { total: 0, active: 0 }
+      entry.total += 1
+      if (DELIVERY_ACTIVE_STATUSES.includes(delivery.status)) entry.active += 1
+      byId.set(driver.id, entry)
+    }
+    return [...byId.entries()].map(([id, counts]) => ({
+      id,
+      name: drivers.find((item) => item.id === id)?.name ?? id.slice(0, 8),
+      ...counts,
+    }))
+  }, [deliveries, drivers])
+
+  useEffect(() => {
+    if (!selectedDelivery) {
+      return
+    }
+
+    const path = deliveryProofPaths[selectedDelivery.id]
+
+    if (!path || deliveryProofImages[selectedDelivery.id]) {
+      return
+    }
+
+    let cancelled = false
+
+    getDeliveryProofSignedUrl(path)
+      .then((url) => {
+        if (!cancelled) {
+          setDeliveryProofImages((current) => ({ ...current, [selectedDelivery.id]: { url } }))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setDeliveryProofImages((current) => ({ ...current, [selectedDelivery.id]: { failed: true } }))
+        }
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedDelivery, deliveryProofPaths, deliveryProofImages])
 
   useEffect(() => {
     if (manageContextId !== selectedDriverId) {
@@ -2154,6 +2220,14 @@ useEffect(() => {
         <section className="admin-layout admin-grid-two">
           <div className="admin-panel">
             <div className="panel-header-row"><h3>Deliveries</h3></div>
+            <div className="stats-grid admin-overview-grid">
+              {deliveryCounters.map((item) => (
+                <div key={item.label} className={item.accent ? 'stat-box accent-stat' : 'stat-box'}>
+                  <span>{item.label}</span>
+                  <strong>{item.value}</strong>
+                </div>
+              ))}
+            </div>
             <div className="toolbar-stack" role="group" aria-label="Delivery filters">
               {(['all', 'active', 'completed', 'exceptions'] as const).map((filter) => (
                 <button
@@ -2168,17 +2242,50 @@ useEffect(() => {
             </div>
             {deliveryError ? <p className="form-error-message submit-error">{deliveryError}</p> : null}
             {isLoadingDeliveries ? <p className="muted-copy">Loading deliveries...</p> : filteredDeliveries.length === 0 ? <div className="empty-state-box"><p>No deliveries found.</p></div> : (
-              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Reference</th><th>Date</th><th>Package</th><th>Pickup</th><th>Destination</th><th>Status</th><th>Driver</th><th>Proof</th></tr></thead><tbody>
+              <div className="table-wrap"><table className="admin-table"><thead><tr><th>Reference</th><th>Date</th><th>Package</th><th>Pickup</th><th>Destination</th><th>Status</th><th>Fee</th><th>Driver</th><th>Proof</th></tr></thead><tbody>
                 {filteredDeliveries.map((delivery) => <tr key={delivery.id} onClick={() => setSelectedDeliveryId(delivery.id)} className={selectedDeliveryId === delivery.id ? 'selected-row' : ''}>
                   <td><code className="ride-id-cell" title={delivery.id}>{delivery.id.slice(0, 8)}…</code></td><td>{delivery.preferred_date}</td><td>{delivery.package_type}</td><td>{delivery.pickup_address}</td><td>{delivery.delivery_address}</td>
-                  <td><span className={`status-pill ${delivery.status}`}>{delivery.status}</span></td><td>{deliveryDriverName(delivery.driver_id)}</td><td>{deliveryProofIds.has(delivery.id) ? 'Available' : '—'}</td>
+                  <td><span className={`status-pill ${delivery.status}`}>{delivery.status}</span></td><td>{typeof delivery.price_cents === 'number' && Number.isFinite(delivery.price_cents) && delivery.price_cents > 0 ? `₱${formatCentavos(delivery.price_cents)}` : '—'}</td><td>{deliveryDriverName(delivery.driver_id)}</td><td>{deliveryProofIds.has(delivery.id) ? 'Available' : '—'}</td>
                 </tr>)}
               </tbody></table></div>
             )}
+            <div className="panel-header-row"><h3>Deliveries per driver</h3></div>
+            {deliveriesPerDriver.length === 0 ? (
+              <div className="empty-state-box"><p>No drivers assigned yet.</p></div>
+            ) : (
+              <ul className="mini-list">
+                {deliveriesPerDriver.map((entry) => (
+                  <li key={entry.id}>
+                    <strong>{entry.name}</strong>
+                    <span>{entry.total} total · {entry.active} active</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
           <aside className="admin-panel detail-panel">{selectedDelivery ? <><div className="panel-header-row"><h3>Delivery Details</h3></div><div className="detail-grid">
-            <div><span>Reference</span><strong>{selectedDelivery.id.slice(0, 8)}…</strong></div><div><span>Status</span><strong>{selectedDelivery.status}</strong></div><div><span>Date</span><strong>{selectedDelivery.preferred_date}</strong></div><div><span>Time</span><strong>{selectedDelivery.preferred_time}</strong></div><div><span>Sender</span><strong>{selectedDelivery.sender_name}</strong></div><div><span>Phone</span><strong>{selectedDelivery.sender_phone}</strong></div><div><span>Package Type</span><strong>{selectedDelivery.package_type}</strong></div><div><span>Package Details</span><strong>{selectedDelivery.package_details || 'None'}</strong></div><div><span>Package Size</span><strong>{selectedDelivery.package_size}</strong></div><div><span>Pickup</span><strong>{selectedDelivery.pickup_address}</strong></div><div><span>Destination</span><strong>{selectedDelivery.delivery_address}</strong></div><div><span>Driver</span><strong>{deliveryDriverName(selectedDelivery.driver_id)}</strong></div><div><span>Proof</span><strong>{deliveryProofIds.has(selectedDelivery.id) ? 'Available' : 'Not available'}</strong></div><div><span>Created</span><strong>{new Date(selectedDelivery.created_at).toLocaleString()}</strong></div><div><span>Updated</span><strong>{new Date(selectedDelivery.updated_at).toLocaleString()}</strong></div>
-          </div></> : <div className="empty-state-box"><p>Select a delivery to view details.</p></div>}</aside>
+            <div><span>Reference</span><strong>{selectedDelivery.id.slice(0, 8)}…</strong></div><div><span>Status</span><strong>{selectedDelivery.status}</strong></div><div><span>Date</span><strong>{selectedDelivery.preferred_date}</strong></div><div><span>Time</span><strong>{selectedDelivery.preferred_time}</strong></div><div><span>Sender</span><strong>{selectedDelivery.sender_name}</strong></div><div><span>Phone</span><strong>{selectedDelivery.sender_phone}</strong></div><div><span>Package Type</span><strong>{selectedDelivery.package_type}</strong></div><div><span>Package Details</span><strong>{selectedDelivery.package_details || 'None'}</strong></div><div><span>Package Size</span><strong>{selectedDelivery.package_size}</strong></div><div><span>Pickup</span><strong>{selectedDelivery.pickup_address}</strong></div><div><span>Destination</span><strong>{selectedDelivery.delivery_address}</strong></div><div><span>Driver</span><strong>{deliveryDriverName(selectedDelivery.driver_id)}</strong></div><div><span>Delivery Fee</span><strong>{typeof selectedDelivery.price_cents === 'number' && Number.isFinite(selectedDelivery.price_cents) && selectedDelivery.price_cents > 0 ? `₱${formatCentavos(selectedDelivery.price_cents)}` : '—'}</strong></div><div><span>Proof</span><strong>{deliveryProofIds.has(selectedDelivery.id) ? 'Available'            : 'Not available'}</strong></div><div><span>Created</span><strong>{new
+           Date(selectedDelivery.created_at).toLocaleString()}</strong></div><div><span>Updated</span><strong>{new
+           Date(selectedDelivery.updated_at).toLocaleString()}</strong></div>
+          </div><div className="panel-header-row"><h3>Delivery timeline</h3></div><div className="detail-grid">
+            <div><span>Requested</span><strong>{new Date(selectedDelivery.created_at).toLocaleString()}</strong></div><div><span>Current status</span><strong>{selectedDelivery.status}</strong></div><div><span>Last update</span><strong>{new Date(selectedDelivery.updated_at).toLocaleString()}</strong></div>
+            {selectedDelivery.driver_id ? <div><span>Driver assigned</span><strong>{deliveryDriverName(selectedDelivery.driver_id)}</strong></div> : null}
+            {typeof selectedDelivery.price_cents === 'number' && Number.isFinite(selectedDelivery.price_cents) && selectedDelivery.price_cents > 0 ? <div><span>Fee set</span><strong>₱{formatCentavos(selectedDelivery.price_cents)}</strong></div> : null}
+            {deliveryProofIds.has(selectedDelivery.id) ? <div><span>Proof uploaded</span><strong>Available</strong></div> : null}
+          </div>
+          {deliveryProofIds.has(selectedDelivery.id) ? (
+            (() => {
+              const proofImage = deliveryProofImages[selectedDelivery.id]
+              if (proofImage?.url) {
+                return <img src={proofImage.url} alt="Delivery proof photo" className="proof-preview" />
+              }
+              if (proofImage?.failed || !deliveryProofPaths[selectedDelivery.id]) {
+                return <p className="muted-copy">Proof image unavailable</p>
+              }
+              return <p className="muted-copy">Loading proof photo...</p>
+            })()
+          ) : null}
+          </> : <div className="empty-state-box"><p>Select a delivery to view details.</p></div>}</aside>
         </section>
       ) : null}
     </div>

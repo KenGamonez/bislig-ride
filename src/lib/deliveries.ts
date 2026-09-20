@@ -90,6 +90,27 @@ export async function fetchDeliveryProofIds(deliveryIds: string[]): Promise<Set<
   return new Set(((data ?? []) as Array<{ delivery_id: string }>).map((row) => row.delivery_id))
 }
 
+export async function fetchDeliveryProofPaths(deliveryIds: string[]): Promise<Record<string, string>> {
+  if (deliveryIds.length === 0) return {}
+
+  const { data, error } = await supabase
+    .from('delivery_proofs')
+    .select('delivery_id,storage_path')
+    .in('delivery_id', deliveryIds)
+
+  if (error) throw error
+
+  const paths: Record<string, string> = {}
+
+  for (const row of (data ?? []) as Array<{ delivery_id: string; storage_path: string }>) {
+    if (row.delivery_id && row.storage_path && !paths[row.delivery_id]) {
+      paths[row.delivery_id] = row.storage_path
+    }
+  }
+
+  return paths
+}
+
 export async function acceptDeliveryOffer(offerId: string): Promise<DeliveryBooking> {
   const { data, error } = await supabase
     .rpc('accept_delivery_offer', { p_offer_id: offerId })

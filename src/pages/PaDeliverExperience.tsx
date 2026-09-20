@@ -438,14 +438,27 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     const quotedCents = trackedDelivery && typeof trackedDelivery.price_cents === 'number' && Number.isFinite(trackedDelivery.price_cents)
       ? trackedDelivery.price_cents
       : null
+    const nextCopy =
+      status === 'pending' ? t('pad.nextPending')
+      : status === 'dispatching' ? t('pad.nextDispatching')
+      : status === 'assigned' ? t('pad.nextAssigned')
+      : status === 'quoted' ? t('pad.nextQuoted')
+      : status === 'confirmed' ? t('pad.nextConfirmed')
+      : status === 'driver_on_way' ? t('pad.nextOnWay')
+      : status === 'driver_arrived' ? t('pad.nextArrived')
+      : status === 'picked_up' ? t('pad.nextPickedUp')
+      : status === 'in_transit' ? t('pad.nextInTransit')
+      : status === 'delivered' ? t('pad.nextDelivered')
+      : status === 'no_driver' ? t('pad.nextNoDriver')
+      : null
 
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
-            <h1>{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
+            <p className="eyebrow">{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
+            <h1>{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
             {status === 'quoted' ? (
               <>
                 <p className="booking-status">{t('pad.statusLabel')}: {t('pad.quoteReady')}</p>
@@ -469,9 +482,14 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <p className="booking-status">{t('pad.statusLabel')}: {status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : t('pad.trackDelivered')}</p>
             ) : status === 'no_driver' ? (
               <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackNoDriver')}</p>
+            ) : status === 'cancelled' ? (
+              <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackCancelled')}</p>
+            ) : status === 'failed' ? (
+              <p className="booking-status">{t('pad.statusLabel')}: {t('pad.trackFailedStatus')}</p>
             ) : (
               <p>{t('pad.receivedBody')}</p>
             )}
+            {nextCopy ? <p>{nextCopy}</p> : null}
             {createdDeliveryId ? (
               <p className="booking-ref">{t('pad.bookingRef')}: {createdDeliveryId.slice(0, 8)}…</p>
             ) : null}

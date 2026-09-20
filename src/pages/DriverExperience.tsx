@@ -304,6 +304,7 @@ export function DriverExperience({
   const [deliveryNow, setDeliveryNow] = useState(() => Date.now())
   const [deliveryError, setDeliveryError] = useState('')
   const [acceptedDeliveries, setAcceptedDeliveries] = useState<DeliveryBooking[]>([])
+  const [completedDeliveryNotice, setCompletedDeliveryNotice] = useState<DeliveryBooking | null>(null)
   const [deliverySubmittingId, setDeliverySubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleSubmittingId, setDeliveryLifecycleSubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleError, setDeliveryLifecycleError] = useState<{ deliveryId: string; message: string } | null>(null)
@@ -1243,8 +1244,25 @@ return unsubscribe
 
     void loadHeldDeliveries()
 
+    const channel = supabase
+      .channel(`driver-deliveries-held-${driverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'deliveries',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        () => {
+          loadHeldDeliveries()
+        },
+      )
+      .subscribe()
+
     return () => {
       mounted = false
+      void supabase.removeChannel(channel)
     }
   }, [driverId, driverAuthId, canAcceptDeliveries])
 
@@ -2263,10 +2281,10 @@ const displayedDriver = driverProfile ?? demoDriver
           const items = await fetchDriverDeliveries(driverId)
           setAcceptedDeliveries(items.slice(0, 10))
         } catch {
-          setAcceptedDeliveries((current) =>
-            current.filter((booking) => booking.id !== bookingId).concat([updated]).slice(0, 10),
-          )
+          setAcceptedDeliveries((current) => current.filter((booking) => booking.id !== bookingId).slice(0, 10))
         }
+
+        setCompletedDeliveryNotice(updated)
 
         if (deliveryProof.previewUrl) URL.revokeObjectURL(deliveryProof.previewUrl)
         setDeliveryProof(null)
@@ -2372,6 +2390,116 @@ const displayedDriver = driverProfile ?? demoDriver
         </div>
       </div>
     )
+  }
+
+  const renderDeliveryTripOverlay = () => {
+    if (!canAcceptDeliveries) {
+      return null
+    }
+
+    const confirmedBooking = acceptedDeliveries.find(
+      (booking) => booking.status === 'confirmed' && booking.driver_id === driverId,
+    ) ?? null
+
+    if (confirmedBooking) {
+      return (
+        <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Delivery confirmed">
+          <div className="ride-request-sheet">
+            <section className="driver-card pakyawan-card">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">DELIVERY CONFIRMED</p>
+                  <h3>The passenger confirmed the delivery fee.</h3>
+                  <p>Next: go to the pickup location.</p>
+                </div>
+              </div>
+              <ul className="pakyawan-list">
+                <li className="pakyawan-item">
+                  <div className="pakyawan-route">
+                    <span>{confirmedBooking.pickup_address}</span>
+                    <strong>→</strong>
+                    <span>{confirmedBooking.delivery_address}</span>
+                  </div>
+                  <div className="pakyawan-meta">
+                    <span>
+                      {confirmedBooking.preferred_date} · {confirmedBooking.preferred_time}
+                    </span>
+                    {typeof confirmedBooking.price_cents === 'number' &&
+                    Number.isFinite(confirmedBooking.price_cents) ? (
+                      <span>Fee: ₱{formatCentavos(confirmedBooking.price_cents)}</span>
+                    ) : null}
+                  </div>
+                  {deliveryLifecycleError && deliveryLifecycleError.deliveryId === confirmedBooking.id ? (
+                    <span className="field-error">{deliveryLifecycleError.message}</span>
+                  ) : null}
+                  <div className="pakyawan-actions">
+                    <button
+                      type="button"
+                      className="primary-action compact-button"
+                      disabled={deliveryLifecycleSubmittingId === confirmedBooking.id}
+                      onClick={() => void handleAdvanceDeliveryTrip(confirmedBooking.id, 'driver_on_way')}
+                    >
+                      {deliveryLifecycleSubmittingId === confirmedBooking.id ? 'Updating...' : 'Go On My Way'}
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      )
+    }
+
+    if (completedDeliveryNotice) {
+      return (
+        <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Delivery completed">
+          <div className="ride-request-sheet">
+            <section className="driver-card pakyawan-card">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">DELIVERY COMPLETED ✓</p>
+                  <h3>Your Pa-Deliver was successfully completed.</h3>
+                </div>
+              </div>
+              <ul className="pakyawan-list">
+                <li className="pakyawan-item">
+                  <div className="pakyawan-route">
+                    <span>{completedDeliveryNotice.pickup_address}</span>
+                    <strong>→</strong>
+                    <span>{completedDeliveryNotice.delivery_address}</span>
+                  </div>
+                  <div className="pakyawan-meta">
+                    <span>Reference: {completedDeliveryNotice.id.slice(0, 8)}…</span>
+                    {typeof completedDeliveryNotice.price_cents === 'number' &&
+                    Number.isFinite(completedDeliveryNotice.price_cents) ? (
+                      <span>Fee: ₱{formatCentavos(completedDeliveryNotice.price_cents)}</span>
+                    ) : null}
+                  </div>
+                  <div className="pakyawan-actions">
+                    <button
+                      type="button"
+                      className="primary-action compact-button"
+                      onClick={() => setCompletedDeliveryNotice(null)}
+                    >
+                      Back to dashboard
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      )
+    }
+
+    return null
+  }
+
+  const deliveryTripNextCopy: Record<string, string> = {
+    driver_on_way: 'Next: Mark the delivery arrived when you reach the pickup location.',
+    driver_arrived: 'Next: Pick up the package from the passenger.',
+    picked_up: 'Next: Start the delivery.',
+    in_transit: 'Next: Complete the delivery when you reach the destination.',
   }
 
   const renderDeliverySection = () => {
@@ -2510,6 +2638,9 @@ const displayedDriver = driverProfile ?? demoDriver
                   ) : (
                     <span>Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
                   )}
+                  {deliveryTripNextCopy[booking.status] ? (
+                    <span>{deliveryTripNextCopy[booking.status]}</span>
+                  ) : null}
                   {booking.driver_id === driverId && booking.status === 'assigned' ? (
                     <div className="pakyawan-price-box">
                       <span className="field-label">Next step: send your delivery fee.</span>
@@ -2651,7 +2782,6 @@ const displayedDriver = driverProfile ?? demoDriver
                       )}
                     </div>
                   ) : null}
-                  {booking.status === 'completed' ? <span>Delivered.</span> : null}
                   {deliveryLifecycleError && deliveryLifecycleError.deliveryId === booking.id ? (
                     <span className="field-error">{deliveryLifecycleError.message}</span>
                   ) : null}
@@ -3649,6 +3779,8 @@ const renderOnlineState = () => (
       ) : null}
 
       {renderDeliveryPopup()}
+
+      {renderDeliveryTripOverlay()}
 
       <div className="driver-operations">
         {phase === 'offline' ? renderOfflineState() : null}
