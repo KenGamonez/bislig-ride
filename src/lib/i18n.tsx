@@ -474,7 +474,7 @@ const en = {
   'pad.receivedEyebrow': 'Request received',
   'pad.receivedTitle': 'Delivery Request Received',
   'pad.receivedBody':
-    'Our team will confirm pickup details and the delivery fee with you before the package is booked.',
+    'Your delivery request was received. We\u2019re finding an available driver \u2014 no manual team confirmation needed.',
   'pad.statusLabel': 'Status',
   'pad.refreshStatus': 'Refresh status',
   'pad.checkingStatus': 'Checking for updates...',
@@ -1076,7 +1076,7 @@ const bi: Record<TranslationKey, string> = {
   'pad.receivedEyebrow': 'Nadawat ang request',
   'pad.receivedTitle': 'Nadawat ang Delivery Request',
   'pad.receivedBody':
-    'Kumpirmahon sa among team ang mga detalye sa pickup ug ang delivery fee uban kanimo sa dili pa ma-book ang package.',
+    'Nadawat na ang imong delivery request. Nangita kami og available nga driver \u2014 dili na kinahanglan og manual nga kumpirmasyon sa team.',
   'pad.statusLabel': 'Kahimtang',
   'pad.refreshStatus': 'I-refresh ang status',
   'pad.checkingStatus': 'Gisusi ang mga update...',
