@@ -279,6 +279,7 @@ export function DriverExperience({
   const stopTrackingRef = useRef<(() => void) | null>(null)
   const handledOfferIdsRef = useRef<Set<string>>(new Set())
   const dismissedOfferIdsRef = useRef<Set<string>>(new Set())
+  const deliveryChimedIdsRef = useRef<Set<string>>(new Set())
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelSubmitting, setCancelSubmitting] = useState(false)
   const [cancelError, setCancelError] = useState('')
@@ -1073,20 +1074,25 @@ return unsubscribe
 
           const subtitle = `${incoming.pickup_address ?? 'Pickup'} → ${incoming.delivery_address ?? 'Destination'}`
 
-          setNotifications((current) => [
-            {
-              id: `delivery-${incoming.id}`,
-              kind: 'pakyawan',
-              rideId: null,
-              title: 'New delivery request',
-              subtitle,
-              seen: false,
-              createdAt: Date.now(),
-            },
-            ...current,
-          ])
+          setNotifications((current) =>
+            current.some((item) => item.id === `delivery-${incoming.id}`)
+              ? current
+              : [
+                  {
+                    id: `delivery-${incoming.id}`,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'New delivery request',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
 
-          if (driverOnline) {
+          if (driverOnline && !deliveryChimedIdsRef.current.has(incoming.id)) {
+            deliveryChimedIdsRef.current.add(incoming.id)
             playRequestChime()
             showBrowserNotification('New delivery request', subtitle)
           }
@@ -2096,6 +2102,14 @@ const displayedDriver = driverProfile ?? demoDriver
     } catch (error) {
       console.error('Unable to accept delivery request:', error)
       setDeliveryError('This request could not be accepted. It may have been taken by another driver.')
+      setDeliveryRequests((current) => current.filter((booking) => booking.id !== bookingId))
+
+      try {
+        const items = await fetchAvailableDeliveries()
+        setDeliveryRequests(items)
+      } catch (refreshError) {
+        console.error('Unable to refresh delivery requests:', refreshError)
+      }
     } finally {
       setDeliverySubmittingId(null)
     }
@@ -2220,6 +2234,85 @@ const displayedDriver = driverProfile ?? demoDriver
     } finally {
       setIsUploadingProof(false)
     }
+  }
+
+  const renderDeliveryPopup = () => {
+    if (!canAcceptDeliveries) {
+      return null
+    }
+
+    const popupBooking = deliveryRequests.length > 0 ? deliveryRequests[0] : null
+
+    if (!popupBooking) {
+      return null
+    }
+
+    const waitingCount = deliveryRequests.length - 1
+
+    return (
+      <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Incoming delivery request">
+        <div className="ride-request-sheet">
+          <section className="driver-card pakyawan-card">
+            <div className="state-heading">
+              <div>
+                <p className="section-label">NEW DELIVERY REQUEST</p>
+                <h3>Pa-Deliver / package delivery</h3>
+                <p>A customer is requesting a package delivery. Accept to take it.</p>
+              </div>
+            </div>
+            <ul className="pakyawan-list">
+              <li className="pakyawan-item">
+                <div className="pakyawan-route">
+                  <span>{popupBooking.pickup_address}</span>
+                  <strong>→</strong>
+                  <span>{popupBooking.delivery_address}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {popupBooking.preferred_date} · {popupBooking.preferred_time}
+                  </span>
+                  <span>
+                    {popupBooking.package_type} · {popupBooking.package_size}
+                  </span>
+                  {popupBooking.package_details ? (
+                    <span>{popupBooking.package_details}</span>
+                  ) : null}
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{popupBooking.sender_name}</span>
+                  <span>{popupBooking.sender_phone}</span>
+                </div>
+                {waitingCount > 0 ? (
+                  <div className="pakyawan-meta">
+                    <span>
+                      {waitingCount} more request{waitingCount === 1 ? '' : 's'} waiting
+                    </span>
+                  </div>
+                ) : null}
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptDeliveryRequest(popupBooking.id)}
+                    disabled={deliverySubmittingId === popupBooking.id}
+                  >
+                    {deliverySubmittingId === popupBooking.id ? 'Accepting...' : 'Accept'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => handleDeclineDeliveryRequest(popupBooking.id)}
+                    disabled={deliverySubmittingId !== null}
+                  >
+                    Not now
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    )
   }
 
   const renderDeliverySection = () => {
@@ -3444,6 +3537,8 @@ const renderOnlineState = () => (
           </div>
         </div>
       ) : null}
+
+      {renderDeliveryPopup()}
 
       <div className="driver-operations">
         {phase === 'offline' ? renderOfflineState() : null}
