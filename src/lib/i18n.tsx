@@ -412,6 +412,9 @@ const en = {
   'pak.receivedBody1': 'Your Pakyawan / Umbak request has been submitted.',
   'pak.receivedBody2':
     'Our team will review your trip details, vehicle availability, and pricing. Final pricing will be confirmed before your booking is accepted.',
+  'pak.driverFound': 'Driver found',
+  'pak.assignedTitle': 'Driver Has Accepted Your Booking',
+  'pak.assignedBody': 'Your driver has accepted your booking. Waiting for the driver to send the trip price.',
   'pak.backToRide': 'Back to Ride Booking',
   'pak.submitFailed':
     'We could not submit your booking request right now. Please try again.',
@@ -1036,6 +1039,9 @@ const bi: Record<TranslationKey, string> = {
   'pak.receivedBody1': 'Na-submit na ang imong Pakyawan / Umbak request.',
   'pak.receivedBody2':
     'Ribyuon sa among team ang mga detalye sa imong byahe, availability sa sakyanan, ug presyo. Kumpirmahon una ang final pricing sa dili pa ma-accept ang imong booking.',
+  'pak.driverFound': 'Nakit-an ang Driver',
+  'pak.assignedTitle': 'Gidawat Na sa Driver ang Imong Booking',
+  'pak.assignedBody': 'Gidawat na sa imong driver ang imong booking. Naghulat pa nga ipadala sa driver ang presyo sa byahe.',
   'pak.backToRide': 'Balik sa Ride Booking',
   'pak.submitFailed':
     'Dili ma-submit karon ang imong booking request. Palihog sulayi og balik.',
