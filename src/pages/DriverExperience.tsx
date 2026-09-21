@@ -1394,22 +1394,22 @@ return unsubscribe
       return
     }
 
-    // One booking-scoped chat watcher per delivered booking. Realtime
-    // delivery already requires the own-assigned SELECT policy, so other
-    // drivers' messages can never arrive here.
-    const deliveredIds = Array.from(
+    // One booking-scoped chat watcher per held active or delivered booking.
+    // Realtime delivery already requires the own-assigned SELECT policy, so
+    // other drivers' messages can never arrive here.
+    const watchedIds = Array.from(
       new Set(
-        deliveredDeliveries
+        [...acceptedDeliveries, ...deliveredDeliveries]
           .filter((booking) => booking.driver_id === driverId)
           .map((booking) => booking.id),
       ),
     )
 
-    if (deliveredIds.length === 0) {
+    if (watchedIds.length === 0) {
       return
     }
 
-    const channels = deliveredIds.map((deliveredId) =>
+    const channels = watchedIds.map((deliveredId) =>
       supabase
         .channel(`driver-delivery-chatwatch-${deliveredId}`)
         .on(
@@ -1443,7 +1443,9 @@ return unsubscribe
               return
             }
 
-            const booking = deliveredDeliveries.find((item) => item.id === deliveredId)
+            const booking =
+              deliveredDeliveries.find((item) => item.id === deliveredId) ??
+              acceptedDeliveries.find((item) => item.id === deliveredId)
             const route = booking
               ? `${booking.pickup_address} → ${booking.delivery_address}`
               : 'Delivery booking'
@@ -1481,7 +1483,7 @@ return unsubscribe
         void supabase.removeChannel(channel)
       })
     }
-  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline, deliveredDeliveries, deliveryChatBookingId])
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline, acceptedDeliveries, deliveredDeliveries, deliveryChatBookingId])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -3323,6 +3325,17 @@ const displayedDriver = driverProfile ?? demoDriver
                   )}
                   {deliveryTripNextCopy[booking.status] ? (
                     <span>{deliveryTripNextCopy[booking.status]}</span>
+                  ) : null}
+                  {booking.driver_id === driverId ? (
+                    <DeliveryChatSection
+                      deliveryId={booking.id}
+                      role="driver"
+                      otherPartyName={booking.sender_name}
+                      toggleLabel="Chat with Customer"
+                      enableRealtime
+                      forceOpen={deliveryChatBookingId === booking.id}
+                      onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
+                    />
                   ) : null}
                   {booking.driver_id === driverId && booking.status === 'assigned' ? (
                     <div className="pakyawan-price-box">

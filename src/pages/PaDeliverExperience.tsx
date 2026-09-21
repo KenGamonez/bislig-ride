@@ -722,7 +722,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                 {proofError ? <span className="field-error">{proofError}</span> : null}
               </div>
             ) : null}
-            {status === 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
+            {trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
               <>
                 <p className="pad-section-label">{t('pad.chatWithDriver')}</p>
                 <DeliveryChatSection
@@ -735,6 +735,10 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                   onOpenChange={setDeliveryChatOpen}
                   onIncomingMessage={handleDeliveryChatMessage}
                 />
+              </>
+            ) : null}
+            {status === 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
+              <>
                 <p className="pad-section-label">{t('pad.rateDriver')}</p>
                 <DeliveryRating
                   deliveryId={trackedDelivery.id}
