@@ -265,7 +265,9 @@ export function DriverExperience({
   const [pakyawanRequests, setPakyawanRequests] = useState<PakyawanBooking[]>([])
   const [acceptedPakyawan, setAcceptedPakyawan] = useState<PakyawanBooking[]>([])
   const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
-  const [pakyawanError, setPakyawanError] = useState('')
+  const [pakyawanRequestsError, setPakyawanRequestsError] = useState('')
+  const [pakyawanOffersError, setPakyawanOffersError] = useState('')
+  const [pakyawanRequestsRetry, setPakyawanRequestsRetry] = useState(0)
   const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
   const [pakyawanNow, setPakyawanNow] = useState(() => Date.now())
   const [pakyawanPriceInputs, setPakyawanPriceInputs] = useState<Record<string, string>>({})
@@ -809,18 +811,18 @@ return unsubscribe
 
     const loadRequests = async () => {
       if (mounted) {
-        setPakyawanError('')
+        setPakyawanRequestsError('')
       }
       try {
         const items = await fetchAvailablePakyawanBookings()
         if (mounted) {
           setPakyawanRequests(items)
-          setPakyawanError('')
+          setPakyawanRequestsError('')
         }
       } catch (error) {
         console.error('Unable to load pakyawan requests:', error)
         if (mounted) {
-          setPakyawanError('Unable to load Pakyawan requests right now.')
+          setPakyawanRequestsError('Unable to load Pakyawan requests right now.')
         }
       }
     }
@@ -849,6 +851,9 @@ return unsubscribe
               : [incoming as PakyawanBooking, ...current],
           )
 
+          // A real request just arrived, so a stale request-loading error must not linger.
+          setPakyawanRequestsError('')
+
           const subtitle = `${incoming.pickup_location ?? 'Pickup'} → ${incoming.destination ?? 'Destination'}`
 
           setNotifications((current) => [
@@ -876,7 +881,7 @@ return unsubscribe
       mounted = false
       void supabase.removeChannel(channel)
     }
-  }, [driverAuthId, canAcceptPakyawan, driverOnline])
+  }, [driverAuthId, canAcceptPakyawan, driverOnline, pakyawanRequestsRetry])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -887,18 +892,18 @@ return unsubscribe
 
     const loadOffers = async () => {
       if (mounted) {
-        setPakyawanError('')
+        setPakyawanOffersError('')
       }
       try {
         const items = await fetchDriverPakyawanOffers(driverId)
         if (mounted) {
           setPakyawanOffers(items)
-          setPakyawanError('')
+          setPakyawanOffersError('')
         }
       } catch (error) {
         console.error('Unable to load pakyawan offers:', error)
         if (mounted) {
-          setPakyawanError('Unable to load Pakyawan offers right now.')
+          setPakyawanOffersError('Unable to load Pakyawan offers right now.')
         }
       }
     }
@@ -1755,7 +1760,7 @@ const displayedDriver = driverProfile ?? demoDriver
     }
 
     setPakyawanSubmittingId(bookingId)
-    setPakyawanError('')
+    setPakyawanRequestsError('')
 
     try {
       const updated = await acceptPakyawanBooking(bookingId, driverId)
@@ -1768,7 +1773,7 @@ const displayedDriver = driverProfile ?? demoDriver
       setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
     } catch (error) {
       console.error('Unable to accept pakyawan request:', error)
-      setPakyawanError('This request could not be accepted. It may have been taken by another driver.')
+      setPakyawanRequestsError('This request could not be accepted. It may have been taken by another driver.')
     } finally {
       setPakyawanSubmittingId(null)
     }
@@ -1799,7 +1804,7 @@ const displayedDriver = driverProfile ?? demoDriver
     }
 
     setPakyawanSubmittingId(offerId)
-    setPakyawanError('')
+    setPakyawanOffersError('')
 
     try {
       const assigned = await acceptPakyawanOffer(offerId)
@@ -1813,7 +1818,7 @@ const displayedDriver = driverProfile ?? demoDriver
       setNotifications((current) => current.filter((item) => item.id !== `pakyawan-offer-${offerId}` && item.id !== `pakyawan-${assigned.id}`))
     } catch (error) {
       console.error('Unable to accept pakyawan offer:', error)
-      setPakyawanError(resolvePakyawanOfferError(error))
+      setPakyawanOffersError(resolvePakyawanOfferError(error))
 
       try {
         const items = await fetchDriverPakyawanOffers(driverId)
@@ -1832,7 +1837,7 @@ const displayedDriver = driverProfile ?? demoDriver
     }
 
     setPakyawanSubmittingId(offerId)
-    setPakyawanError('')
+    setPakyawanOffersError('')
 
     try {
       await declinePakyawanOffer(offerId)
@@ -1840,7 +1845,7 @@ const displayedDriver = driverProfile ?? demoDriver
       setNotifications((current) => current.filter((item) => item.id !== `pakyawan-offer-${offerId}`))
     } catch (error) {
       console.error('Unable to decline pakyawan offer:', error)
-      setPakyawanError(resolvePakyawanOfferError(error))
+      setPakyawanOffersError(resolvePakyawanOfferError(error))
 
       try {
         const items = await fetchDriverPakyawanOffers(driverId)
@@ -2359,6 +2364,89 @@ const displayedDriver = driverProfile ?? demoDriver
     )
   }
 
+  const renderPakyawanPopup = () => {
+    if (!canAcceptPakyawan) {
+      return null
+    }
+
+    // Foreground request card: independent of the Pakyawan tab and of the
+    // dormant offers error state, so an incoming booking is always actionable.
+    const popupBooking = pakyawanRequests.length > 0 ? pakyawanRequests[0] : null
+
+    if (!popupBooking) {
+      return null
+    }
+
+    const waitingCount = pakyawanRequests.length - 1
+
+    return (
+      <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Incoming Pakyawan request">
+        <div className="ride-request-sheet">
+          <section className="driver-card pakyawan-card">
+            <div className="state-heading">
+              <div>
+                <p className="section-label">NEW PAKYAWAN REQUEST</p>
+                <h3>Pakyawan / scheduled trip</h3>
+                <p>A customer is requesting a Pakyawan trip. Accept to take it.</p>
+              </div>
+            </div>
+            <ul className="pakyawan-list">
+              <li className="pakyawan-item">
+                <div className="pakyawan-route">
+                  <span>{popupBooking.pickup_location}</span>
+                  <strong>→</strong>
+                  <span>{popupBooking.destination}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {popupBooking.booking_date} · {popupBooking.pickup_time}
+                  </span>
+                  <span>
+                    {popupBooking.passengers} passenger{popupBooking.passengers === 1 ? '' : 's'} · {popupBooking.trip_type}
+                  </span>
+                  {popupBooking.estimated_hours ? (
+                    <span>
+                      ~{popupBooking.estimated_hours} hr{popupBooking.estimated_hours === 1 ? '' : 's'}
+                    </span>
+                  ) : null}
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{popupBooking.customer_name}</span>
+                  <span>{popupBooking.customer_phone}</span>
+                </div>
+                {waitingCount > 0 ? (
+                  <div className="pakyawan-meta">
+                    <span>
+                      {waitingCount} more request{waitingCount === 1 ? '' : 's'} waiting
+                    </span>
+                  </div>
+                ) : null}
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptPakyawan(popupBooking.id)}
+                    disabled={pakyawanSubmittingId === popupBooking.id}
+                  >
+                    {pakyawanSubmittingId === popupBooking.id ? 'Accepting...' : 'Accept Request'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => handleDeclinePakyawan(popupBooking.id)}
+                    disabled={pakyawanSubmittingId !== null}
+                  >
+                    Not now
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   const renderDeliveryTripOverlay = () => {
     if (!canAcceptDeliveries) {
       return null
@@ -2808,13 +2896,28 @@ const displayedDriver = driverProfile ?? demoDriver
           <span className="state-badge pakyawan-badge">{pakyawanRequests.length}</span>
         </div>
 
-        {pakyawanError ? (
-          <p className="form-error-message">{pakyawanError}</p>
+        {pakyawanRequestsError ? (
+          <>
+            <p className="form-error-message">{pakyawanRequestsError}</p>
+            <div className="pakyawan-actions">
+              <button
+                type="button"
+                className="secondary-action compact-button"
+                onClick={() => setPakyawanRequestsRetry((value) => value + 1)}
+              >
+                Retry
+              </button>
+            </div>
+          </>
         ) : !driverOnline ? (
           <p className="muted-copy">Go online to receive Pakyawan requests.</p>
         ) : null}
 
-        {pakyawanError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
+        {pakyawanOffersError ? (
+          <p className="form-error-message">{pakyawanOffersError}</p>
+        ) : null}
+
+        {pakyawanOffersError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
           <ul className="pakyawan-list">
             {activePakyawanOffers.map((offer) => (
               <li key={offer.id} className="pakyawan-item pakyawan-offer">
@@ -2859,7 +2962,7 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {pakyawanError || !driverOnline || pakyawanRequests.length === 0 ? null : (
+        {pakyawanRequestsError || !driverOnline || pakyawanRequests.length === 0 ? null : (
           <ul className="pakyawan-list">
             {pakyawanRequests.map((booking) => (
               <li key={booking.id} className="pakyawan-item">
@@ -3949,6 +4052,8 @@ const renderOnlineState = () => (
       ) : null}
 
       {renderDeliveryPopup()}
+
+      {renderPakyawanPopup()}
 
       {renderDeliveryTripOverlay()}
 
