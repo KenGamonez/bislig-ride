@@ -145,7 +145,19 @@ export function PakyawanChat({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bookingId])
 
+  const lastScrolledIdRef = useRef<string | null>(null)
+
   useEffect(() => {
+    const last = messages[messages.length - 1] ?? null
+    const prevId = lastScrolledIdRef.current
+    lastScrolledIdRef.current = last?.id ?? null
+
+    // Scroll only when a genuinely new message arrives — never on initial
+    // load or on background polls that change nothing.
+    if (!last || prevId === null || prevId === last.id) {
+      return
+    }
+
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
 

@@ -2562,6 +2562,8 @@ const displayedDriver = driverProfile ?? demoDriver
           ? current.map((booking) => (booking.id === assigned.id ? assigned : booking))
           : [assigned, ...current].slice(0, 10),
       )
+      // Successful accept only: keep the driver inside the delivery workflow.
+      setDriverView('delivery')
     } catch (error) {
       console.error('Unable to accept delivery offer:', error)
       setDeliveryError(resolveDeliveryAcceptError(error))
@@ -2594,6 +2596,8 @@ const displayedDriver = driverProfile ?? demoDriver
           : [assigned, ...current].slice(0, 10),
       )
       setNotifications((current) => current.filter((item) => item.id !== `delivery-${bookingId}`))
+      // Successful accept only: keep the driver inside the delivery workflow.
+      setDriverView('delivery')
     } catch (error) {
       console.error('Unable to accept delivery request:', error)
       setDeliveryError('This request could not be accepted. It may have been taken by another driver.')

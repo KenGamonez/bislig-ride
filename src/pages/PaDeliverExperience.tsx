@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
@@ -76,6 +76,17 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [proofViewerOpen, setProofViewerOpen] = useState(false)
   const [proofLoading, setProofLoading] = useState(false)
   const [proofError, setProofError] = useState('')
+  const [deliveryChatOpen, setDeliveryChatOpen] = useState(false)
+  const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ preview: string } | null>(null)
+
+  const handleDeliveryChatMessage = useCallback(
+    (preview: string) => {
+      setDeliveryChatAlert({ preview })
+      playChatNotification()
+      showBrowserNotification(t('pad.newUpdate'), preview.slice(0, 120))
+    },
+    [t],
+  )
   const prevDeliverySigRef = useRef<string | null>(null)
   const cardRef = useRef<HTMLFormElement>(null)
 
@@ -237,6 +248,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       setDeliveryAlert(null)
       setDeliveryUnread(false)
       setDeliveryBellOpen(false)
+      setDeliveryChatOpen(false)
+      setDeliveryChatAlert(null)
       prevDeliverySigRef.current = null
       setSubmitted(true)
     } catch (error) {
@@ -477,6 +490,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             setTrackedDelivery(booking)
             setDeliveryAlert(null)
             setDeliveryBellOpen(false)
+            setDeliveryChatOpen(false)
+            setDeliveryChatAlert(null)
             prevDeliverySigRef.current = null
             syncDeliveryUnread(candidate.id)
             setSubmitted(true)
@@ -716,6 +731,9 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                   role="passenger"
                   otherPartyName={t('chat.roleDriver')}
                   toggleLabel={t('pad.chatWithDriver')}
+                  forceOpen={deliveryChatOpen}
+                  onOpenChange={setDeliveryChatOpen}
+                  onIncomingMessage={handleDeliveryChatMessage}
                 />
                 <p className="pad-section-label">{t('pad.rateDriver')}</p>
                 <DeliveryRating
@@ -794,6 +812,21 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                 }
               }}
               onClose={() => setDeliveryAlert(null)}
+            />
+          ) : null}
+          {deliveryChatAlert && trackedDelivery ? (
+            <PakyawanChatAlertPopup
+              eyebrow={t('pad.newUpdate')}
+              title={t('pad.chatWithDriver')}
+              subtitle={`${trackedDelivery.pickup_address} → ${trackedDelivery.delivery_address}`}
+              preview={deliveryChatAlert.preview}
+              openLabel={t('pad.openChat')}
+              closeLabel={t('chat.closeAria')}
+              onOpen={() => {
+                setDeliveryChatAlert(null)
+                setDeliveryChatOpen(true)
+              }}
+              onClose={() => setDeliveryChatAlert(null)}
             />
           ) : null}
           {proofViewerOpen ? (

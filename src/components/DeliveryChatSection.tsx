@@ -14,6 +14,7 @@ type DeliveryChatSectionProps = {
   enableRealtime?: boolean
   forceOpen?: boolean
   onOpenChange?: (open: boolean) => void
+  onIncomingMessage?: (preview: string) => void
 }
 
 const seenKey = (deliveryId: string) => `bislig-ride-padeliver-chatseen-${deliveryId}`
@@ -43,11 +44,18 @@ export function DeliveryChatSection({
   enableRealtime = false,
   forceOpen,
   onOpenChange,
+  onIncomingMessage,
 }: DeliveryChatSectionProps) {
   const { t } = useLanguage()
   const [internalOpen, setInternalOpen] = useState(false)
   const [hasUnread, setHasUnread] = useState(false)
   const alertedIdRef = useRef<string | null>(null)
+
+  const onIncomingMessageRef = useRef(onIncomingMessage)
+
+  useEffect(() => {
+    onIncomingMessageRef.current = onIncomingMessage
+  })
 
   const open = forceOpen ?? internalOpen
 
@@ -120,6 +128,7 @@ export function DeliveryChatSection({
         if (newest.id !== seen && alertedIdRef.current !== newest.id) {
           alertedIdRef.current = newest.id
           setHasUnread(true)
+          onIncomingMessageRef.current?.(newest.message)
         }
       } catch {
         // Polling must never break the page.
