@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
+import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
+import { fetchDeliveryProofUrl } from '../lib/deliveryProof'
+import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
 import { formatCentavos } from '../lib/fare'
 import type { DeliveryBooking } from '../types/delivery'
 import { useLanguage } from '../lib/i18n'
@@ -64,7 +67,67 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [submitError, setSubmitError] = useState('')
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
+  const [deliveryAlert, setDeliveryAlert] = useState<{ status: string } | null>(null)
+  const [deliveryUnread, setDeliveryUnread] = useState(false)
+  const [deliveryBellOpen, setDeliveryBellOpen] = useState(false)
+  const [proofUrl, setProofUrl] = useState<string | null>(null)
+  const [proofViewerOpen, setProofViewerOpen] = useState(false)
+  const [proofLoading, setProofLoading] = useState(false)
+  const [proofError, setProofError] = useState('')
+  const prevDeliverySigRef = useRef<string | null>(null)
   const cardRef = useRef<HTMLFormElement>(null)
+
+  const deliveryViewedKey = (deliveryId: string) => `bislig-ride-padeliver-updateviewed-${deliveryId}`
+
+  const syncDeliveryUnread = (deliveryId: string) => {
+    let notified: string | null = null
+    let viewed: string | null = null
+
+    try {
+      notified = window.localStorage.getItem(`bislig-ride-padeliver-notifiedseen-${deliveryId}`)
+      viewed = window.localStorage.getItem(deliveryViewedKey(deliveryId))
+    } catch {
+      notified = null
+      viewed = null
+    }
+
+    setDeliveryUnread(notified !== null && notified !== viewed)
+  }
+
+  const handleViewDeliveryUpdate = (deliveryId: string) => {
+    try {
+      window.localStorage.setItem(
+        deliveryViewedKey(deliveryId),
+        window.localStorage.getItem(`bislig-ride-padeliver-notifiedseen-${deliveryId}`) ?? 'seen',
+      )
+    } catch {
+      // Private browsing — unread clears in memory only.
+    }
+
+    setDeliveryUnread(false)
+    setDeliveryBellOpen(false)
+    document.getElementById('pad-delivery-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
+
+  const handleViewProof = async () => {
+    if (!createdDeliveryId || !createdAccessToken || proofLoading) {
+      return
+    }
+
+    setProofLoading(true)
+    setProofError('')
+
+    try {
+      const url = await fetchDeliveryProofUrl(createdDeliveryId, createdAccessToken)
+      setProofUrl(url)
+      setProofViewerOpen(true)
+    } catch (error) {
+      console.error('Unable to load delivery proof:', error)
+      setProofError(t('pad.proofLoadFailed'))
+    } finally {
+      setProofLoading(false)
+    }
+  }
 
   const updateField = (name: keyof PaDeliverForm, value: string) => {
     setForm((current) => ({ ...current, [name]: value }))
@@ -169,6 +232,10 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       }
       setCreatedDeliveryId(created.id)
       setCreatedAccessToken(created.access_token)
+      setDeliveryAlert(null)
+      setDeliveryUnread(false)
+      setDeliveryBellOpen(false)
+      prevDeliverySigRef.current = null
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit delivery request:', error)
@@ -182,6 +249,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     if (isConfirming || !createdDeliveryId || !createdAccessToken || !trackedDelivery || trackedDelivery.status !== 'quoted') {
       return
     }
+
+    unlockNotificationAudio()
 
     setIsConfirming(true)
     setConfirmError('')
@@ -197,22 +266,75 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     }
   }
 
-  const refreshDeliveryStatus = async () => {
+  const refreshDeliveryStatus = async (quiet = false) => {
     if (!createdDeliveryId || !createdAccessToken || isRefreshing) {
       return
     }
 
-    setIsRefreshing(true)
-    setTrackingError('')
+    // Background ticks stay silent so the page does not flicker every poll.
+    if (!quiet) {
+      setIsRefreshing(true)
+      setTrackingError('')
+    }
 
     try {
       const latest = await getDeliveryBooking(createdDeliveryId, createdAccessToken)
-      setTrackedDelivery(latest)
+      setTrackedDelivery((current) => {
+        if (
+          current &&
+          current.status === latest.status &&
+          current.price_cents === latest.price_cents &&
+          current.driver_id === latest.driver_id &&
+          current.updated_at === latest.updated_at &&
+          current.proof_available === latest.proof_available
+        ) {
+          return current
+        }
+
+        return latest
+      })
     } catch (error) {
       console.error('Unable to refresh delivery status:', error)
-      setTrackingError(t('pad.trackFailed'))
+
+      if (!quiet) {
+        setTrackingError(t('pad.trackFailed'))
+      }
     } finally {
-      setIsRefreshing(false)
+      if (!quiet) {
+        setIsRefreshing(false)
+      }
+    }
+  }
+
+  const deliveryStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'quoted':
+        return t('pad.quoteReady')
+      case 'confirmed':
+        return t('pad.trackConfirmed')
+      case 'assigned':
+        return t('pad.trackAssigned')
+      case 'driver_on_way':
+        return t('pad.trackOnWay')
+      case 'driver_arrived':
+        return t('pad.trackArrived')
+      case 'picked_up':
+        return t('pad.trackPickedUp')
+      case 'in_transit':
+        return t('pad.trackInTransit')
+      case 'delivered':
+        return t('pad.trackDelivered')
+      case 'cancelled':
+        return t('pad.trackCancelled')
+      case 'failed':
+        return t('pad.trackFailedStatus')
+      case 'no_driver':
+        return t('pad.trackNoDriver')
+      case 'pending':
+      case 'dispatching':
+        return t('pad.trackFinding')
+      default:
+        return status.toUpperCase().replace(/_/g, ' ')
     }
   }
 
@@ -228,7 +350,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
 
     void refreshDeliveryStatus()
     const timer = window.setInterval(() => {
-      void refreshDeliveryStatus()
+      void refreshDeliveryStatus(true)
     }, 10000)
 
     return () => {
@@ -236,6 +358,76 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, createdDeliveryId, createdAccessToken, trackedDelivery?.status])
+
+  useEffect(() => {
+    if (!submitted || !createdDeliveryId || !trackedDelivery) {
+      return
+    }
+
+    const notifiable = [
+      'assigned',
+      'quoted',
+      'confirmed',
+      'driver_on_way',
+      'driver_arrived',
+      'picked_up',
+      'in_transit',
+      'delivered',
+    ]
+
+    const sig = `${trackedDelivery.id}:${trackedDelivery.status}`
+    const prevSig = prevDeliverySigRef.current
+    prevDeliverySigRef.current = sig
+
+    if (!notifiable.includes(trackedDelivery.status)) {
+      return
+    }
+
+    const markerKey = `bislig-ride-padeliver-notifiedseen-${trackedDelivery.id}`
+    let seen: string | null = null
+
+    try {
+      seen = window.localStorage.getItem(markerKey)
+    } catch {
+      seen = null
+    }
+
+    if (seen === trackedDelivery.status) {
+      return
+    }
+
+    if (prevSig === null) {
+      // First observation (e.g. reload mid-trip): establish the baseline
+      // silently instead of announcing an old state.
+      try {
+        window.localStorage.setItem(markerKey, trackedDelivery.status)
+      } catch {
+        // Private browsing — the in-memory signature still prevents repeats.
+      }
+
+      syncDeliveryUnread(trackedDelivery.id)
+
+      return
+    }
+
+    const prevStatus = prevSig.split(':')[1]
+
+    if (prevStatus === trackedDelivery.status) {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(markerKey, trackedDelivery.status)
+    } catch {
+      // Private browsing — the in-memory signature still prevents repeats.
+    }
+
+    setDeliveryAlert({ status: trackedDelivery.status })
+    setDeliveryUnread(true)
+    playChatNotification()
+    showBrowserNotification(t('pad.newUpdate'), deliveryStatusLabel(trackedDelivery.status))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, createdDeliveryId, trackedDelivery])
 
   useEffect(() => {
     if (submitted) {
@@ -281,6 +473,10 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             setCreatedDeliveryId(candidate.id)
             setCreatedAccessToken(candidate.token)
             setTrackedDelivery(booking)
+            setDeliveryAlert(null)
+            setDeliveryBellOpen(false)
+            prevDeliverySigRef.current = null
+            syncDeliveryUnread(candidate.id)
             setSubmitted(true)
             return
           }
@@ -456,7 +652,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
-          <section className="scheduled-card scheduled-success">
+          <section className="scheduled-card scheduled-success" id="pad-delivery-box">
             <p className="eyebrow">{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
             <h1>{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
             {status === 'quoted' ? (
@@ -494,16 +690,108 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <p className="booking-ref">{t('pad.bookingRef')}: {createdDeliveryId.slice(0, 8)}…</p>
             ) : null}
             {status === 'delivered' && trackedDelivery?.proof_available ? (
-              <p className="booking-status">{t('pad.proofAvailable')}</p>
+              <div className="pad-proof-box">
+                <span className="field-label">{t('pad.proofAvailable')}</span>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    disabled={proofLoading}
+                    onClick={() => void handleViewProof()}
+                  >
+                    {proofLoading ? t('pad.checkingStatus') : t('pad.viewProof')}
+                  </button>
+                </div>
+                {proofError ? <span className="field-error">{proofError}</span> : null}
+              </div>
             ) : null}
             {trackingError ? <p className="form-error-message submit-error">{trackingError}</p> : null}
-            <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshDeliveryStatus()}>
-              {isRefreshing ? t('pad.checkingStatus') : t('pad.refreshStatus')}
-            </button>
+            <div className="pak-bell-row">
+              {deliveryUnread || deliveryBellOpen ? (
+                <div className="notification-wrap">
+                  <button
+                    type="button"
+                    className="notification-bell"
+                    aria-label={deliveryUnread ? `${t('pad.newUpdate')} (1 unread)` : t('pad.newUpdate')}
+                    aria-expanded={deliveryBellOpen}
+                    onClick={() => setDeliveryBellOpen((current) => !current)}
+                  >
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    {deliveryUnread ? <span className="notification-badge">1</span> : null}
+                  </button>
+                  {deliveryBellOpen && createdDeliveryId ? (
+                    <div className="notification-panel" role="dialog" aria-label={t('pad.newUpdate')}>
+                      <div className="notification-panel-head">
+                        <strong>{t('pad.newUpdate')}</strong>
+                      </div>
+                      <ul className="notification-list">
+                        <li className="notification-item">
+                          <div className="notification-copy">
+                            <strong>{trackedDelivery ? deliveryStatusLabel(trackedDelivery.status) : t('pad.newUpdate')}</strong>
+                            <span>
+                              {trackedDelivery ? `${trackedDelivery.pickup_address} → ${trackedDelivery.delivery_address}` : ''}
+                            </span>
+                          </div>
+                          <div className="notification-actions">
+                            <button
+                              type="button"
+                              className="compact-button notification-action"
+                              onClick={() => handleViewDeliveryUpdate(createdDeliveryId)}
+                            >
+                              {t('pad.viewBooking')}
+                            </button>
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshDeliveryStatus()}>
+                {isRefreshing ? t('pad.checkingStatus') : t('pad.refreshStatus')}
+              </button>
+            </div>
             <button type="button" className="primary-action" onClick={onBack}>
               {t('form.backHome')}
             </button>
           </section>
+          {deliveryAlert && trackedDelivery ? (
+            <PakyawanChatAlertPopup
+              eyebrow={t('pad.newUpdate')}
+              title={deliveryStatusLabel(deliveryAlert.status)}
+              subtitle={`${trackedDelivery.pickup_address} → ${trackedDelivery.delivery_address}`}
+              preview={deliveryStatusLabel(trackedDelivery.status)}
+              openLabel={t('pad.viewBooking')}
+              closeLabel={t('chat.closeAria')}
+              onOpen={() => {
+                setDeliveryAlert(null)
+                if (createdDeliveryId) {
+                  handleViewDeliveryUpdate(createdDeliveryId)
+                }
+              }}
+              onClose={() => setDeliveryAlert(null)}
+            />
+          ) : null}
+          {proofViewerOpen ? (
+            <div className="proof-viewer-overlay" role="dialog" aria-modal="true" aria-label={t('pad.proofAvailable')}>
+              <div className="proof-viewer-sheet">
+                <p className="proof-viewer-title">{t('pad.proofAvailable')}</p>
+                {proofUrl ? (
+                  <img src={proofUrl} alt={t('pad.proofAvailable')} />
+                ) : (
+                  <p className="proof-viewer-error">{t('pad.proofLoadFailed')}</p>
+                )}
+                <div className="pak-req-actions">
+                  <button type="button" className="secondary-action" onClick={() => setProofViewerOpen(false)}>
+                    {t('chat.closeAria')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </main>
       </>
     )

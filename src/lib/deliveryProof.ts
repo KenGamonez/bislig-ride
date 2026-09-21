@@ -65,3 +65,17 @@ export async function getDeliveryProofSignedUrl(path: string, expiresInSeconds =
 
   return data.signedUrl
 }
+
+export async function fetchDeliveryProofUrl(deliveryId: string, accessToken: string): Promise<string> {
+  const { data, error } = await supabase.functions.invoke('delivery-proof-url', {
+    body: { deliveryId, accessToken },
+  })
+
+  if (error) throw error
+
+  const signedUrl = (data as { signedUrl?: string } | null)?.signedUrl
+
+  if (!signedUrl) throw new Error('Unable to load the proof photo.')
+
+  return signedUrl
+}

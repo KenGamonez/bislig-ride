@@ -8475,6 +8475,78 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   overflow-wrap: anywhere;
 }
 
+/* --------------------------------------------------------
+   PROOF OF DELIVERY — viewer + module (scoped, mobile-first)
+   -------------------------------------------------------- */
+
+.pad-proof-box {
+  display: grid;
+  gap: 8px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--color-gray-50);
+  border: 1px solid var(--border);
+}
+
+.pad-proof-box .field-label {
+  color: var(--color-green-deep);
+}
+
+.proof-viewer-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(0, 0, 0, 0.72);
+}
+
+.proof-viewer-sheet {
+  width: min(560px, 100%);
+  max-height: calc(100dvh - 32px);
+  overflow-y: auto;
+  background: var(--surface);
+  border-radius: 18px;
+  padding: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.proof-viewer-sheet img {
+  width: 100%;
+  height: auto;
+  max-height: 62dvh;
+  object-fit: contain;
+  border-radius: 12px;
+  background: var(--color-gray-100);
+}
+
+.proof-viewer-title {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 800;
+}
+
+.proof-viewer-error {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+@media (max-width: 480px) {
+  .proof-viewer-overlay {
+    padding: 12px;
+    align-items: flex-end;
+  }
+
+  .proof-viewer-sheet {
+    border-radius: 18px 18px 0 0;
+  }
+}
+
 .pak-bell-row {
   display: flex;
   gap: 8px;

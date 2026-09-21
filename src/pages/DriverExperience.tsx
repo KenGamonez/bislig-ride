@@ -13,9 +13,9 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
-import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDriverDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
-import { buildDeliveryProofPath, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
+import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   notificationPermission,
   playRequestChime,
@@ -263,6 +263,10 @@ export function DriverExperience({
   const [deliveryPriceError, setDeliveryPriceError] = useState<{ deliveryId: string; message: string } | null>(null)
   const [deliveryProof, setDeliveryProof] = useState<{ bookingId: string; file: File | null; previewUrl: string | null } | null>(null)
   const [isUploadingProof, setIsUploadingProof] = useState(false)
+  const [deliveryConfirmedPopup, setDeliveryConfirmedPopup] = useState<DeliveryBooking | null>(null)
+  const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
+  const [deliveryProofViewLoadingId, setDeliveryProofViewLoadingId] = useState<string | null>(null)
+  const [deliveryProofViewError, setDeliveryProofViewError] = useState<{ bookingId: string; message: string } | null>(null)
   const [pakyawanRequests, setPakyawanRequests] = useState<PakyawanBooking[]>([])
   const [acceptedPakyawan, setAcceptedPakyawan] = useState<PakyawanBooking[]>([])
   const [pakyawanSubmittingId, setPakyawanSubmittingId] = useState<string | null>(null)
@@ -1304,8 +1308,44 @@ return unsubscribe
           table: 'deliveries',
           filter: `driver_id=eq.${driverId}`,
         },
-        () => {
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<DeliveryBooking>
+
           loadHeldDeliveries()
+
+          // The only external writer to this driver's held deliveries is the
+          // passenger confirming the quoted fee.
+          if (!incoming.id || incoming.driver_id !== driverId || incoming.status !== 'confirmed') {
+            return
+          }
+
+          const subtitle = `${incoming.pickup_address ?? 'Pickup'} → ${incoming.delivery_address ?? 'Destination'}`
+
+          setNotifications((current) =>
+            current.some((item) => item.id === `delivery-confirmed-${incoming.id}`)
+              ? current
+              : [
+                  {
+                    id: `delivery-confirmed-${incoming.id}`,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'Delivery confirmed',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
+
+          setDeliveryConfirmedPopup((current) =>
+            current && current.id === incoming.id ? current : (incoming as DeliveryBooking),
+          )
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('Delivery confirmed', subtitle)
+          }
         },
       )
       .subscribe()
@@ -1314,7 +1354,7 @@ return unsubscribe
       mounted = false
       void supabase.removeChannel(channel)
     }
-  }, [driverId, driverAuthId, canAcceptDeliveries])
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -2827,6 +2867,69 @@ const displayedDriver = driverProfile ?? demoDriver
     )
   }
 
+  const handleCloseDeliveryConfirmedPopup = () => {
+    const bookingId = deliveryConfirmedPopup?.id
+
+    setDeliveryConfirmedPopup(null)
+
+    if (bookingId) {
+      setNotifications((items) => items.filter((item) => item.id !== `delivery-confirmed-${bookingId}`))
+    }
+  }
+
+  const handleViewDeliveryProof = async (bookingId: string) => {
+    if (deliveryProofViewLoadingId) {
+      return
+    }
+
+    setDeliveryProofViewLoadingId(bookingId)
+    setDeliveryProofViewError(null)
+
+    try {
+      const paths = await fetchDeliveryProofPaths([bookingId])
+      const path = paths[bookingId]
+
+      if (!path) {
+        throw new Error('No proof photo is available for this delivery yet.')
+      }
+
+      const url = await getDeliveryProofSignedUrl(path, 120)
+      setDeliveryProofView({ bookingId, url })
+    } catch (error) {
+      console.error('Unable to load delivery proof:', error)
+      setDeliveryProofViewError({
+        bookingId,
+        message: error instanceof Error && error.message ? error.message : 'Could not load the proof photo.',
+      })
+    } finally {
+      setDeliveryProofViewLoadingId(null)
+    }
+  }
+
+  const renderDeliveryConfirmedPopup = () => {
+    if (!deliveryConfirmedPopup) {
+      return null
+    }
+
+    const confirmedBooking = deliveryConfirmedPopup
+
+    return (
+      <PakyawanChatAlertPopup
+        eyebrow="DELIVERY CONFIRMED"
+        title="Customer confirmed this delivery"
+        subtitle={`${confirmedBooking.pickup_address} → ${confirmedBooking.delivery_address}`}
+        preview={`${confirmedBooking.preferred_date} · ${confirmedBooking.preferred_time}`}
+        openLabel="View Delivery"
+        closeLabel="Close"
+        onOpen={() => {
+          setDriverView('delivery')
+          handleCloseDeliveryConfirmedPopup()
+        }}
+        onClose={handleCloseDeliveryConfirmedPopup}
+      />
+    )
+  }
+
   const renderDeliveryTripOverlay = () => {
     if (!canAcceptDeliveries) {
       return null
@@ -3231,8 +3334,39 @@ const displayedDriver = driverProfile ?? demoDriver
                       )}
                     </div>
                   ) : null}
+                  {booking.driver_id === driverId && booking.status === 'delivered' ? (
+                    <div className="pad-proof-box">
+                      <span className="field-label">Proof of delivery: Available</span>
+                      <div className="pakyawan-actions">
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          disabled={deliveryProofViewLoadingId === booking.id}
+                          onClick={() => void handleViewDeliveryProof(booking.id)}
+                        >
+                          {deliveryProofViewLoadingId === booking.id ? 'Loading...' : 'View Proof'}
+                        </button>
+                      </div>
+                      {deliveryProofViewError && deliveryProofViewError.bookingId === booking.id ? (
+                        <span className="field-error">{deliveryProofViewError.message}</span>
+                      ) : null}
+                    </div>
+                  ) : null}
                   {deliveryLifecycleError && deliveryLifecycleError.deliveryId === booking.id ? (
                     <span className="field-error">{deliveryLifecycleError.message}</span>
+                  ) : null}
+                  {deliveryProofView && deliveryProofView.bookingId === booking.id ? (
+                    <div className="proof-viewer-overlay" role="dialog" aria-modal="true" aria-label="Proof of delivery">
+                      <div className="proof-viewer-sheet">
+                        <p className="proof-viewer-title">Proof of delivery</p>
+                        <img src={deliveryProofView.url} alt="Proof of delivery" />
+                        <div className="pak-req-actions">
+                          <button type="button" className="secondary-action" onClick={() => setDeliveryProofView(null)}>
+                            Close
+                          </button>
+                        </div>
+                      </div>
+                    </div>
                   ) : null}
                 </li>
               ))}
@@ -4415,6 +4549,8 @@ const renderOnlineState = () => (
       {renderPakyawanPopup()}
 
       {renderPakyawanConfirmedPopup()}
+
+      {renderDeliveryConfirmedPopup()}
 
       {pakyawanChatAlert ? (
         <PakyawanChatAlertPopup
