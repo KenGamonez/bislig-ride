@@ -3294,6 +3294,33 @@ a.secondary-action {
   background: var(--color-gray-50);
 }
 
+/* Inline (in-card) chat panel: bounded message scroll, pinned composer. */
+.ride-chat-inline {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  background: var(--color-white);
+  min-width: 0;
+}
+
+.ride-chat-inline .ride-chat-panel {
+  width: 100%;
+  max-height: none;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.ride-chat-inline .ride-chat-messages {
+  min-height: 88px;
+  max-height: 260px;
+}
+
+@media (max-width: 480px) {
+  .ride-chat-inline .ride-chat-messages {
+    max-height: 38dvh;
+  }
+}
+
 .ride-chat-empty {
   margin: 40px auto;
   max-width: 280px;

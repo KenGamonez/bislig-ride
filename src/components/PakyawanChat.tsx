@@ -50,7 +50,11 @@ type PakyawanChatProps = {
   transport?: ChatTransport
 }
 
-export function PakyawanChat({
+type PakyawanChatPanelProps = PakyawanChatProps & {
+  bare?: boolean
+}
+
+export function PakyawanChatPanel({
   bookingId,
   senderRole,
   accessToken = null,
@@ -59,7 +63,8 @@ export function PakyawanChat({
   pollIntervalMs = 10000,
   onClose,
   transport = defaultTransport,
-}: PakyawanChatProps) {
+  bare = false,
+}: PakyawanChatPanelProps) {
   const { t } = useLanguage()
   const [messages, setMessages] = useState<ChatMessageItem[]>([])
   const [message, setMessage] = useState('')
@@ -193,8 +198,7 @@ export function PakyawanChat({
     setSending(false)
   }
 
-  return (
-    <div className="ride-chat-overlay" role="dialog" aria-modal="true" aria-label={t('chat.titleWith', { name: otherPartyName })}>
+  const panel = (
       <div className="ride-chat-panel">
         <div className="ride-chat-header">
           <div>
@@ -257,6 +261,25 @@ export function PakyawanChat({
           </button>
         </form>
       </div>
+  )
+
+  if (bare) {
+    return panel
+  }
+
+  return (
+    <div className="ride-chat-inline" role="region" aria-label={t('chat.titleWith', { name: otherPartyName })}>
+      {panel}
+    </div>
+  )
+}
+
+export function PakyawanChat(props: PakyawanChatProps) {
+  const { t } = useLanguage()
+
+  return (
+    <div className="ride-chat-overlay" role="dialog" aria-modal="true" aria-label={t('chat.titleWith', { name: props.otherPartyName })}>
+      <PakyawanChatPanel {...props} bare />
     </div>
   )
 }

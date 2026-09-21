@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
-import { DeliveryRating } from '../components/DeliveryRating'
 import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
 import { fetchDeliveryProofUrl } from '../lib/deliveryProof'
 import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
@@ -703,6 +702,9 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <p>{t('pad.receivedBody')}</p>
             )}
             {nextCopy ? <p>{nextCopy}</p> : null}
+            {status === 'delivered' && quotedCents !== null ? (
+              <p className="booking-fee">{t('pad.trackDelivered')}: ₱{formatCentavos(quotedCents)}</p>
+            ) : null}
             {createdDeliveryId ? (
               <p className="booking-ref">{t('pad.bookingRef')}: {createdDeliveryId.slice(0, 8)}…</p>
             ) : null}
@@ -722,7 +724,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                 {proofError ? <span className="field-error">{proofError}</span> : null}
               </div>
             ) : null}
-            {trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
+            {status !== 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
               <>
                 <p className="pad-section-label">{t('pad.chatWithDriver')}</p>
                 <DeliveryChatSection
@@ -734,17 +736,6 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                   forceOpen={deliveryChatOpen}
                   onOpenChange={setDeliveryChatOpen}
                   onIncomingMessage={handleDeliveryChatMessage}
-                />
-              </>
-            ) : null}
-            {status === 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
-              <>
-                <p className="pad-section-label">{t('pad.rateDriver')}</p>
-                <DeliveryRating
-                  deliveryId={trackedDelivery.id}
-                  accessToken={createdAccessToken}
-                  raterRole="passenger"
-                  ratedName={t('chat.roleDriver')}
                 />
               </>
             ) : null}

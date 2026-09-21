@@ -5,7 +5,6 @@ import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
-import { DeliveryRating } from '../components/DeliveryRating'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
@@ -268,7 +267,6 @@ export function DriverExperience({
   const [deliveryConfirmedPopup, setDeliveryConfirmedPopup] = useState<DeliveryBooking | null>(null)
   const [deliveredDeliveries, setDeliveredDeliveries] = useState<DeliveryBooking[]>([])
   const [deliveryChatBookingId, setDeliveryChatBookingId] = useState<string | null>(null)
-  const [deliveryRatingBookingId, setDeliveryRatingBookingId] = useState<string | null>(null)
   const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
   const deliveryChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
@@ -1394,12 +1392,13 @@ return unsubscribe
       return
     }
 
-    // One booking-scoped chat watcher per held active or delivered booking.
+    // One booking-scoped chat watcher per held active booking. Delivered
+    // bookings show a final record with no chat UI, so they are not watched.
     // Realtime delivery already requires the own-assigned SELECT policy, so
     // other drivers' messages can never arrive here.
     const watchedIds = Array.from(
       new Set(
-        [...acceptedDeliveries, ...deliveredDeliveries]
+        acceptedDeliveries
           .filter((booking) => booking.driver_id === driverId)
           .map((booking) => booking.id),
       ),
@@ -1443,9 +1442,7 @@ return unsubscribe
               return
             }
 
-            const booking =
-              deliveredDeliveries.find((item) => item.id === deliveredId) ??
-              acceptedDeliveries.find((item) => item.id === deliveredId)
+            const booking = acceptedDeliveries.find((item) => item.id === deliveredId)
             const route = booking
               ? `${booking.pickup_address} → ${booking.delivery_address}`
               : 'Delivery booking'
@@ -1483,7 +1480,7 @@ return unsubscribe
         void supabase.removeChannel(channel)
       })
     }
-  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline, acceptedDeliveries, deliveredDeliveries, deliveryChatBookingId])
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline, acceptedDeliveries, deliveryChatBookingId])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -3541,38 +3538,32 @@ const displayedDriver = driverProfile ?? demoDriver
                     </div>
                   </div>
                   {booking.driver_id === driverId ? (
-                    <>
-                      <DeliveryChatSection
-                        deliveryId={booking.id}
-                        role="driver"
-                        otherPartyName={booking.sender_name}
-                        toggleLabel="Chat with Customer"
-                        enableRealtime
-                        forceOpen={deliveryChatBookingId === booking.id}
-                        onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
-                      />
-                      {deliveryRatingBookingId === booking.id ? (
-                        <>
-                          <p className="pad-section-label">Rate your passenger</p>
-                          <DeliveryRating
-                            deliveryId={booking.id}
-                            raterRole="driver"
-                            ratedName={booking.sender_name}
-                          />
-                        </>
-                      ) : null}
-                      <div className="pakyawan-actions">
-                        <button
-                          type="button"
-                          className="secondary-action compact-button"
-                          onClick={() =>
-                            setDeliveryRatingBookingId((current) => (current === booking.id ? null : booking.id))
-                          }
-                        >
-                          {deliveryRatingBookingId === booking.id ? 'Close' : 'Rate'}
-                        </button>
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="secondary-action compact-button"
+                        disabled={deliveryProofViewLoadingId === booking.id}
+                        onClick={() => void handleViewDeliveryProof(booking.id)}
+                      >
+                        {deliveryProofViewLoadingId === booking.id ? 'Loading...' : 'View Proof'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {deliveryProofViewError && deliveryProofViewError.bookingId === booking.id ? (
+                    <span className="field-error">{deliveryProofViewError.message}</span>
+                  ) : null}
+                  {deliveryProofView && deliveryProofView.bookingId === booking.id ? (
+                    <div className="proof-viewer-overlay" role="dialog" aria-modal="true" aria-label="Proof of delivery">
+                      <div className="proof-viewer-sheet">
+                        <p className="proof-viewer-title">Proof of delivery</p>
+                        <img src={deliveryProofView.url} alt="Proof of delivery" />
+                        <div className="pak-req-actions">
+                          <button type="button" className="secondary-action" onClick={() => setDeliveryProofView(null)}>
+                            Close
+                          </button>
+                        </div>
                       </div>
-                    </>
+                    </div>
                   ) : null}
                 </li>
               ))}

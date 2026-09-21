@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { PakyawanChat } from './PakyawanChat'
+import { PakyawanChatPanel } from './PakyawanChat'
 import { listDeliveryMessages, sendDeliveryMessage } from '../lib/deliveries'
 import { unlockNotificationAudio } from '../lib/notifications'
 import { useLanguage } from '../lib/i18n'
@@ -163,7 +163,7 @@ export function DeliveryChatSection({
         </button>
       </div>
       {open ? (
-        <PakyawanChat
+        <PakyawanChatPanel
           bookingId={deliveryId}
           senderRole={role === 'driver' ? 'driver' : 'passenger'}
           accessToken={accessToken}
