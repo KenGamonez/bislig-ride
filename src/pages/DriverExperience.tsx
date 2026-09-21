@@ -1771,6 +1771,9 @@ const displayedDriver = driverProfile ?? demoDriver
           : [updated, ...current].slice(0, 10),
       )
       setNotifications((current) => current.filter((item) => item.id !== `pakyawan-${bookingId}`))
+      // Successful accept only: open the Pakyawan view so the assigned
+      // booking and its price input are immediately visible.
+      setDriverView('pakyawan')
     } catch (error) {
       console.error('Unable to accept pakyawan request:', error)
       setPakyawanRequestsError('This request could not be accepted. It may have been taken by another driver.')
