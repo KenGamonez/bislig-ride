@@ -5,6 +5,7 @@ import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
+import { DeliveryRating } from '../components/DeliveryRating'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
@@ -267,6 +268,7 @@ export function DriverExperience({
   const [deliveryConfirmedPopup, setDeliveryConfirmedPopup] = useState<DeliveryBooking | null>(null)
   const [deliveredDeliveries, setDeliveredDeliveries] = useState<DeliveryBooking[]>([])
   const [deliveryChatBookingId, setDeliveryChatBookingId] = useState<string | null>(null)
+  const [deliveryRatingBookingId, setDeliveryRatingBookingId] = useState<string | null>(null)
   const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
   const deliveryChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
@@ -3538,16 +3540,39 @@ const displayedDriver = driverProfile ?? demoDriver
                     </div>
                   </div>
                   {booking.driver_id === driverId ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="secondary-action compact-button"
-                        disabled={deliveryProofViewLoadingId === booking.id}
-                        onClick={() => void handleViewDeliveryProof(booking.id)}
-                      >
-                        {deliveryProofViewLoadingId === booking.id ? 'Loading...' : 'View Proof'}
-                      </button>
-                    </div>
+                    <>
+                      <div className="pakyawan-actions">
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          disabled={deliveryProofViewLoadingId === booking.id}
+                          onClick={() => void handleViewDeliveryProof(booking.id)}
+                        >
+                          {deliveryProofViewLoadingId === booking.id ? 'Loading...' : 'View Proof'}
+                        </button>
+                      </div>
+                      {deliveryRatingBookingId === booking.id ? (
+                        <>
+                          <p className="pad-section-label">Rate your passenger</p>
+                          <DeliveryRating
+                            deliveryId={booking.id}
+                            raterRole="driver"
+                            ratedName={booking.sender_name}
+                          />
+                        </>
+                      ) : null}
+                      <div className="pakyawan-actions">
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          onClick={() =>
+                            setDeliveryRatingBookingId((current) => (current === booking.id ? null : booking.id))
+                          }
+                        >
+                          {deliveryRatingBookingId === booking.id ? 'Close' : 'Rate'}
+                        </button>
+                      </div>
+                    </>
                   ) : null}
                   {deliveryProofViewError && deliveryProofViewError.bookingId === booking.id ? (
                     <span className="field-error">{deliveryProofViewError.message}</span>

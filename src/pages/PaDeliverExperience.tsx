@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
+import { DeliveryRating } from '../components/DeliveryRating'
 import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
 import { fetchDeliveryProofUrl } from '../lib/deliveryProof'
 import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
@@ -736,6 +737,17 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                   forceOpen={deliveryChatOpen}
                   onOpenChange={setDeliveryChatOpen}
                   onIncomingMessage={handleDeliveryChatMessage}
+                />
+              </>
+            ) : null}
+            {status === 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
+              <>
+                <p className="pad-section-label">{t('pad.rateDriver')}</p>
+                <DeliveryRating
+                  deliveryId={trackedDelivery.id}
+                  accessToken={createdAccessToken}
+                  raterRole="passenger"
+                  ratedName={t('chat.roleDriver')}
                 />
               </>
             ) : null}
