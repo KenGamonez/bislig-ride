@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
+import { PakyawanChat } from '../components/PakyawanChat'
 import { confirmPakyawanBooking, createPakyawanBooking, getPakyawanBooking } from '../lib/scheduledBookings'
 import { pakyawanTripTypes, type PakyawanBooking, type PakyawanTripType } from '../types/scheduledBooking'
 import { formatCentavos } from '../lib/fare'
@@ -64,6 +65,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
+  const [pakyawanChatOpen, setPakyawanChatOpen] = useState(false)
 
   const updateField = (field: keyof PakyawanBookingForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -167,6 +169,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       delete initialTracked.access_token
       setCreatedBooking({ id: created.id, accessToken: created.access_token })
       setTrackedBooking(initialTracked)
+      setPakyawanChatOpen(false)
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit pakyawan booking:', error)
@@ -175,6 +178,75 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       setIsSubmitting(false)
     }
   }
+
+  useEffect(() => {
+    if (submitted) {
+      return
+    }
+
+    let cancelled = false
+
+    const restoreTrackedBooking = async () => {
+      const prefix = 'bislig-ride-pakyawan-'
+      const candidates: Array<{ id: string; token: string }> = []
+
+      try {
+        for (let i = 0; i < window.localStorage.length; i += 1) {
+          const key = window.localStorage.key(i)
+          const token = key ? window.localStorage.getItem(key) : null
+          if (key && key.startsWith(prefix) && token) {
+            candidates.push({ id: key.slice(prefix.length), token })
+          }
+        }
+      } catch {
+        return
+      }
+
+      for (const candidate of candidates) {
+        try {
+          const booking = await getPakyawanBooking(candidate.id, candidate.token)
+          if (cancelled) {
+            return
+          }
+
+          if (
+            booking.status === 'pending' ||
+            booking.status === 'assigned' ||
+            booking.status === 'quoted' ||
+            booking.status === 'confirmed' ||
+            booking.status === 'scheduled' ||
+            booking.status === 'driver_on_way' ||
+            booking.status === 'driver_arrived' ||
+            booking.status === 'in_progress'
+          ) {
+            setCreatedBooking({ id: candidate.id, accessToken: candidate.token })
+            setTrackedBooking(booking)
+            setSubmitted(true)
+            return
+          }
+
+          try {
+            window.localStorage.removeItem(`${prefix}${candidate.id}`)
+          } catch {
+            // Private browsing or disabled storage — nothing to clean up.
+          }
+        } catch {
+          try {
+            window.localStorage.removeItem(`${prefix}${candidate.id}`)
+          } catch {
+            // Private browsing or disabled storage — nothing to clean up.
+          }
+        }
+      }
+    }
+
+    void restoreTrackedBooking()
+
+    return () => {
+      cancelled = true
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   const refreshBookingStatus = async () => {
     if (!createdBooking || isRefreshing) {
@@ -412,6 +484,22 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                 <button type="button" className="primary-action request-ride-action" disabled={isConfirming} onClick={() => void handleConfirmBooking()}>
                   {isConfirming ? t('pak.confirming') : t('pak.confirmBooking')}
                 </button>
+              </>
+            ) : null}
+            {createdBooking && trackedBooking && trackedBooking.driver_id ? (
+              <>
+                <button type="button" className="secondary-action" onClick={() => setPakyawanChatOpen((current) => !current)}>
+                  {pakyawanChatOpen ? t('chat.closeAria') : t('chat.titleWith', { name: t('chat.roleDriver') })}
+                </button>
+                {pakyawanChatOpen ? (
+                  <PakyawanChat
+                    bookingId={trackedBooking.id}
+                    senderRole="passenger"
+                    accessToken={createdBooking.accessToken}
+                    otherPartyName={t('chat.roleDriver')}
+                    onClose={() => setPakyawanChatOpen(false)}
+                  />
+                ) : null}
               </>
             ) : null}
             <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshBookingStatus()}>

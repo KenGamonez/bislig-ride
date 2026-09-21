@@ -43,3 +43,13 @@ export type PakyawanOfferWithBooking = PakyawanOffer & {
   booking: PakyawanBooking
 }
 
+export type PakyawanChatRole = 'passenger' | 'driver'
+
+export type PakyawanMessage = {
+  id: string
+  booking_id: string
+  sender_role: PakyawanChatRole
+  message: string
+  created_at: string
+}
+

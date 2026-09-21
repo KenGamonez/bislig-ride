@@ -1,5 +1,5 @@
 ﻿import { supabase } from './supabase'
-import type { PakyawanBooking, PakyawanBookingInsert, PakyawanOffer, PakyawanOfferWithBooking } from '../types/scheduledBooking'
+import type { PakyawanBooking, PakyawanBookingInsert, PakyawanChatRole, PakyawanMessage, PakyawanOffer, PakyawanOfferWithBooking } from '../types/scheduledBooking'
 
 export async function createPakyawanBooking(booking: PakyawanBookingInsert) {
   const { data, error } = await supabase
@@ -194,4 +194,38 @@ export async function acceptPakyawanBooking(bookingId: string, driverId: string)
   if (error) throw error
 
   return data
+}
+
+export async function sendPakyawanMessage(args: {
+  bookingId: string
+  accessToken?: string | null
+  senderRole: PakyawanChatRole
+  message: string
+}): Promise<PakyawanMessage> {
+  const { data, error } = await supabase
+    .rpc('send_pakyawan_message', {
+      p_booking_id: args.bookingId,
+      p_access_token: args.accessToken ?? null,
+      p_sender_role: args.senderRole,
+      p_message: args.message,
+    })
+    .single()
+
+  if (error) throw error
+
+  return data as PakyawanMessage
+}
+
+export async function listPakyawanMessages(
+  bookingId: string,
+  accessToken?: string | null,
+): Promise<PakyawanMessage[]> {
+  const { data, error } = await supabase.rpc('list_pakyawan_messages', {
+    p_booking_id: bookingId,
+    p_access_token: accessToken ?? null,
+  })
+
+  if (error) throw error
+
+  return (data ?? []) as PakyawanMessage[]
 }

@@ -3,6 +3,7 @@ import { AppHeader } from '../components/AppHeader'
 import { CancelRideModal } from '../components/CancelRideModal'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
+import { PakyawanChat } from '../components/PakyawanChat'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
@@ -270,6 +271,7 @@ export function DriverExperience({
   const [pakyawanRequestsRetry, setPakyawanRequestsRetry] = useState(0)
   const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
   const [pakyawanConfirmedPopup, setPakyawanConfirmedPopup] = useState<PakyawanBooking | null>(null)
+  const [pakyawanChatBookingId, setPakyawanChatBookingId] = useState<string | null>(null)
   const [pakyawanNow, setPakyawanNow] = useState(() => Date.now())
   const [pakyawanPriceInputs, setPakyawanPriceInputs] = useState<Record<string, string>>({})
   const [pakyawanPriceSubmittingId, setPakyawanPriceSubmittingId] = useState<string | null>(null)
@@ -3362,6 +3364,28 @@ const displayedDriver = driverProfile ?? demoDriver
                   {booking.status === 'completed' ? <span>Trip completed.</span> : null}
                   {pakyawanLifecycleError && pakyawanLifecycleError.bookingId === booking.id ? (
                     <span className="field-error">{pakyawanLifecycleError.message}</span>
+                  ) : null}
+                  {booking.driver_id === driverId ? (
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="secondary-action compact-button"
+                        onClick={() =>
+                          setPakyawanChatBookingId((current) => (current === booking.id ? null : booking.id))
+                        }
+                      >
+                        {pakyawanChatBookingId === booking.id ? 'Close Chat' : 'Chat with Passenger'}
+                      </button>
+                    </div>
+                  ) : null}
+                  {pakyawanChatBookingId === booking.id && booking.driver_id === driverId ? (
+                    <PakyawanChat
+                      bookingId={booking.id}
+                      senderRole="driver"
+                      otherPartyName={booking.customer_name}
+                      enableRealtime
+                      onClose={() => setPakyawanChatBookingId(null)}
+                    />
                   ) : null}
                 </li>
               ))}
