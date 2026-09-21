@@ -1932,6 +1932,165 @@ const displayedDriver = driverProfile ?? demoDriver
     return `${minutes}:${String(seconds).padStart(2, '0')}`
   }
 
+  // Presentation-only formatting for the mobile Pakyawan request card.
+  const formatPakyawanCardDate = (value: string | null | undefined): { main: string; sub: string } => {
+    if (!value) {
+      return { main: '—', sub: '' }
+    }
+
+    const parsed = new Date(`${value}T00:00:00`)
+
+    if (Number.isNaN(parsed.getTime())) {
+      return { main: value, sub: '' }
+    }
+
+    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+    const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+
+    return {
+      main: `${months[parsed.getMonth()]} ${parsed.getDate()}`,
+      sub: `${days[parsed.getDay()]} · ${parsed.getFullYear()}`,
+    }
+  }
+
+  const formatPakyawanCardTime = (value: string | null | undefined): string => {
+    if (!value) {
+      return '—'
+    }
+
+    const match = /^(\d{1,2}):(\d{2})(?::(\d{2}))?/.exec(value.trim())
+
+    if (!match) {
+      return value
+    }
+
+    const hours24 = Number(match[1])
+    const minutes = match[2]
+
+    if (!Number.isFinite(hours24)) {
+      return value
+    }
+
+    const period = hours24 >= 12 ? 'PM' : 'AM'
+    const hours12 = hours24 % 12 === 0 ? 12 : hours24 % 12
+
+    return `${hours12}:${minutes} ${period}`
+  }
+
+  const pakyawanCardStatusLabel = (status: string): string => {
+    switch (status) {
+      case 'pending':
+        return 'Waiting for accept'
+      case 'assigned':
+        return 'Assigned to you'
+      case 'quoted':
+        return 'Waiting for confirmation'
+      case 'scheduled':
+        return 'Scheduled'
+      case 'driver_on_way':
+        return 'Driver on the way'
+      case 'driver_arrived':
+        return 'Driver arrived'
+      case 'in_progress':
+        return 'Trip in progress'
+      case 'completed':
+        return 'Completed'
+      case 'cancelled':
+        return 'Cancelled'
+      default:
+        return status.toUpperCase().replace(/_/g, ' ')
+    }
+  }
+
+  // Single shared request-card renderer for the inline Pakyawan list and the
+  // foreground popup. Same data, same handlers — presentation only.
+  const renderPakyawanRequestCard = (booking: PakyawanBooking, options: { eyebrow: string | null; acceptLabel: string }) => {
+    const date = formatPakyawanCardDate(booking.booking_date)
+    const time = formatPakyawanCardTime(booking.pickup_time)
+    const priceCents = typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? booking.price_cents : null
+
+    return (
+      <li key={booking.id} className="pak-req">
+        <div className="pak-req-top">
+          {options.eyebrow ? <span className="pak-req-eyebrow">{options.eyebrow}</span> : <span />}
+          <span className="pak-req-status">{pakyawanCardStatusLabel(booking.status)}</span>
+        </div>
+        <div className="pak-req-route">
+          <div className="pak-req-stop">
+            <span className="pak-req-dot is-pickup" aria-hidden="true" />
+            <div className="pak-req-stop-copy">
+              <span className="pak-req-label">Pickup</span>
+              <strong className="pak-req-place">{booking.pickup_location}</strong>
+            </div>
+          </div>
+          <div className="pak-req-leg" aria-hidden="true">
+            <span className="pak-req-leg-rail" />
+          </div>
+          <div className="pak-req-stop">
+            <span className="pak-req-dot is-destination" aria-hidden="true" />
+            <div className="pak-req-stop-copy">
+              <span className="pak-req-label">Destination</span>
+              <strong className="pak-req-place">{booking.destination}</strong>
+            </div>
+          </div>
+        </div>
+        <div className="pak-req-grid">
+          <div className="pak-req-cell">
+            <span className="pak-req-label">Date</span>
+            <strong>{date.main}</strong>
+            {date.sub ? <small>{date.sub}</small> : null}
+          </div>
+          <div className="pak-req-cell">
+            <span className="pak-req-label">Time</span>
+            <strong>{time}</strong>
+            {booking.estimated_hours ? (
+              <small>
+                ~{booking.estimated_hours} hr{booking.estimated_hours === 1 ? '' : 's'} trip
+              </small>
+            ) : (
+              <small>Scheduled pickup</small>
+            )}
+          </div>
+          <div className="pak-req-cell">
+            <span className="pak-req-label">Passengers</span>
+            <strong>{booking.passengers}</strong>
+            <small>{booking.trip_type}</small>
+          </div>
+        </div>
+        <div className="pak-req-split">
+          <div className="pak-req-party">
+            <span className="pak-req-label">Customer</span>
+            <strong>{booking.customer_name}</strong>
+            <small>{booking.customer_phone}</small>
+          </div>
+          <div className="pak-req-party pak-req-price">
+            <span className="pak-req-label">Trip price</span>
+            <strong>{priceCents !== null ? `₱${formatCentavos(priceCents)}` : '—'}</strong>
+            <small>{pakyawanCardStatusLabel(booking.status)}</small>
+          </div>
+        </div>
+        <div className="pak-req-actions">
+          <button
+            type="button"
+            className="primary-action"
+            onClick={() => void handleAcceptPakyawan(booking.id)}
+            disabled={pakyawanSubmittingId === booking.id}
+          >
+            {pakyawanSubmittingId === booking.id ? 'Accepting...' : options.acceptLabel}
+          </button>
+          <button
+            type="button"
+            className="secondary-action"
+            onClick={() => handleDeclinePakyawan(booking.id)}
+            disabled={pakyawanSubmittingId !== null}
+          >
+            Not now
+          </button>
+        </div>
+      </li>
+    )
+  }
+
   const activePakyawanOffers = pakyawanOffers.filter(
     (offer) => new Date(offer.expires_at).getTime() > pakyawanNow,
   )
@@ -2390,57 +2549,14 @@ const displayedDriver = driverProfile ?? demoDriver
                 <p>A customer is requesting a Pakyawan trip. Accept to take it.</p>
               </div>
             </div>
-            <ul className="pakyawan-list">
-              <li className="pakyawan-item">
-                <div className="pakyawan-route">
-                  <span>{popupBooking.pickup_location}</span>
-                  <strong>→</strong>
-                  <span>{popupBooking.destination}</span>
-                </div>
-                <div className="pakyawan-meta">
-                  <span>
-                    {popupBooking.booking_date} · {popupBooking.pickup_time}
-                  </span>
-                  <span>
-                    {popupBooking.passengers} passenger{popupBooking.passengers === 1 ? '' : 's'} · {popupBooking.trip_type}
-                  </span>
-                  {popupBooking.estimated_hours ? (
-                    <span>
-                      ~{popupBooking.estimated_hours} hr{popupBooking.estimated_hours === 1 ? '' : 's'}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="pakyawan-customer">
-                  <span>{popupBooking.customer_name}</span>
-                  <span>{popupBooking.customer_phone}</span>
-                </div>
-                {waitingCount > 0 ? (
-                  <div className="pakyawan-meta">
-                    <span>
-                      {waitingCount} more request{waitingCount === 1 ? '' : 's'} waiting
-                    </span>
-                  </div>
-                ) : null}
-                <div className="pakyawan-actions">
-                  <button
-                    type="button"
-                    className="primary-action compact-button"
-                    onClick={() => void handleAcceptPakyawan(popupBooking.id)}
-                    disabled={pakyawanSubmittingId === popupBooking.id}
-                  >
-                    {pakyawanSubmittingId === popupBooking.id ? 'Accepting...' : 'Accept Request'}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-action compact-button"
-                    onClick={() => handleDeclinePakyawan(popupBooking.id)}
-                    disabled={pakyawanSubmittingId !== null}
-                  >
-                    Not now
-                  </button>
-                </div>
-              </li>
+            <ul className="pak-req-list">
+              {renderPakyawanRequestCard(popupBooking, { eyebrow: null, acceptLabel: 'Accept Request' })}
             </ul>
+            {waitingCount > 0 ? (
+              <p className="pak-req-waiting">
+                {waitingCount} more request{waitingCount === 1 ? '' : 's'} waiting
+              </p>
+            ) : null}
           </section>
         </div>
       </div>
@@ -2914,7 +3030,7 @@ const displayedDriver = driverProfile ?? demoDriver
         ) : null}
 
         {pakyawanOffersError ? (
-          <p className="form-error-message">{pakyawanOffersError}</p>
+          <p className="pak-req-note">{pakyawanOffersError}</p>
         ) : null}
 
         {pakyawanOffersError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
@@ -2963,51 +3079,8 @@ const displayedDriver = driverProfile ?? demoDriver
         )}
 
         {pakyawanRequestsError || !driverOnline || pakyawanRequests.length === 0 ? null : (
-          <ul className="pakyawan-list">
-            {pakyawanRequests.map((booking) => (
-              <li key={booking.id} className="pakyawan-item">
-                <div className="pakyawan-route">
-                  <span>{booking.pickup_location}</span>
-                  <strong>→</strong>
-                  <span>{booking.destination}</span>
-                </div>
-                <div className="pakyawan-meta">
-                  <span>
-                    {booking.booking_date} · {booking.pickup_time}
-                  </span>
-                  <span>
-                    {booking.passengers} passenger{booking.passengers === 1 ? '' : 's'} · {booking.trip_type}
-                  </span>
-                  {booking.estimated_hours ? (
-                    <span>
-                      ~{booking.estimated_hours} hr{booking.estimated_hours === 1 ? '' : 's'}
-                    </span>
-                  ) : null}
-                </div>
-                <div className="pakyawan-customer">
-                  <span>{booking.customer_name}</span>
-                  <span>{booking.customer_phone}</span>
-                </div>
-                <div className="pakyawan-actions">
-                  <button
-                    type="button"
-                    className="primary-action compact-button"
-                    onClick={() => void handleAcceptPakyawan(booking.id)}
-                    disabled={pakyawanSubmittingId === booking.id}
-                  >
-                    {pakyawanSubmittingId === booking.id ? 'Accepting...' : 'Accept'}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-action compact-button"
-                    onClick={() => handleDeclinePakyawan(booking.id)}
-                    disabled={pakyawanSubmittingId !== null}
-                  >
-                    Not now
-                  </button>
-                </div>
-              </li>
-            ))}
+          <ul className="pak-req-list">
+            {pakyawanRequests.map((booking) => renderPakyawanRequestCard(booking, { eyebrow: 'New request', acceptLabel: 'Accept Request' }))}
           </ul>
         )}
 
