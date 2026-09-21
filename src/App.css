@@ -7620,6 +7620,79 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .pakyawan-list {
   display: grid;
   gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Driver delivery rows: full-width route-first composition.
+   Mobile stacks; desktop distributes route | status/fee. */
+.delv-row {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.delv-top {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.delv-main {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.delv-route {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.delv-meta {
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.delv-side {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.delv-fee {
+  color: var(--text-primary);
+  font-size: 1.05rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+@media (min-width: 768px) {
+  .delv-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .delv-side {
+    justify-content: flex-end;
+    text-align: right;
+  }
 }
 
 .pakyawan-item {
@@ -7727,16 +7800,20 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .pakyawan-accepted-list {
   display: grid;
   gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
 .pakyawan-accepted {
-  display: flex;
-  align-items: center;
-  gap: 14px;
+  display: grid;
+  gap: 12px;
+  align-items: start;
   padding: 14px 16px;
   background: var(--color-green-soft);
   border: 1px solid rgba(22,163,74, 0.25);
   border-radius: var(--radius-lg);
+  min-width: 0;
 }
 
 .pakyawan-accepted-icon {

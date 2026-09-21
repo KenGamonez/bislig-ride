@@ -268,6 +268,7 @@ export function DriverExperience({
   const [deliveryConfirmedPopup, setDeliveryConfirmedPopup] = useState<DeliveryBooking | null>(null)
   const [deliveredDeliveries, setDeliveredDeliveries] = useState<DeliveryBooking[]>([])
   const [deliveryChatBookingId, setDeliveryChatBookingId] = useState<string | null>(null)
+  const [deliveryRatingBookingId, setDeliveryRatingBookingId] = useState<string | null>(null)
   const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
   const deliveryChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
@@ -3509,17 +3510,23 @@ const displayedDriver = driverProfile ?? demoDriver
             <p className="section-label">DELIVERED</p>
             <ul className="pakyawan-accepted-list">
               {deliveredDeliveries.map((booking) => (
-                <li key={booking.id}>
-                  <strong>
-                    {booking.pickup_address} → {booking.delivery_address}
-                  </strong>
-                  <span>
-                    {booking.preferred_date} · {booking.preferred_time}
-                  </span>
-                  <span>Status: DELIVERED</span>
-                  {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
-                    <span>Fee: ₱{formatCentavos(booking.price_cents)}</span>
-                  ) : null}
+                <li key={booking.id} className="delv-row">
+                  <div className="delv-top">
+                    <div className="delv-main">
+                      <strong className="delv-route">
+                        {booking.pickup_address} → {booking.delivery_address}
+                      </strong>
+                      <span className="delv-meta">
+                        {booking.preferred_date} · {booking.preferred_time}
+                      </span>
+                    </div>
+                    <div className="delv-side">
+                      <span className="pak-req-status">DELIVERED</span>
+                      {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
+                        <strong className="delv-fee">₱{formatCentavos(booking.price_cents)}</strong>
+                      ) : null}
+                    </div>
+                  </div>
                   {booking.driver_id === driverId ? (
                     <>
                       <DeliveryChatSection
@@ -3531,12 +3538,27 @@ const displayedDriver = driverProfile ?? demoDriver
                         forceOpen={deliveryChatBookingId === booking.id}
                         onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
                       />
-                      <p className="pad-section-label">Rate your passenger</p>
-                      <DeliveryRating
-                        deliveryId={booking.id}
-                        raterRole="driver"
-                        ratedName={booking.sender_name}
-                      />
+                      {deliveryRatingBookingId === booking.id ? (
+                        <>
+                          <p className="pad-section-label">Rate your passenger</p>
+                          <DeliveryRating
+                            deliveryId={booking.id}
+                            raterRole="driver"
+                            ratedName={booking.sender_name}
+                          />
+                        </>
+                      ) : null}
+                      <div className="pakyawan-actions">
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          onClick={() =>
+                            setDeliveryRatingBookingId((current) => (current === booking.id ? null : booking.id))
+                          }
+                        >
+                          {deliveryRatingBookingId === booking.id ? 'Close' : 'Rate'}
+                        </button>
+                      </div>
                     </>
                   ) : null}
                 </li>
