@@ -13656,3 +13656,191 @@ a:focus-visible {
     font-size: 0.84rem;
   }
 }
+
+/* =========================================================
+   APP REDESIGN — BOLD MOBILE-APP SYSTEM (visual only)
+   Compact app shell, dense hierarchy, distinct card types,
+   map-first surfaces, segmented navigation. No behavior,
+   copy, or workflow changes below this line.
+   ========================================================= */
+
+/* ---- Heroes become compact app headers ---- */
+.scheduled-shell .scheduled-header,
+.application-shell .application-header {
+  margin-bottom: 16px;
+  padding: 20px 20px 18px;
+}
+
+.scheduled-shell .scheduled-header h1,
+.application-shell .application-header h1 {
+  font-size: 1.45rem;
+  letter-spacing: -0.02em;
+  max-width: none;
+}
+
+.customer-layout .service-greeting h1 {
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.customer-layout .home-hero-title {
+  font-size: 1.5rem;
+  letter-spacing: -0.03em;
+}
+
+.customer-layout .discover-heading h2 {
+  font-size: 1.15rem;
+  letter-spacing: -0.02em;
+}
+
+.section-header {
+  margin-bottom: 14px;
+}
+
+.section-header h1 {
+  font-size: clamp(1.35rem, 2vw, 1.7rem);
+}
+
+.driver-dash-copy h2 {
+  font-size: 1.5rem;
+}
+
+/* ---- Price becomes a dark financial module ---- */
+.fare-box:not(.fare-highlight-focal),
+.customer-layout .fare-box:not(.fare-highlight-focal) {
+  background: var(--color-black-soft);
+  border-color: var(--color-black-soft);
+  border-radius: 16px;
+  padding: 16px 18px;
+  box-shadow: 0 10px 24px rgba(7, 16, 18, 0.18);
+}
+
+.fare-box:not(.fare-highlight-focal) strong,
+.customer-layout .fare-box:not(.fare-highlight-focal) strong {
+  color: var(--color-white);
+  font-size: 1.4rem;
+  letter-spacing: -0.01em;
+}
+
+.fare-box:not(.fare-highlight-focal) .field-label,
+.customer-layout .fare-box:not(.fare-highlight-focal) .field-label,
+.fare-box:not(.fare-highlight-focal) small,
+.customer-layout .fare-box:not(.fare-highlight-focal) small {
+  color: rgba(255, 255, 255, 0.62);
+}
+
+/* ---- Status becomes a strong state module ---- */
+.booking-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-gray-100);
+  border-left: 3px solid var(--color-green-deep);
+  border-radius: 0 12px 12px 0;
+  padding: 10px 12px;
+}
+
+/* ---- Driver mini-nav becomes a segmented control ---- */
+.driver-mini-nav {
+  background: var(--color-gray-100);
+  border: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 4px;
+  gap: 2px;
+  margin-bottom: 14px;
+}
+
+.mini-nav-item {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.mini-nav-item.is-active {
+  background: var(--surface);
+  border-color: var(--border);
+  color: var(--color-green-deep);
+  box-shadow: var(--shadow-xs);
+}
+
+/* ---- Desktop nav active becomes a pill ---- */
+.app-header .nav-link.is-active {
+  background: var(--color-green-soft);
+  border-radius: 999px;
+  padding: 8px 14px;
+}
+
+.app-header .nav-link.is-active::after {
+  display: none;
+}
+
+/* ---- Sheets get a native grabber ---- */
+.ride-request-sheet {
+  position: relative;
+}
+
+.ride-request-sheet::before {
+  content: '';
+  position: sticky;
+  top: 10px;
+  z-index: 5;
+  display: block;
+  width: 40px;
+  height: 4px;
+  margin: 10px auto 0;
+  border-radius: 999px;
+  background: var(--color-gray-300);
+}
+
+/* ---- Success cards become compact app confirmations ---- */
+.scheduled-card.scheduled-success,
+.application-card.application-success {
+  padding: 24px 22px;
+}
+
+.scheduled-card.scheduled-success h1,
+.application-card.application-success h1 {
+  font-size: 1.4rem;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Service rows get denser ---- */
+.customer-layout .service-card--primary,
+.customer-layout .service-card,
+.customer-layout .other-ways-row,
+.customer-layout .ride-now-card,
+.booking-mode-card {
+  padding: 14px 16px;
+}
+
+.booking-section {
+  gap: 12px;
+}
+
+/* ---- Map-first: taller driver map surface ---- */
+.driver-map-panel .maplibregl-map {
+  height: 320px !important;
+}
+
+@media (max-width: 480px) {
+  .scheduled-shell .scheduled-header,
+  .application-shell .application-header {
+    padding: 18px 16px 16px;
+  }
+
+  .scheduled-shell .scheduled-header h1,
+  .application-shell .application-header h1 {
+    font-size: 1.3rem;
+  }
+
+  .customer-layout .service-greeting h1,
+  .customer-layout .home-hero-title {
+    font-size: 1.35rem;
+  }
+
+  .fare-box:not(.fare-highlight-focal) strong,
+  .customer-layout .fare-box:not(.fare-highlight-focal) strong {
+    font-size: 1.25rem;
+  }
+}
