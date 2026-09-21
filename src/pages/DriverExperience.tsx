@@ -94,7 +94,7 @@ const resolvePresenceErrorMessage = (error: unknown, offline: boolean): string =
 
 type DriverPhase = 'offline' | 'online' | 'incoming_request' | 'heading_to_pickup' | 'arrived' | 'in_progress' | 'completed'
 
-type DriverView = 'home' | 'queue' | 'profile' | 'pakyawan' | 'delivery'
+  type DriverView = 'profile' | 'queue' | 'pakyawan' | 'delivery'
 
 type DriverSummaryProfile = {
   name: string
@@ -196,7 +196,7 @@ export function DriverExperience({
 }) {
   const [driverOnline, setDriverOnline] = useState(false)
   const [phase, setPhase] = useState<DriverPhase>('offline')
-  const [driverView, setDriverView] = useState<DriverView>('home')
+  const [driverView, setDriverView] = useState<DriverView>('profile')
   const [request, setRequest] = useState<Ride | null>(null)
   const [activeRide, setActiveRide] = useState<Ride | null>(null)
   const [transitioning, setTransitioning] = useState(false)
@@ -4365,9 +4365,8 @@ const renderOnlineState = () => (
 
       <nav className="driver-mini-nav" aria-label="Driver workspaces">
         {([
-          { id: 'home', label: 'Home' },
-          { id: 'queue', label: 'Ride Queue' },
           { id: 'profile', label: 'Profile' },
+          { id: 'queue', label: 'Ride Queue' },
           { id: 'pakyawan', label: 'Pakyawan', count: pakyawanRequests.length + activePakyawanOffers.length },
           { id: 'delivery', label: 'Delivery', count: deliveryRequests.length + activeDeliveryOffers.length },
         ] as const).map((item) => (
@@ -4383,64 +4382,6 @@ const renderOnlineState = () => (
           </button>
         ))}
       </nav>
-
-      {driverView === 'home' ? (
-        <>
-          {phase === 'offline' ? (
-            <section className="driver-card work-state work-offline">
-              <div className="state-heading">
-                <div>
-                  <p className="section-label">AVAILABILITY</p>
-                  <h3>You&apos;re currently offline</h3>
-                  <p>Go online to start receiving requests, or review your recent activity below.</p>
-                </div>
-                <span className="state-badge offline-badge">OFFLINE</span>
-              </div>
-              <div className="work-cta">
-                <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
-                  {transitioning ? 'Going Online...' : 'Go Online'}
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          {(activeRide || pendingOffer) && phase !== 'offline' ? (
-            <section className="driver-card work-state">
-              <div className="state-heading">
-                <div>
-                  <p className="section-label">ACTIVE RIDE</p>
-                  <h3>You have an active ride</h3>
-                  <p>Your trip is waiting in the Ride Queue workspace.</p>
-                </div>
-              </div>
-              <div className="work-cta">
-                <button type="button" className="secondary-action compact-button" onClick={() => setDriverView('queue')}>
-                  Open Ride Queue
-                </button>
-              </div>
-            </section>
-          ) : null}
-
-          {cancellationNotice ? (
-            <section className="ride-cancelled-notice" role="alert">
-              <div>
-                <strong>Ride cancelled by the passenger</strong>
-                <span>
-                  {activeRide
-                    ? `${activeRide.customer_name} cancelled this ride. `
-                    : 'Your passenger cancelled this ride. '}
-                  Reason: {cancellationNotice.reason}
-                </span>
-              </div>
-              <button type="button" onClick={() => setCancellationNotice(null)}>
-                Dismiss
-              </button>
-            </section>
-          ) : null}
-
-          {renderRecentRides()}
-        </>
-      ) : null}
 
       {driverView === 'profile' ? (
         <>
@@ -4518,11 +4459,29 @@ const renderOnlineState = () => (
               </form>
             </section>
           ) : null}
+
+          {renderRecentRides()}
         </>
       ) : null}
 
       {driverView === 'queue' ? (
         <div className="driver-operations">
+          {cancellationNotice ? (
+            <section className="ride-cancelled-notice" role="alert">
+              <div>
+                <strong>Ride cancelled by the passenger</strong>
+                <span>
+                  {activeRide
+                    ? `${activeRide.customer_name} cancelled this ride. `
+                    : 'Your passenger cancelled this ride. '}
+                  Reason: {cancellationNotice.reason}
+                </span>
+              </div>
+              <button type="button" onClick={() => setCancellationNotice(null)}>
+                Dismiss
+              </button>
+            </section>
+          ) : null}
           {phase === 'offline' ? renderOfflineState() : null}
           {phase === 'online' ? renderOnlineState() : null}
           {phase === 'heading_to_pickup' ? renderHeadingToPickup() : null}
