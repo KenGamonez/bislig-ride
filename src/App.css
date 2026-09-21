@@ -8458,6 +8458,93 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   line-height: 1.5;
 }
 
+.pak-chat-preview {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-gray-50);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* --------------------------------------------------------
+   PASSENGER UPCOMING — lightweight active-booking cards
+   (scoped, mobile-first; reuses pak-req language)
+   -------------------------------------------------------- */
+
+.upcoming-list {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 16px;
+  padding: 0;
+  list-style: none;
+}
+
+.upcoming-card {
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-soft);
+}
+
+.upcoming-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.upcoming-card-route {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--text-primary);
+  font-size: 0.98rem;
+  font-weight: 750;
+  letter-spacing: -0.01em;
+  line-height: 1.35;
+}
+
+.upcoming-card-meta {
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.upcoming-card-meta strong {
+  color: var(--text-primary);
+}
+
+.upcoming-card-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.upcoming-card-actions .primary-action,
+.upcoming-card-actions .secondary-action {
+  width: 100%;
+  min-height: 46px;
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (min-width: 768px) {
+  .upcoming-card-actions {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  }
+}
+
 @media (max-width: 380px) {
   .pak-req {
     padding: 16px 14px;

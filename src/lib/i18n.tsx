@@ -81,6 +81,7 @@ const en = {
   'dash.pakyawanDesc': 'Reserve a vehicle for longer trips.',
   'dash.paDeliver': 'Pa-deliver',
   'dash.paDeliverDesc': 'Send packages across Bislig.',
+  'home.upcomingEyebrow': 'Your upcoming rides',
   'dash.carRentals': 'Car Rentals',
   'dash.carRentalsDesc': 'Rent a vehicle by the day.',
 
@@ -436,6 +437,13 @@ const en = {
   'pak.tripCompleted': 'Trip completed',
   'pak.trackFailed': 'We could not load your booking status. Please try again.',
   'pak.confirmFailed': 'We could not confirm your booking. It may have already been updated — please refresh the status and try again.',
+  'pak.upcomingLabel': 'Upcoming Pakyawan',
+  'pak.chatWithDriver': 'Chat with Driver',
+  'pak.viewBooking': 'View Booking',
+  'pak.waitingDriver': 'Waiting for driver',
+  'pak.driverAssigned': 'Driver assigned',
+  'pak.newMessage': 'New message',
+  'pak.openChat': 'Open Chat',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
@@ -482,6 +490,8 @@ const en = {
   'pad.refreshStatus': 'Refresh status',
   'pad.checkingStatus': 'Checking for updates...',
   'pad.trackFailed': 'We could not load your delivery status. Please try again.',
+  'pad.upcomingLabel': 'Upcoming Delivery',
+  'pad.viewBooking': 'View Delivery',
   'pad.trackFinding': 'Finding a driver',
   'pad.trackNoDriver': 'Unable to find a driver right now.',
   'pad.trackAssigned': 'Driver Assigned',
@@ -707,6 +717,7 @@ const bi: Record<TranslationKey, string> = {
   'dash.pakyawanDesc': 'Pag-reserve og sakyanan para sa layo nga byahe.',
   'dash.paDeliver': 'Pa-deliver',
   'dash.paDeliverDesc': 'Pagpadala og mga package sa tibuok Bislig.',
+  'home.upcomingEyebrow': 'Imong umalabot nga mga biyahe',
   'dash.carRentals': 'Pag-arkila og Sakyanan',
   'dash.carRentalsDesc': 'Pag-arkila og sakyanan kada adlaw.',
 
@@ -1063,6 +1074,13 @@ const bi: Record<TranslationKey, string> = {
   'pak.tripCompleted': 'Nahuman ang byahe',
   'pak.trackFailed': 'Dili ma-load karon ang status sa imong booking. Palihog sulayi og balik.',
   'pak.confirmFailed': 'Dili makumpirma karon ang imong booking. Basin na-update na kini — palihog i-refresh ang status ug sulayi og balik.',
+  'pak.upcomingLabel': 'Umalabot nga Pakyawan',
+  'pak.chatWithDriver': 'Chat uban sa Driver',
+  'pak.viewBooking': 'Tan-awa ang Booking',
+  'pak.waitingDriver': 'Naghulat sa driver',
+  'pak.driverAssigned': 'Naka-assign ang driver',
+  'pak.newMessage': 'Bag-ong mensahe',
+  'pak.openChat': 'Ablihi ang Chat',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
@@ -1108,6 +1126,8 @@ const bi: Record<TranslationKey, string> = {
   'pad.refreshStatus': 'I-refresh ang status',
   'pad.checkingStatus': 'Gisusi ang mga update...',
   'pad.trackFailed': 'Dili ma-load karon ang status sa imong delivery. Palihog sulayi og balik.',
+  'pad.upcomingLabel': 'Umalabot nga Delivery',
+  'pad.viewBooking': 'Tan-awa ang Delivery',
   'pad.trackFinding': 'Nangita og driver',
   'pad.trackNoDriver': 'Dili makakita og driver karon.',
   'pad.trackAssigned': 'Na-assign ang Driver',

@@ -206,3 +206,50 @@ export function PakyawanChat({
     </div>
   )
 }
+
+type PakyawanChatAlertPopupProps = {
+  eyebrow: string
+  title: string
+  subtitle: string
+  preview: string
+  openLabel: string
+  closeLabel: string
+  onOpen: () => void
+  onClose: () => void
+}
+
+export function PakyawanChatAlertPopup({
+  eyebrow,
+  title,
+  subtitle,
+  preview,
+  openLabel,
+  closeLabel,
+  onOpen,
+  onClose,
+}: PakyawanChatAlertPopupProps) {
+  return (
+    <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label={title}>
+      <div className="ride-request-sheet">
+        <section className="driver-card pakyawan-card">
+          <div className="state-heading">
+            <div>
+              <p className="section-label">{eyebrow}</p>
+              <h3>{title}</h3>
+              <p>{subtitle}</p>
+            </div>
+          </div>
+          <p className="pak-chat-preview">{preview}</p>
+          <div className="pak-req-actions">
+            <button type="button" className="primary-action" onClick={onOpen}>
+              {openLabel}
+            </button>
+            <button type="button" className="secondary-action" onClick={onClose}>
+              {closeLabel}
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  )
+}

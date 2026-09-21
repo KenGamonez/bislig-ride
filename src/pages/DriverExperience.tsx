@@ -3,7 +3,7 @@ import { AppHeader } from '../components/AppHeader'
 import { CancelRideModal } from '../components/CancelRideModal'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
-import { PakyawanChat } from '../components/PakyawanChat'
+import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
@@ -272,6 +272,8 @@ export function DriverExperience({
   const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
   const [pakyawanConfirmedPopup, setPakyawanConfirmedPopup] = useState<PakyawanBooking | null>(null)
   const [pakyawanChatBookingId, setPakyawanChatBookingId] = useState<string | null>(null)
+  const [pakyawanChatAlert, setPakyawanChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
+  const pakyawanChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [pakyawanNow, setPakyawanNow] = useState(() => Date.now())
   const [pakyawanPriceInputs, setPakyawanPriceInputs] = useState<Record<string, string>>({})
   const [pakyawanPriceSubmittingId, setPakyawanPriceSubmittingId] = useState<string | null>(null)
@@ -1346,6 +1348,100 @@ return unsubscribe
       mounted = false
     }
   }, [driverId, driverAuthId, canAcceptPakyawan])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptPakyawan) {
+      return
+    }
+
+    // One booking-scoped chat watcher per held booking. Realtime delivery
+    // already requires the own-assigned SELECT policy, so other drivers'
+    // messages can never arrive here.
+    const heldIds = Array.from(
+      new Set(
+        acceptedPakyawan
+          .filter((booking) => booking.driver_id === driverId)
+          .map((booking) => booking.id),
+      ),
+    )
+
+    if (heldIds.length === 0) {
+      return
+    }
+
+    const channels = heldIds.map((heldId) =>
+      supabase
+        .channel(`driver-pakyawan-chatwatch-${heldId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'pakyawan_messages',
+            filter: `booking_id=eq.${heldId}`,
+          },
+          (payload) => {
+            const incoming = payload.new as {
+              id?: string
+              booking_id?: string
+              sender_role?: string
+              message?: string
+            }
+
+            if (!incoming.id || incoming.sender_role === 'driver') {
+              return
+            }
+
+            if (pakyawanChatSeenIdsRef.current.has(incoming.id)) {
+              return
+            }
+
+            pakyawanChatSeenIdsRef.current.add(incoming.id)
+
+            // The open chat shows the message itself — no duplicate popup/sound.
+            if (pakyawanChatBookingId === heldId) {
+              return
+            }
+
+            const booking = acceptedPakyawan.find((item) => item.id === heldId)
+            const route = booking
+              ? `${booking.pickup_location} → ${booking.destination}`
+              : 'Pakyawan booking'
+            const preview = String(incoming.message ?? '').slice(0, 160)
+
+            setNotifications((current) =>
+              current.some((item) => item.id === `pakyawan-chatmsg-${incoming.id}`)
+                ? current
+                : [
+                    {
+                      id: `pakyawan-chatmsg-${incoming.id}`,
+                      kind: 'pakyawan',
+                      rideId: null,
+                      title: 'New Pakyawan message',
+                      subtitle: preview,
+                      seen: false,
+                      createdAt: Date.now(),
+                    },
+                    ...current,
+                  ],
+            )
+
+            setPakyawanChatAlert({ bookingId: heldId, route, preview })
+
+            if (driverOnline) {
+              playRequestChime()
+            }
+          },
+        )
+        .subscribe(),
+    )
+
+    return () => {
+      channels.forEach((channel) => {
+        void supabase.removeChannel(channel)
+      })
+    }
+  }, [driverId, driverAuthId, canAcceptPakyawan, driverOnline, acceptedPakyawan, pakyawanChatBookingId])
 
   const resolvePakyawanLifecycleError = (error: unknown): string => {
     const message = error instanceof Error ? error.message : ''
@@ -4319,6 +4415,23 @@ const renderOnlineState = () => (
       {renderPakyawanPopup()}
 
       {renderPakyawanConfirmedPopup()}
+
+      {pakyawanChatAlert ? (
+        <PakyawanChatAlertPopup
+          eyebrow="NEW MESSAGE"
+          title="Pakyawan chat"
+          subtitle={pakyawanChatAlert.route}
+          preview={pakyawanChatAlert.preview}
+          openLabel="Open Chat"
+          closeLabel="Close"
+          onOpen={() => {
+            setPakyawanChatBookingId(pakyawanChatAlert.bookingId)
+            setDriverView('pakyawan')
+            setPakyawanChatAlert(null)
+          }}
+          onClose={() => setPakyawanChatAlert(null)}
+        />
+      ) : null}
 
       {renderDeliveryTripOverlay()}
 

@@ -7,6 +7,7 @@ import { RideChat } from '../components/RideChat'
 import { LocationInput } from '../components/LocationInput'
 import { MapView } from '../components/MapView'
 import { MobileBottomNav, type MobileBottomNavTab } from '../components/MobileBottomNav'
+import { PassengerUpcoming } from '../components/PassengerUpcoming'
 import { ServiceDashboard } from '../components/ServiceDashboard'
 import { AnnouncementTicker } from '../components/AnnouncementTicker'
 import { WeatherWidget } from '../components/WeatherWidget'
@@ -2116,6 +2117,8 @@ onClick={() => setRating(star)}
             <h1>{t('book.heroWhere1')} <span className="hero-accent">{t('book.heroWhere2')}</span></h1>
             <p className="subtitle">{t('book.subtitle')}</p>
           </div>
+
+          {!showProfile && showCustomerForm ? <PassengerUpcoming /> : null}
 
           {!showProfile && showCustomerForm ? (
             <div className="booking-mode-picker" role="group" aria-label={t('book.chooseService')}>

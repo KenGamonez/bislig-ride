@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
-import { PakyawanChat } from '../components/PakyawanChat'
+import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { confirmPakyawanBooking, createPakyawanBooking, getPakyawanBooking } from '../lib/scheduledBookings'
+import { unlockNotificationAudio } from '../lib/notifications'
+import { usePakyawanMessageAlert } from '../lib/usePakyawanMessageAlert'
 import { pakyawanTripTypes, type PakyawanBooking, type PakyawanTripType } from '../types/scheduledBooking'
 import { formatCentavos } from '../lib/fare'
 import { useLanguage } from '../lib/i18n'
@@ -66,6 +68,19 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
   const [pakyawanChatOpen, setPakyawanChatOpen] = useState(false)
+
+  const chatAvailable = Boolean(submitted && createdBooking && trackedBooking && trackedBooking.driver_id)
+  const {
+    alert: pakyawanMessageAlert,
+    markChatSeen,
+    dismissAlert: dismissPakyawanMessageAlert,
+  } = usePakyawanMessageAlert({
+    bookingId: createdBooking?.id ?? null,
+    accessToken: createdBooking?.accessToken ?? null,
+    chatOpen: pakyawanChatOpen,
+    enabled: chatAvailable,
+    notificationTitle: t('pak.newMessage'),
+  })
 
   const updateField = (field: keyof PakyawanBookingForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -488,7 +503,20 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             ) : null}
             {createdBooking && trackedBooking && trackedBooking.driver_id ? (
               <>
-                <button type="button" className="secondary-action" onClick={() => setPakyawanChatOpen((current) => !current)}>
+                <button
+                  type="button"
+                  className="secondary-action"
+                  onClick={() => {
+                    unlockNotificationAudio()
+                    setPakyawanChatOpen((current) => {
+                      if (!current) {
+                        void markChatSeen()
+                      }
+
+                      return !current
+                    })
+                  }}
+                >
                   {pakyawanChatOpen ? t('chat.closeAria') : t('chat.titleWith', { name: t('chat.roleDriver') })}
                 </button>
                 {pakyawanChatOpen ? (
@@ -509,6 +537,23 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
               {t('pak.backToRide')}
             </button>
           </section>
+          {pakyawanMessageAlert && createdBooking && trackedBooking ? (
+            <PakyawanChatAlertPopup
+              eyebrow={t('pak.newMessage')}
+              title={t('pak.chatWithDriver')}
+              subtitle={`${trackedBooking.pickup_location} → ${trackedBooking.destination}`}
+              preview={pakyawanMessageAlert.preview}
+              openLabel={t('pak.openChat')}
+              closeLabel={t('chat.closeAria')}
+              onOpen={() => {
+                unlockNotificationAudio()
+                setPakyawanChatOpen(true)
+                void markChatSeen()
+                dismissPakyawanMessageAlert()
+              }}
+              onClose={dismissPakyawanMessageAlert}
+            />
+          ) : null}
         </main>
       </>
     )
