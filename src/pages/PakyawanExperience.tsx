@@ -204,7 +204,9 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     if (
       status !== undefined &&
       status !== 'pending' &&
+      status !== 'assigned' &&
       status !== 'quoted' &&
+      status !== 'confirmed' &&
       status !== 'scheduled' &&
       status !== 'driver_on_way' &&
       status !== 'driver_arrived' &&
