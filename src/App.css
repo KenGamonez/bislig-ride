@@ -8470,6 +8470,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   overflow-wrap: anywhere;
 }
 
+.pak-bell-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pak-bell-row .secondary-action {
+  flex: 1;
+  min-width: 0;
+}
+
 /* --------------------------------------------------------
    PASSENGER UPCOMING — lightweight active-booking cards
    (scoped, mobile-first; reuses pak-req language)

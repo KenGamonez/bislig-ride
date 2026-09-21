@@ -69,7 +69,38 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [confirmError, setConfirmError] = useState('')
   const [pakyawanChatOpen, setPakyawanChatOpen] = useState(false)
   const [quoteAlert, setQuoteAlert] = useState<{ amount: number } | null>(null)
+  const [quoteUnread, setQuoteUnread] = useState(false)
+  const [quoteBellOpen, setQuoteBellOpen] = useState(false)
   const prevQuoteSigRef = useRef<string | null>(null)
+
+  const quoteViewedKey = (bookingId: string) => `bislig-ride-pakyawan-quoteviewed-${bookingId}`
+
+  const syncQuoteUnread = (bookingId: string) => {
+    let notified: string | null = null
+    let viewed: string | null = null
+
+    try {
+      notified = window.localStorage.getItem(`bislig-ride-pakyawan-quoteseen-${bookingId}`)
+      viewed = window.localStorage.getItem(quoteViewedKey(bookingId))
+    } catch {
+      notified = null
+      viewed = null
+    }
+
+    setQuoteUnread(notified !== null && notified !== viewed)
+  }
+
+  const handleViewQuote = (bookingId: string) => {
+    try {
+      window.localStorage.setItem(quoteViewedKey(bookingId), window.localStorage.getItem(`bislig-ride-pakyawan-quoteseen-${bookingId}`) ?? 'seen')
+    } catch {
+      // Private browsing — unread clears in memory only.
+    }
+
+    setQuoteUnread(false)
+    setQuoteBellOpen(false)
+    document.getElementById('pak-quote-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+  }
 
   const chatAvailable = Boolean(submitted && createdBooking && trackedBooking && trackedBooking.driver_id)
   const {
@@ -188,6 +219,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       setTrackedBooking(initialTracked)
       setPakyawanChatOpen(false)
       setQuoteAlert(null)
+      setQuoteUnread(false)
+      setQuoteBellOpen(false)
       prevQuoteSigRef.current = null
       setSubmitted(true)
     } catch (error) {
@@ -241,7 +274,9 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             setCreatedBooking({ id: candidate.id, accessToken: candidate.token })
             setTrackedBooking(booking)
             setQuoteAlert(null)
+            setQuoteBellOpen(false)
             prevQuoteSigRef.current = null
+            syncQuoteUnread(candidate.id)
             setSubmitted(true)
             return
           }
@@ -368,12 +403,15 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
     if (prevSig === null) {
       // First observation (e.g. reload after quote): establish the baseline
-      // silently instead of announcing an old quote.
+      // silently instead of announcing an old quote. The bell still reflects
+      // any unviewed quote until the passenger opens it.
       try {
         window.localStorage.setItem(markerKey, String(price))
       } catch {
         // Private browsing — the in-memory signature still prevents repeats.
       }
+
+      syncQuoteUnread(trackedBooking.id)
 
       return
     }
@@ -391,6 +429,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     }
 
     setQuoteAlert({ amount: price })
+    setQuoteUnread(true)
     playChatNotification()
     showBrowserNotification(t('pak.quoteReady'), `₱${formatCentavos(price)}`)
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -614,9 +653,58 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                 ) : null}
               </>
             ) : null}
-            <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshBookingStatus()}>
-              {isRefreshing ? t('pak.checkingStatus') : t('pak.refreshStatus')}
-            </button>
+            <div className="pak-bell-row">
+              {quoteUnread || quoteBellOpen ? (
+                <div className="notification-wrap">
+                  <button
+                    type="button"
+                    className="notification-bell"
+                    aria-label={quoteUnread ? `${t('pak.newQuote')} (1 unread)` : t('pak.newQuote')}
+                    aria-expanded={quoteBellOpen}
+                    onClick={() => setQuoteBellOpen((current) => !current)}
+                  >
+                    <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+                      <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+                    </svg>
+                    {quoteUnread ? <span className="notification-badge">1</span> : null}
+                  </button>
+                  {quoteBellOpen ? (
+                    <div className="notification-panel" role="dialog" aria-label={t('pak.newQuote')}>
+                      <div className="notification-panel-head">
+                        <strong>{t('pak.newQuote')}</strong>
+                      </div>
+                      <ul className="notification-list">
+                        <li className="notification-item">
+                          <div className="notification-copy">
+                            <strong>{t('pak.quoteReady')}</strong>
+                            <span>
+                              {typeof trackedBooking?.price_cents === 'number'
+                                ? `₱${formatCentavos(trackedBooking.price_cents)}`
+                                : t('pak.waitingDriverPrice')}
+                            </span>
+                          </div>
+                          <div className="notification-actions">
+                            {trackedBooking ? (
+                              <button
+                                type="button"
+                                className="compact-button notification-action"
+                                onClick={() => handleViewQuote(trackedBooking.id)}
+                              >
+                                {t('pak.viewBooking')}
+                              </button>
+                            ) : null}
+                          </div>
+                        </li>
+                      </ul>
+                    </div>
+                  ) : null}
+                </div>
+              ) : null}
+              <button type="button" className="secondary-action" disabled={isRefreshing} onClick={() => void refreshBookingStatus()}>
+                {isRefreshing ? t('pak.checkingStatus') : t('pak.refreshStatus')}
+              </button>
+            </div>
             <button type="button" className="primary-action" onClick={onBack}>
               {t('pak.backToRide')}
             </button>
