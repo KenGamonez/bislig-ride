@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
+import { DeliveryChatSection } from '../components/DeliveryChatSection'
+import { DeliveryRating } from '../components/DeliveryRating'
 import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
 import { fetchDeliveryProofUrl } from '../lib/deliveryProof'
 import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
@@ -704,6 +706,25 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                 </div>
                 {proofError ? <span className="field-error">{proofError}</span> : null}
               </div>
+            ) : null}
+            {status === 'delivered' && trackedDelivery && trackedDelivery.driver_id && createdAccessToken ? (
+              <>
+                <p className="pad-section-label">{t('pad.chatWithDriver')}</p>
+                <DeliveryChatSection
+                  deliveryId={trackedDelivery.id}
+                  accessToken={createdAccessToken}
+                  role="passenger"
+                  otherPartyName={t('chat.roleDriver')}
+                  toggleLabel={t('pad.chatWithDriver')}
+                />
+                <p className="pad-section-label">{t('pad.rateDriver')}</p>
+                <DeliveryRating
+                  deliveryId={trackedDelivery.id}
+                  accessToken={createdAccessToken}
+                  raterRole="passenger"
+                  ratedName={t('chat.roleDriver')}
+                />
+              </>
             ) : null}
             {trackingError ? <p className="form-error-message submit-error">{trackingError}</p> : null}
             <div className="pak-bell-row">

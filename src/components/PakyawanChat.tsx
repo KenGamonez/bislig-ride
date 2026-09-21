@@ -3,7 +3,41 @@ import type { FormEvent } from 'react'
 import { supabase } from '../lib/supabase'
 import { useLanguage } from '../lib/i18n'
 import { listPakyawanMessages, sendPakyawanMessage } from '../lib/scheduledBookings'
-import type { PakyawanChatRole, PakyawanMessage } from '../types/scheduledBooking'
+import type { PakyawanChatRole } from '../types/scheduledBooking'
+
+export type ChatMessageItem = {
+  id: string
+  sender_role: string
+  message: string
+  created_at: string
+}
+
+export type ChatTransport = {
+  list: (bookingId: string, accessToken?: string | null) => Promise<ChatMessageItem[]>
+  send: (
+    bookingId: string,
+    accessToken: string | null | undefined,
+    senderRole: string,
+    message: string,
+  ) => Promise<ChatMessageItem>
+  realtimeTable?: string
+  realtimeColumn?: string
+  channelPrefix?: string
+}
+
+const defaultTransport: ChatTransport = {
+  list: (bookingId, accessToken) => listPakyawanMessages(bookingId, accessToken),
+  send: (bookingId, accessToken, senderRole, message) =>
+    sendPakyawanMessage({
+      bookingId,
+      accessToken: accessToken ?? null,
+      senderRole: senderRole as PakyawanChatRole,
+      message,
+    }),
+  realtimeTable: 'pakyawan_messages',
+  realtimeColumn: 'booking_id',
+  channelPrefix: 'pakyawan-chat',
+}
 
 type PakyawanChatProps = {
   bookingId: string
@@ -13,6 +47,7 @@ type PakyawanChatProps = {
   enableRealtime?: boolean
   pollIntervalMs?: number
   onClose: () => void
+  transport?: ChatTransport
 }
 
 export function PakyawanChat({
@@ -23,9 +58,10 @@ export function PakyawanChat({
   enableRealtime = false,
   pollIntervalMs = 10000,
   onClose,
+  transport = defaultTransport,
 }: PakyawanChatProps) {
   const { t } = useLanguage()
-  const [messages, setMessages] = useState<PakyawanMessage[]>([])
+  const [messages, setMessages] = useState<ChatMessageItem[]>([])
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(true)
   const [sending, setSending] = useState(false)
@@ -41,7 +77,7 @@ export function PakyawanChat({
       }
 
       try {
-        const items = await listPakyawanMessages(bookingId, accessToken)
+        const items = await transport.list(bookingId, accessToken)
 
         if (mounted) {
           // Keep the previous array reference when nothing changed so the
@@ -74,17 +110,17 @@ export function PakyawanChat({
 
     const channel = enableRealtime
       ? supabase
-          .channel(`pakyawan-chat-${bookingId}`)
+          .channel(`${transport.channelPrefix ?? 'pakyawan-chat'}-${bookingId}`)
           .on(
             'postgres_changes',
             {
               event: 'INSERT',
               schema: 'public',
-              table: 'pakyawan_messages',
-              filter: `booking_id=eq.${bookingId}`,
+              table: transport.realtimeTable ?? 'pakyawan_messages',
+              filter: `${transport.realtimeColumn ?? 'booking_id'}=eq.${bookingId}`,
             },
             (payload) => {
-              const incoming = payload.new as PakyawanMessage
+              const incoming = payload.new as ChatMessageItem
 
               setMessages((current) => {
                 if (current.some((item) => item.id === incoming.id)) {
@@ -126,12 +162,7 @@ export function PakyawanChat({
     setSending(true)
 
     try {
-      const sent = await sendPakyawanMessage({
-        bookingId,
-        accessToken,
-        senderRole,
-        message: trimmedMessage,
-      })
+      const sent = await transport.send(bookingId, accessToken, senderRole, trimmedMessage)
 
       setMessages((current) => {
         if (current.some((item) => item.id === sent.id)) {

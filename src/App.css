@@ -8536,6 +8536,47 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   font-weight: 600;
 }
 
+.pad-rating-box {
+  display: grid;
+  gap: 10px;
+  padding: 14px;
+  border-radius: 14px;
+  background: var(--color-gray-50);
+  border: 1px solid var(--border);
+}
+
+.pad-rating-box .rating-stars {
+  display: flex;
+  gap: 6px;
+}
+
+.pad-rating-box .rating-star {
+  background: none;
+  border: none;
+  padding: 4px;
+  color: var(--color-gray-300);
+  cursor: pointer;
+}
+
+.pad-rating-box .rating-star.selected {
+  color: var(--color-green-deep);
+}
+
+.pad-rating-box .rating-stars-inline {
+  display: inline-flex;
+  gap: 2px;
+  color: var(--color-green-deep);
+}
+
+.pad-section-label {
+  margin: 14px 0 0;
+  font-size: 0.7rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--text-secondary);
+}
+
 @media (max-width: 480px) {
   .proof-viewer-overlay {
     padding: 12px;

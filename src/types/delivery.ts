@@ -38,3 +38,22 @@ export type DeliveryOffer = {
 export type DeliveryOfferWithBooking = DeliveryOffer & {
   booking: DeliveryBooking
 }
+
+export type DeliveryChatRole = 'passenger' | 'driver'
+
+export type DeliveryMessage = {
+  id: string
+  delivery_id: string
+  sender_role: DeliveryChatRole
+  message: string
+  created_at: string
+}
+
+export type DeliveryRating = {
+  id: string
+  delivery_id: string
+  rater_role: DeliveryChatRole
+  stars: number
+  comment: string
+  created_at: string
+}

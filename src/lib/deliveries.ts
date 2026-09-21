@@ -1,5 +1,5 @@
 import { supabase } from './supabase'
-import type { DeliveryBooking, DeliveryBookingInsert, DeliveryOffer, DeliveryOfferWithBooking } from '../types/delivery'
+import type { DeliveryBooking, DeliveryBookingInsert, DeliveryChatRole, DeliveryMessage, DeliveryOffer, DeliveryOfferWithBooking, DeliveryRating } from '../types/delivery'
 
 export type DeliveryLifecycleStatus = 'driver_on_way' | 'driver_arrived' | 'picked_up' | 'in_transit' | 'delivered'
 
@@ -219,4 +219,89 @@ export async function fetchDriverDeliveryOffers(driverId: string): Promise<Deliv
       decided_at: row.decided_at,
       booking: toBooking(row.booking) as DeliveryBooking,
     }))
+}
+
+export async function fetchDriverDeliveredDeliveries(driverId: string): Promise<DeliveryBooking[]> {
+  const { data, error } = await supabase
+    .from('deliveries')
+    .select('*')
+    .eq('driver_id', driverId)
+    .eq('status', 'delivered')
+    .order('preferred_date', { ascending: false })
+    .order('preferred_time', { ascending: false })
+    .limit(10)
+
+  if (error) throw error
+
+  return (data ?? []) as DeliveryBooking[]
+}
+
+export async function sendDeliveryMessage(args: {
+  deliveryId: string
+  accessToken?: string | null
+  senderRole: DeliveryChatRole
+  message: string
+}): Promise<DeliveryMessage> {
+  const { data, error } = await supabase
+    .rpc('send_delivery_message', {
+      p_delivery_id: args.deliveryId,
+      p_access_token: args.accessToken ?? null,
+      p_sender_role: args.senderRole,
+      p_message: args.message,
+    })
+    .single()
+
+  if (error) throw error
+
+  return data as DeliveryMessage
+}
+
+export async function listDeliveryMessages(
+  deliveryId: string,
+  accessToken?: string | null,
+): Promise<DeliveryMessage[]> {
+  const { data, error } = await supabase.rpc('list_delivery_messages', {
+    p_delivery_id: deliveryId,
+    p_access_token: accessToken ?? null,
+  })
+
+  if (error) throw error
+
+  return (data ?? []) as DeliveryMessage[]
+}
+
+export async function submitDeliveryRating(args: {
+  deliveryId: string
+  accessToken?: string | null
+  raterRole: DeliveryChatRole
+  stars: number
+  comment: string
+}): Promise<DeliveryRating> {
+  const { data, error } = await supabase
+    .rpc('submit_delivery_rating', {
+      p_delivery_id: args.deliveryId,
+      p_access_token: args.accessToken ?? null,
+      p_rater_role: args.raterRole,
+      p_stars: args.stars,
+      p_comment: args.comment,
+    })
+    .single()
+
+  if (error) throw error
+
+  return data as DeliveryRating
+}
+
+export async function getDeliveryRatings(
+  deliveryId: string,
+  accessToken?: string | null,
+): Promise<DeliveryRating[]> {
+  const { data, error } = await supabase.rpc('get_delivery_ratings', {
+    p_delivery_id: deliveryId,
+    p_access_token: accessToken ?? null,
+  })
+
+  if (error) throw error
+
+  return (data ?? []) as DeliveryRating[]
 }

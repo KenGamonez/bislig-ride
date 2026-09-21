@@ -4,6 +4,8 @@ import { CancelRideModal } from '../components/CancelRideModal'
 import { MapView } from '../components/MapView'
 import { RideChat } from '../components/RideChat'
 import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
+import { DeliveryChatSection } from '../components/DeliveryChatSection'
+import { DeliveryRating } from '../components/DeliveryRating'
 import { supabase } from '../lib/supabase'
 import { demoDriver } from '../lib/demoDriver'
 import { changeDriverPassword } from '../lib/driverAuth'
@@ -13,7 +15,7 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
-import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
@@ -264,6 +266,10 @@ export function DriverExperience({
   const [deliveryProof, setDeliveryProof] = useState<{ bookingId: string; file: File | null; previewUrl: string | null } | null>(null)
   const [isUploadingProof, setIsUploadingProof] = useState(false)
   const [deliveryConfirmedPopup, setDeliveryConfirmedPopup] = useState<DeliveryBooking | null>(null)
+  const [deliveredDeliveries, setDeliveredDeliveries] = useState<DeliveryBooking[]>([])
+  const [deliveryChatBookingId, setDeliveryChatBookingId] = useState<string | null>(null)
+  const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
+  const deliveryChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
   const [deliveryProofViewLoadingId, setDeliveryProofViewLoadingId] = useState<string | null>(null)
   const [deliveryProofViewError, setDeliveryProofViewError] = useState<{ bookingId: string; message: string } | null>(null)
@@ -1355,6 +1361,126 @@ return unsubscribe
       void supabase.removeChannel(channel)
     }
   }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    let mounted = true
+
+    const loadDeliveredDeliveries = async () => {
+      try {
+        const items = await fetchDriverDeliveredDeliveries(driverId)
+
+        if (mounted) {
+          setDeliveredDeliveries(items)
+        }
+      } catch (error) {
+        console.error('Unable to load delivered deliveries:', error)
+      }
+    }
+
+    void loadDeliveredDeliveries()
+
+    return () => {
+      mounted = false
+    }
+  }, [driverId, driverAuthId, canAcceptDeliveries])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    // One booking-scoped chat watcher per delivered booking. Realtime
+    // delivery already requires the own-assigned SELECT policy, so other
+    // drivers' messages can never arrive here.
+    const deliveredIds = Array.from(
+      new Set(
+        deliveredDeliveries
+          .filter((booking) => booking.driver_id === driverId)
+          .map((booking) => booking.id),
+      ),
+    )
+
+    if (deliveredIds.length === 0) {
+      return
+    }
+
+    const channels = deliveredIds.map((deliveredId) =>
+      supabase
+        .channel(`driver-delivery-chatwatch-${deliveredId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'delivery_messages',
+            filter: `delivery_id=eq.${deliveredId}`,
+          },
+          (payload) => {
+            const incoming = payload.new as {
+              id?: string
+              delivery_id?: string
+              sender_role?: string
+              message?: string
+            }
+
+            if (!incoming.id || incoming.sender_role === 'driver') {
+              return
+            }
+
+            if (deliveryChatSeenIdsRef.current.has(incoming.id)) {
+              return
+            }
+
+            deliveryChatSeenIdsRef.current.add(incoming.id)
+
+            // The open chat shows the message itself — no duplicate popup/sound.
+            if (deliveryChatBookingId === deliveredId) {
+              return
+            }
+
+            const booking = deliveredDeliveries.find((item) => item.id === deliveredId)
+            const route = booking
+              ? `${booking.pickup_address} → ${booking.delivery_address}`
+              : 'Delivery booking'
+            const preview = String(incoming.message ?? '').slice(0, 160)
+
+            setNotifications((current) =>
+              current.some((item) => item.id === `delivery-chatmsg-${incoming.id}`)
+                ? current
+                : [
+                    {
+                      id: `delivery-chatmsg-${incoming.id}`,
+                      kind: 'pakyawan',
+                      rideId: null,
+                      title: 'New delivery message',
+                      subtitle: preview,
+                      seen: false,
+                      createdAt: Date.now(),
+                    },
+                    ...current,
+                  ],
+            )
+
+            setDeliveryChatAlert({ bookingId: deliveredId, route, preview })
+
+            if (driverOnline) {
+              playRequestChime()
+            }
+          },
+        )
+        .subscribe(),
+    )
+
+    return () => {
+      channels.forEach((channel) => {
+        void supabase.removeChannel(channel)
+      })
+    }
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline, deliveredDeliveries, deliveryChatBookingId])
 
   useEffect(() => {
     if (!driverId || !driverAuthId || !canAcceptPakyawan) {
@@ -3373,6 +3499,47 @@ const displayedDriver = driverProfile ?? demoDriver
             </ul>
           </div>
         ) : null}
+
+        {deliveredDeliveries.length > 0 ? (
+          <div className="pakyawan-accepted">
+            <p className="section-label">DELIVERED</p>
+            <ul className="pakyawan-accepted-list">
+              {deliveredDeliveries.map((booking) => (
+                <li key={booking.id}>
+                  <strong>
+                    {booking.pickup_address} → {booking.delivery_address}
+                  </strong>
+                  <span>
+                    {booking.preferred_date} · {booking.preferred_time}
+                  </span>
+                  <span>Status: DELIVERED</span>
+                  {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
+                    <span>Fee: ₱{formatCentavos(booking.price_cents)}</span>
+                  ) : null}
+                  {booking.driver_id === driverId ? (
+                    <>
+                      <DeliveryChatSection
+                        deliveryId={booking.id}
+                        role="driver"
+                        otherPartyName={booking.sender_name}
+                        toggleLabel="Chat with Customer"
+                        enableRealtime
+                        forceOpen={deliveryChatBookingId === booking.id}
+                        onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
+                      />
+                      <p className="pad-section-label">Rate your passenger</p>
+                      <DeliveryRating
+                        deliveryId={booking.id}
+                        raterRole="driver"
+                        ratedName={booking.sender_name}
+                      />
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
       </section>
     )
   }
@@ -4525,6 +4692,23 @@ const renderOnlineState = () => (
             setPakyawanChatAlert(null)
           }}
           onClose={() => setPakyawanChatAlert(null)}
+        />
+      ) : null}
+
+      {deliveryChatAlert ? (
+        <PakyawanChatAlertPopup
+          eyebrow="NEW MESSAGE"
+          title="Delivery chat"
+          subtitle={deliveryChatAlert.route}
+          preview={deliveryChatAlert.preview}
+          openLabel="Open Chat"
+          closeLabel="Close"
+          onOpen={() => {
+            setDeliveryChatBookingId(deliveryChatAlert.bookingId)
+            setDriverView('delivery')
+            setDeliveryChatAlert(null)
+          }}
+          onClose={() => setDeliveryChatAlert(null)}
         />
       ) : null}
 
