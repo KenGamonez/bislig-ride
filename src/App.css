@@ -12912,10 +12912,19 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
    MATCHES the booking page's green editorial accent + light paper.
    ============================================================ */
 
-/* --- Greeting hero: light editorial (was dark) --- */
-.customer-layout .service-dashboard {
+/* --- Home dashboard: service selection launcher (width/padding come from the launcher layout) --- */
+.service-dashboard {
   display: grid;
   gap: 14px;
+}
+
+.service-dashboard .home-hero-eyebrow {
+  margin-bottom: 8px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--color-gray-500);
 }
 
 .customer-layout .service-greeting {
@@ -13135,11 +13144,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   background: #FBFAF8;
 }
 
-/* --- Editorial stack rhythm --- */
+/* --- Editorial stack rhythm (compact, matches customer-layout gap) --- */
 .customer-layout .service-dashboard {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 40px;
+  gap: 20px;
 }
 
 /* --- 1. Editorial hero --- */
@@ -13161,7 +13170,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-gray-500);
   font-size: 0.68rem;
   font-weight: 800;
-  letter-spacing: 0.22em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
@@ -13481,7 +13490,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .service-dashboard {
-    gap: 28px;
+    gap: 20px;
   }
 
   .customer-layout .home-hero {
@@ -13538,11 +13547,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 /* --- Desktop — centered premium product column --- */
 @media (min-width: 768px) {
   .customer-layout .service-dashboard {
-    gap: 52px;
+    gap: 20px;
   }
 
   .customer-layout .home-hero-title {
-    font-size: clamp(2.6rem, 5.6vw, 4.4rem);
+    font-size: clamp(2rem, 3vw, 2.6rem);
     max-width: 18ch;
   }
 
@@ -14062,123 +14071,119 @@ a:focus-visible {
   }
 }
 
-/* Service Accordion */
+/* Service Accordion — mirrors Ride Now booking-accordion (SS7) */
 .service-dashboard .service-accordion {
-  margin-top: 24px;
+  margin-top: 14px;
+  background: var(--color-white);
+  border: 1px solid var(--color-gray-200);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
 }
 
 .service-dashboard .service-accordion-item {
-  margin-bottom: 8px;
-  border-radius: var(--radius-md);
   background: var(--color-white);
-  overflow: hidden;
-  transition: box-shadow var(--transition);
 }
 
-.service-dashboard .service-accordion-item.is-open {
-  box-shadow: var(--shadow-sm);
+.service-dashboard .service-accordion-item + .service-accordion-item {
+  border-top: 1px solid var(--border);
 }
 
 .service-dashboard .service-accordion-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
+  gap: 10px;
+  width: 100%;
+  min-height: 52px;
+  padding: 13px 14px;
+  border: 0;
+  border-bottom: 1px solid var(--color-gray-100);
+  background: transparent;
+  font: inherit;
+  text-align: left;
   cursor: pointer;
   user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.service-dashboard .service-accordion-header:hover,
+.service-dashboard .service-accordion-header:focus-visible {
+  background: var(--color-gray-50);
+  outline: none;
 }
 
 .service-dashboard .service-accordion-number {
   flex-shrink: 0;
-  width: 24px;
-  height: 24px;
-  border-radius: var(--radius-md);
-  background: var(--color-gray-100);
-  color: var(--color-gray-600);
-  font-size: 0.75rem;
-  font-weight: 700;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
+  width: 26px;
+  color: var(--color-gray-500);
+  font-size: 0.66rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  line-height: 1.4;
+}
+
+.service-dashboard .service-accordion-item.is-open .service-accordion-number {
+  color: var(--color-green);
 }
 
 .service-dashboard .service-accordion-label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-primary);
   flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 1px;
+}
+
+.service-dashboard .service-accordion-label strong {
+  font-size: 0.88rem;
+  letter-spacing: -0.01em;
+  color: var(--color-black);
 }
 
 .service-dashboard .service-accordion-label small {
   display: block;
-  margin-top: 2px;
-  font-size: 0.65rem;
-  color: var(--text-secondary);
+  color: var(--color-gray-500);
+  font-size: 0.7rem;
+  line-height: 1.4;
 }
 
 .service-dashboard .service-accordion-chevron {
   flex-shrink: 0;
-  width: 16px;
-  height: 16px;
-  border: 2px solid var(--color-gray-300);
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.service-dashboard .service-accordion-chevron:hover {
-  border-color: var(--color-green);
-}
-
-.service-dashboard .service-accordion-chevron.is-open {
-  border-color: var(--color-green);
-}
-
-.service-dashboard .service-accordion-chevron.is-open::after {
-  content: '';
-  width: 6px;
-  height: 6px;
-  background: var(--color-green);
-  border-radius: 50%;
+  width: 8px;
+  height: 8px;
+  margin-right: 8px;
+  border-right: 2px solid var(--text-secondary);
+  border-bottom: 2px solid var(--text-secondary);
   transform: rotate(45deg);
+  transition: transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.service-dashboard .service-accordion-item.is-open .service-accordion-chevron {
+  transform: rotate(225deg);
 }
 
 .service-dashboard .service-accordion-panel {
-  padding: 0 14px 12px;
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  overflow: hidden;
+  transition: grid-template-rows 240ms cubic-bezier(0.22, 1, 0.36, 1), opacity 160ms ease;
+}
+
+.service-dashboard .service-accordion-panel > * {
+  min-height: 0;
 }
 
 .service-dashboard .service-accordion-panel.is-open {
-  animation: accordion-open 200ms ease forwards;
+  grid-template-rows: 1fr;
+  opacity: 1;
 }
 
-@keyframes accordion-open {
-  from {
-    height: 0;
-  }
-  to {
-    height: auto;
-  }
+.service-dashboard .service-accordion-desc {
+  margin: 0;
+  padding: 0 14px 12px;
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  line-height: 1.4;
 }
 
-/* When Ride Now is open, highlight it */
-.service-dashboard .service-accordion-item.ride-item.is-open .service-accordion-number {
-  background: var(--color-green);
-  color: var(--color-white);
-}
-
-.service-dashboard .service-accordion-item.pakyawan-item.is-open .service-accordion-number {
-  background: var(--color-green-light);
-  color: var(--color-green);
-}
-
-.service-dashboard .service-accordion-item.pa-deliver-item.is-open .service-accordion-number {
-  background: var(--color-green-light);
-  color: var(--color-green);
-}
-
-.service-dashboard .service-accordion-item.car-rental-item.is-open .service-accordion-number {
-  background: var(--color-green-light);
-  color: var(--color-green);
-}
+/* Open number turns green (Ride Now pattern); no per-service background boxes */
