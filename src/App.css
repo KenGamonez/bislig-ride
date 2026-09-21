@@ -14061,3 +14061,124 @@ a:focus-visible {
     font-size: 1.25rem;
   }
 }
+
+/* Service Accordion */
+.service-dashboard .service-accordion {
+  margin-top: 24px;
+}
+
+.service-dashboard .service-accordion-item {
+  margin-bottom: 8px;
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  overflow: hidden;
+  transition: box-shadow var(--transition);
+}
+
+.service-dashboard .service-accordion-item.is-open {
+  box-shadow: var(--shadow-sm);
+}
+
+.service-dashboard .service-accordion-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.service-dashboard .service-accordion-number {
+  flex-shrink: 0;
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-md);
+  background: var(--color-gray-100);
+  color: var(--color-gray-600);
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.service-dashboard .service-accordion-label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  flex: 1;
+}
+
+.service-dashboard .service-accordion-label small {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.65rem;
+  color: var(--text-secondary);
+}
+
+.service-dashboard .service-accordion-chevron {
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--color-gray-300);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.service-dashboard .service-accordion-chevron:hover {
+  border-color: var(--color-green);
+}
+
+.service-dashboard .service-accordion-chevron.is-open {
+  border-color: var(--color-green);
+}
+
+.service-dashboard .service-accordion-chevron.is-open::after {
+  content: '';
+  width: 6px;
+  height: 6px;
+  background: var(--color-green);
+  border-radius: 50%;
+  transform: rotate(45deg);
+}
+
+.service-dashboard .service-accordion-panel {
+  padding: 0 14px 12px;
+}
+
+.service-dashboard .service-accordion-panel.is-open {
+  animation: accordion-open 200ms ease forwards;
+}
+
+@keyframes accordion-open {
+  from {
+    height: 0;
+  }
+  to {
+    height: auto;
+  }
+}
+
+/* When Ride Now is open, highlight it */
+.service-dashboard .service-accordion-item.ride-item.is-open .service-accordion-number {
+  background: var(--color-green);
+  color: var(--color-white);
+}
+
+.service-dashboard .service-accordion-item.pakyawan-item.is-open .service-accordion-number {
+  background: var(--color-green-light);
+  color: var(--color-green);
+}
+
+.service-dashboard .service-accordion-item.pa-deliver-item.is-open .service-accordion-number {
+  background: var(--color-green-light);
+  color: var(--color-green);
+}
+
+.service-dashboard .service-accordion-item.car-rental-item.is-open .service-accordion-number {
+  background: var(--color-green-light);
+  color: var(--color-green);
+}
