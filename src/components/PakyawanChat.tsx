@@ -44,7 +44,18 @@ export function PakyawanChat({
         const items = await listPakyawanMessages(bookingId, accessToken)
 
         if (mounted) {
-          setMessages(items)
+          // Keep the previous array reference when nothing changed so the
+          // 10-second poll does not rerender or smooth-scroll the chat.
+          setMessages((current) => {
+            if (
+              current.length === items.length &&
+              current.every((item, index) => item.id === items[index].id)
+            ) {
+              return current
+            }
+
+            return items
+          })
         }
       } catch (error) {
         console.error('Unable to load pakyawan chat:', error)

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChat, PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { confirmPakyawanBooking, createPakyawanBooking, getPakyawanBooking } from '../lib/scheduledBookings'
-import { unlockNotificationAudio } from '../lib/notifications'
+import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
 import { usePakyawanMessageAlert } from '../lib/usePakyawanMessageAlert'
 import { pakyawanTripTypes, type PakyawanBooking, type PakyawanTripType } from '../types/scheduledBooking'
 import { formatCentavos } from '../lib/fare'
@@ -68,6 +68,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
   const [pakyawanChatOpen, setPakyawanChatOpen] = useState(false)
+  const [quoteAlert, setQuoteAlert] = useState<{ amount: number } | null>(null)
+  const prevQuoteSigRef = useRef<string | null>(null)
 
   const chatAvailable = Boolean(submitted && createdBooking && trackedBooking && trackedBooking.driver_id)
   const {
@@ -185,6 +187,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
       setCreatedBooking({ id: created.id, accessToken: created.access_token })
       setTrackedBooking(initialTracked)
       setPakyawanChatOpen(false)
+      setQuoteAlert(null)
+      prevQuoteSigRef.current = null
       setSubmitted(true)
     } catch (error) {
       console.error('Unable to submit pakyawan booking:', error)
@@ -236,6 +240,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
           ) {
             setCreatedBooking({ id: candidate.id, accessToken: candidate.token })
             setTrackedBooking(booking)
+            setQuoteAlert(null)
+            prevQuoteSigRef.current = null
             setSubmitted(true)
             return
           }
@@ -263,22 +269,42 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
-  const refreshBookingStatus = async () => {
+  const refreshBookingStatus = async (quiet = false) => {
     if (!createdBooking || isRefreshing) {
       return
     }
 
-    setIsRefreshing(true)
-    setTrackingError('')
+    // Background ticks stay silent so the page does not flicker every poll.
+    if (!quiet) {
+      setIsRefreshing(true)
+      setTrackingError('')
+    }
 
     try {
       const latest = await getPakyawanBooking(createdBooking.id, createdBooking.accessToken)
-      setTrackedBooking(latest)
+      setTrackedBooking((current) => {
+        if (
+          current &&
+          current.status === latest.status &&
+          current.price_cents === latest.price_cents &&
+          current.driver_id === latest.driver_id &&
+          current.updated_at === latest.updated_at
+        ) {
+          return current
+        }
+
+        return latest
+      })
     } catch (error) {
       console.error('Unable to refresh Pakyawan booking status:', error)
-      setTrackingError(t('pak.trackFailed'))
+
+      if (!quiet) {
+        setTrackingError(t('pak.trackFailed'))
+      }
     } finally {
-      setIsRefreshing(false)
+      if (!quiet) {
+        setIsRefreshing(false)
+      }
     }
   }
 
@@ -304,7 +330,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
     void refreshBookingStatus()
     const timer = window.setInterval(() => {
-      void refreshBookingStatus()
+      void refreshBookingStatus(true)
     }, 10000)
 
     return () => {
@@ -313,11 +339,69 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [submitted, createdBooking, trackedBooking?.status])
 
+  useEffect(() => {
+    if (!submitted || !createdBooking || !trackedBooking) {
+      return
+    }
+
+    const price = trackedBooking.price_cents
+    const sig = `${trackedBooking.id}:${trackedBooking.status}:${typeof price === 'number' ? price : ''}`
+    const prevSig = prevQuoteSigRef.current
+    prevQuoteSigRef.current = sig
+
+    if (trackedBooking.status !== 'quoted' || typeof price !== 'number' || !Number.isFinite(price)) {
+      return
+    }
+
+    const markerKey = `bislig-ride-pakyawan-quoteseen-${trackedBooking.id}`
+    let seen: string | null = null
+
+    try {
+      seen = window.localStorage.getItem(markerKey)
+    } catch {
+      seen = null
+    }
+
+    if (seen === String(price)) {
+      return
+    }
+
+    if (prevSig === null) {
+      // First observation (e.g. reload after quote): establish the baseline
+      // silently instead of announcing an old quote.
+      try {
+        window.localStorage.setItem(markerKey, String(price))
+      } catch {
+        // Private browsing — the in-memory signature still prevents repeats.
+      }
+
+      return
+    }
+
+    const prevStatus = prevSig.split(':')[1]
+
+    if (prevStatus === 'quoted') {
+      return
+    }
+
+    try {
+      window.localStorage.setItem(markerKey, String(price))
+    } catch {
+      // Private browsing — the in-memory signature still prevents repeats.
+    }
+
+    setQuoteAlert({ amount: price })
+    playChatNotification()
+    showBrowserNotification(t('pak.quoteReady'), `₱${formatCentavos(price)}`)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [submitted, createdBooking, trackedBooking])
+
   const handleConfirmBooking = async () => {
     if (isConfirming || !createdBooking || !trackedBooking || trackedBooking.status !== 'quoted') {
       return
     }
 
+    unlockNotificationAudio()
     setIsConfirming(true)
     setConfirmError('')
 
@@ -482,14 +566,14 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
               </div>
             </div>
             {quotedCents !== null ? (
-              <div className="fare-box">
+              <div className="fare-box" id="pak-quote-box">
                 <span className="field-label">{t('pak.quotedPrice')}</span>
                 <strong>₱{formatCentavos(quotedCents)}</strong>
               </div>
             ) : (
               <div className="fare-box">
                 <span className="field-label">{t('pak.quotedPrice')}</span>
-                <strong>{t('pak.waitingQuote')}</strong>
+                <strong>{status === 'assigned' ? t('pak.waitingDriverPrice') : t('pak.waitingQuote')}</strong>
               </div>
             )}
             {trackingError ? <p className="form-error-message submit-error">{trackingError}</p> : null}
@@ -537,6 +621,21 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
               {t('pak.backToRide')}
             </button>
           </section>
+          {quoteAlert ? (
+            <PakyawanChatAlertPopup
+              eyebrow={t('pak.quoteReady')}
+              title={`₱${formatCentavos(quoteAlert.amount)}`}
+              subtitle={t('pak.quoteReceived')}
+              preview={`${trackedBooking?.pickup_location ?? ''} → ${trackedBooking?.destination ?? ''}`}
+              openLabel={t('pak.viewBooking')}
+              closeLabel={t('chat.closeAria')}
+              onOpen={() => {
+                setQuoteAlert(null)
+                document.getElementById('pak-quote-box')?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+              }}
+              onClose={() => setQuoteAlert(null)}
+            />
+          ) : null}
           {pakyawanMessageAlert && createdBooking && trackedBooking ? (
             <PakyawanChatAlertPopup
               eyebrow={t('pak.newMessage')}
