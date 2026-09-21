@@ -13448,3 +13448,211 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
     transform: none !important;
   }
 }
+
+/* =========================================================
+   APP VISUAL SYSTEM — UNIFICATION PASS (visual only)
+   One coherent product language: compact app surfaces,
+   single primary action per screen, restrained depth,
+   green reserved for active/confirmed/selected states.
+   No selectors below change behavior, copy, or layout flow.
+   ========================================================= */
+
+/* ---- Root rhythm + overflow guard ---- */
+html, body {
+  overflow-x: clip;
+}
+
+#root {
+  overflow-x: clip;
+}
+
+/* ---- Focus: one consistent, accessible ring ---- */
+.primary-action:focus-visible,
+.secondary-action:focus-visible,
+.input-field:focus-visible,
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--color-green-deep);
+  outline-offset: 2px;
+}
+
+/* ---- Buttons: consistent app-control geometry ---- */
+.primary-action,
+.secondary-action {
+  min-height: 50px;
+  border-radius: 14px;
+  font-size: 0.86rem;
+  letter-spacing: 0.02em;
+}
+
+.primary-action:disabled,
+.secondary-action:disabled {
+  opacity: 0.55;
+}
+
+/* ---- Inputs: consistent app-form geometry ---- */
+.input-field {
+  min-height: 52px;
+  padding: 0 16px;
+  border-radius: 12px;
+  font-size: 0.95rem;
+}
+
+.input-field:focus {
+  border-color: var(--color-green-deep);
+  box-shadow: 0 0 0 3px rgba(5, 180, 114, 0.12);
+}
+
+.field-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+}
+
+/* ---- Eyebrow: one compact product voice ---- */
+.eyebrow,
+.section-label {
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+}
+
+/* ---- Operational headings: app scale, not marketing scale ---- */
+.section-header h1 {
+  font-size: clamp(1.6rem, 2.4vw, 2.1rem);
+  letter-spacing: -0.03em;
+}
+
+.subtitle {
+  font-size: 0.88rem;
+  max-width: 34rem;
+}
+
+/* ---- Operational cards: one surface treatment ---- */
+.driver-card,
+.scheduled-card,
+.flow-card,
+.pakyawan-card,
+.upcoming-card,
+.history-card,
+.auth-card {
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-soft);
+}
+
+/* ---- Numeric emphasis: tabular figures for prices/stats ---- */
+.fare-box strong,
+.pak-req-price strong,
+.driver-stat-tile strong,
+.booking-status {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Status modules: compact, scannable ---- */
+.booking-status {
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.state-badge,
+.history-count,
+.mini-nav-badge,
+.pak-req-status {
+  letter-spacing: 0.05em;
+}
+
+/* ---- Map as core app surface ---- */
+.map-panel {
+  overflow: hidden;
+  border-radius: 18px;
+}
+
+.map-view {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+/* ---- Sheets + dialogs: consistent entrance surface ---- */
+.ride-request-sheet > .driver-card,
+.ride-chat-panel {
+  border-radius: 18px;
+}
+
+/* ---- Header: compact app shell ---- */
+.header-inner {
+  height: 60px;
+}
+
+.app-header .nav-link.is-active {
+  color: var(--color-green-deep);
+}
+
+/* ---- Service/mode cards: one selected language ---- */
+.booking-mode-card.is-active,
+.ride-mode-tab.selected,
+.mini-nav-item.is-active {
+  border-color: rgba(5, 180, 114, 0.45);
+}
+
+/* ---- Mobile app proportions (360–430px first) ---- */
+@media (max-width: 480px) {
+  .header-inner {
+    height: 56px;
+    padding: 0 16px;
+    gap: 12px;
+  }
+
+  .brand-logo {
+    height: 38px;
+  }
+
+  .section-header {
+    margin-bottom: 16px;
+  }
+
+  .section-header h1 {
+    font-size: 1.55rem;
+  }
+
+  .driver-card,
+  .scheduled-card,
+  .flow-card,
+  .upcoming-card,
+  .history-card,
+  .auth-card {
+    border-radius: 16px;
+  }
+
+  .primary-action,
+  .secondary-action {
+    min-height: 50px;
+    font-size: 0.88rem;
+  }
+
+  .input-field {
+    min-height: 52px;
+    font-size: 1rem;
+  }
+
+  .map-panel {
+    border-radius: 16px;
+  }
+}
+
+/* ---- Small phones: protect 320–360px from overflow ---- */
+@media (max-width: 360px) {
+  .header-inner {
+    padding: 0 12px;
+    gap: 8px;
+  }
+
+  .section-header h1 {
+    font-size: 1.4rem;
+  }
+
+  .subtitle {
+    font-size: 0.84rem;
+  }
+}
