@@ -269,6 +269,7 @@ export function DriverExperience({
   const [pakyawanOffersError, setPakyawanOffersError] = useState('')
   const [pakyawanRequestsRetry, setPakyawanRequestsRetry] = useState(0)
   const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
+  const [pakyawanConfirmedPopup, setPakyawanConfirmedPopup] = useState<PakyawanBooking | null>(null)
   const [pakyawanNow, setPakyawanNow] = useState(() => Date.now())
   const [pakyawanPriceInputs, setPakyawanPriceInputs] = useState<Record<string, string>>({})
   const [pakyawanPriceSubmittingId, setPakyawanPriceSubmittingId] = useState<string | null>(null)
@@ -975,6 +976,81 @@ return unsubscribe
 
     return () => {
       mounted = false
+      void supabase.removeChannel(channel)
+    }
+  }, [driverId, driverAuthId, canAcceptPakyawan, driverOnline])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptPakyawan) {
+      return
+    }
+
+    // Passenger confirmation lands directly on `scheduled` (there is no
+    // persisted `confirmed` status). Watch this driver's own bookings so the
+    // driver learns about confirmation without refreshing.
+    const channel = supabase
+      .channel(`driver-pakyawan-held-${driverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'pakyawan_bookings',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<PakyawanBooking>
+
+          if (!incoming.id || incoming.driver_id !== driverId) {
+            return
+          }
+
+          const confirmedBookingId = incoming.id
+
+          setAcceptedPakyawan((current) => {
+            const byId = new Map(current.map((booking) => [booking.id, booking]))
+
+            byId.set(confirmedBookingId, { ...(byId.get(confirmedBookingId) ?? {}), ...incoming } as PakyawanBooking)
+
+            return Array.from(byId.values()).slice(0, 10)
+          })
+
+          if (incoming.status !== 'scheduled') {
+            return
+          }
+
+          const subtitle = `${incoming.pickup_location ?? 'Pickup'} → ${incoming.destination ?? 'Destination'}`
+
+          setNotifications((current) =>
+            current.some((item) => item.id === `pakyawan-confirmed-${incoming.id}`)
+              ? current
+              : [
+                  {
+                    id: `pakyawan-confirmed-${incoming.id}`,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'Pakyawan confirmed',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
+
+          setPakyawanConfirmedPopup((current) =>
+            current && current.id === incoming.id ? current : (incoming as PakyawanBooking),
+          )
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('Pakyawan confirmed', subtitle)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
       void supabase.removeChannel(channel)
     }
   }, [driverId, driverAuthId, canAcceptPakyawan, driverOnline])
@@ -2566,6 +2642,93 @@ const displayedDriver = driverProfile ?? demoDriver
     )
   }
 
+  const handleClosePakyawanConfirmedPopup = () => {
+    const bookingId = pakyawanConfirmedPopup?.id
+
+    setPakyawanConfirmedPopup(null)
+
+    if (bookingId) {
+      setNotifications((items) => items.filter((item) => item.id !== `pakyawan-confirmed-${bookingId}`))
+    }
+  }
+
+  const renderPakyawanConfirmedPopup = () => {
+    if (!pakyawanConfirmedPopup) {
+      return null
+    }
+
+    const confirmedBooking = pakyawanConfirmedPopup
+    const priceCents =
+      typeof confirmedBooking.price_cents === 'number' && Number.isFinite(confirmedBooking.price_cents)
+        ? confirmedBooking.price_cents
+        : null
+
+    return (
+      <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Pakyawan booking confirmed">
+        <div className="ride-request-sheet">
+          <section className="driver-card pakyawan-card">
+            <div className="state-heading">
+              <div>
+                <p className="section-label">PAKYAWAN CONFIRMED</p>
+                <h3>Passenger confirmed this trip</h3>
+                <p>Continue with the scheduled trip below. No refresh needed.</p>
+              </div>
+            </div>
+            <ul className="pak-req-list">
+              <li className="pak-req">
+                <div className="pak-req-route">
+                  <div className="pak-req-stop">
+                    <span className="pak-req-dot is-pickup" aria-hidden="true" />
+                    <div className="pak-req-stop-copy">
+                      <span className="pak-req-label">Pickup</span>
+                      <strong className="pak-req-place">{confirmedBooking.pickup_location}</strong>
+                    </div>
+                  </div>
+                  <div className="pak-req-leg" aria-hidden="true">
+                    <span className="pak-req-leg-rail" />
+                  </div>
+                  <div className="pak-req-stop">
+                    <span className="pak-req-dot is-destination" aria-hidden="true" />
+                    <div className="pak-req-stop-copy">
+                      <span className="pak-req-label">Destination</span>
+                      <strong className="pak-req-place">{confirmedBooking.destination}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div className="pak-req-grid">
+                  <div className="pak-req-cell">
+                    <span className="pak-req-label">Date</span>
+                    <strong>{formatPakyawanCardDate(confirmedBooking.booking_date).main}</strong>
+                  </div>
+                  <div className="pak-req-cell">
+                    <span className="pak-req-label">Time</span>
+                    <strong>{formatPakyawanCardTime(confirmedBooking.pickup_time)}</strong>
+                  </div>
+                  <div className="pak-req-cell">
+                    <span className="pak-req-label">Trip price</span>
+                    <strong>{priceCents !== null ? `₱${formatCentavos(priceCents)}` : '—'}</strong>
+                  </div>
+                </div>
+                <div className="pak-req-split">
+                  <div className="pak-req-party">
+                    <span className="pak-req-label">Customer</span>
+                    <strong>{confirmedBooking.customer_name}</strong>
+                    <small>{confirmedBooking.customer_phone}</small>
+                  </div>
+                </div>
+                <div className="pak-req-actions">
+                  <button type="button" className="primary-action" onClick={handleClosePakyawanConfirmedPopup}>
+                    Close
+                  </button>
+                </div>
+              </li>
+            </ul>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   const renderDeliveryTripOverlay = () => {
     if (!canAcceptDeliveries) {
       return null
@@ -4130,6 +4293,8 @@ const renderOnlineState = () => (
       {renderDeliveryPopup()}
 
       {renderPakyawanPopup()}
+
+      {renderPakyawanConfirmedPopup()}
 
       {renderDeliveryTripOverlay()}
 
