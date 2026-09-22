@@ -6,6 +6,7 @@ import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
 import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides, subscribeToAdminRideNow, type AdminLiveRideOffer } from '../lib/adminLiveData'
 import { fetchAdminDriverPresence, subscribeToAdminPresence, type AdminDriverPresence } from '../lib/adminPresence'
+import { fetchAdminDriverHolds, forceDriverOffline, releaseDriverHold, subscribeToAdminHolds, type AdminDriverHold, type ForceOfflineResult } from '../lib/adminHolds'
 import { driverLocationStatus } from '../lib/driverPresence'
 import { adminRetryRide } from '../lib/dispatch'
 import type { DispatchResult } from '../types/dispatch'
@@ -474,6 +475,32 @@ useEffect(() => {
         })
     })
   }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    fetchAdminDriverHolds()
+      .then((holds) => {
+        setDriverHolds(holds)
+      })
+      .catch((error) => {
+        console.error('Unable to load driver holds:', error)
+      })
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    return subscribeToAdminHolds(() => {
+      fetchAdminDriverHolds()
+        .then((holds) => {
+          setDriverHolds(holds)
+        })
+        .catch((error) => {
+          console.error('Unable to refresh driver holds:', error)
+        })
+    })
+  }, [isLoggedIn])
   useEffect(() => {
     let isMounted = true
 
@@ -846,6 +873,14 @@ useEffect(() => {
   }
 
   const [presenceMap, setPresenceMap] = useState<Record<string, AdminDriverPresence>>({})
+  const [driverHolds, setDriverHolds] = useState<Record<string, AdminDriverHold>>({})
+  const [forceHoldTarget, setForceHoldTarget] = useState<AdminDriver | null>(null)
+  const [holdReason, setHoldReason] = useState('')
+  const [isForcingHold, setIsForcingHold] = useState(false)
+  const [releaseHoldTarget, setReleaseHoldTarget] = useState<AdminDriverHold | null>(null)
+  const [isReleasingHold, setIsReleasingHold] = useState(false)
+  const [holdError, setHoldError] = useState('')
+  const [holdMessage, setHoldMessage] = useState('')
 
   const presenceStatus = (driverId: string): 'Online' | 'Stale' | 'Offline' | 'Busy' => {
     const presence = presenceMap[driverId]
@@ -1129,6 +1164,85 @@ useEffect(() => {
       setDriverError(driverRemovalErrorMessage(error))
     } finally {
       setIsRemovingDriver(false)
+    }
+  }
+
+  const forceResultText = (result: ForceOfflineResult, name: string): string => {
+    const parts = [`${name} is now held offline.`]
+
+    if (result.already_offline) {
+      parts.push('Already offline.')
+    }
+
+    if (result.offers_withdrawn > 0) {
+      parts.push(`${result.offers_withdrawn} live offer${result.offers_withdrawn === 1 ? '' : 's'} withdrawn.`)
+    }
+
+    if (result.active_ride_id) {
+      parts.push('Active ride preserved.')
+    }
+
+    return parts.join(' ')
+  }
+
+  const openForceHoldModal = (driver: AdminDriver) => {
+    setForceHoldTarget(driver)
+    setHoldReason('')
+    setHoldError('')
+    setHoldMessage('')
+  }
+
+  const handleForceHold = async () => {
+    if (!forceHoldTarget || isForcingHold) {
+      return
+    }
+
+    const reason = holdReason.trim()
+
+    if (!reason) {
+      setHoldError('Enter a reason for holding this driver offline.')
+      return
+    }
+
+    setIsForcingHold(true)
+    setHoldError('')
+
+    try {
+      const result = await forceDriverOffline(forceHoldTarget.id, reason)
+      const holds = await fetchAdminDriverHolds()
+      setDriverHolds(holds)
+      setHoldMessage(forceResultText(result, forceHoldTarget.name))
+      setForceHoldTarget(null)
+      setHoldReason('')
+    } catch (error) {
+      console.error('Unable to hold driver offline:', error)
+      setHoldMessage('')
+      setHoldError(error instanceof Error && error.message ? error.message : 'Unable to hold this driver offline. Please try again.')
+    } finally {
+      setIsForcingHold(false)
+    }
+  }
+
+  const handleReleaseHold = async () => {
+    if (!releaseHoldTarget || isReleasingHold) {
+      return
+    }
+
+    setIsReleasingHold(true)
+    setHoldError('')
+
+    try {
+      await releaseDriverHold(releaseHoldTarget.id)
+      const holds = await fetchAdminDriverHolds()
+      setDriverHolds(holds)
+      setReleaseHoldTarget(null)
+      setHoldMessage('Admin hold released. The driver must go online normally.')
+    } catch (error) {
+      console.error('Unable to release driver hold:', error)
+      setHoldMessage('')
+      setHoldError(error instanceof Error && error.message ? error.message : 'Unable to release this hold. Please try again.')
+    } finally {
+      setIsReleasingHold(false)
     }
   }
 
@@ -1731,10 +1845,10 @@ useEffect(() => {
                           </button>
                         </td>
                         <td className="action-buttons-cell">
-                          <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); openManageAccount(driver) }}>
+                          <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); setHoldMessage(''); setHoldError(''); openManageAccount(driver) }}>
                             Manage
                           </button>
-                          <button type="button" className="ghost-button" onClick={() => setSelectedDriverId(driver.id)}>
+                          <button type="button" className="ghost-button" onClick={() => { setSelectedDriverId(driver.id); setHoldMessage(''); setHoldError('') }}>
                             View
                           </button>
                           {driver.status !== 'Active' && (
@@ -1745,6 +1859,15 @@ useEffect(() => {
                           <button type="button" className="ghost-button danger-button" onClick={() => setDriverToRemove(driver)}>
                             Remove
                           </button>
+                          {driverHolds[driver.id] ? (
+                            <span className="status-pill busy" title="Held offline by Admin">
+                              Admin hold
+                            </span>
+                          ) : (
+                            <button type="button" className="ghost-button danger-button" onClick={() => openForceHoldModal(driver)}>
+                              Force offline
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -1778,6 +1901,21 @@ useEffect(() => {
                   <div><span>Status</span><strong>{selectedDriver.status}</strong></div>
                   <div><span>Presence</span><strong>{presenceStatus(selectedDriver.id)}{presenceMap[selectedDriver.id] ? ` · updated ${new Date(presenceMap[selectedDriver.id].updatedAt).toLocaleString()}` : ' · no presence row'}</strong></div>
                   <div><span>Profile availability</span><strong>{selectedDriver.availability}</strong></div>
+                  <div><span>Admin hold</span><strong>{driverHolds[selectedDriver.id] ? `Held since ${new Date(driverHolds[selectedDriver.id].createdAt).toLocaleString()}` : 'Not held'}</strong></div>
+                  {driverHolds[selectedDriver.id] ? (
+                    <div><span>Hold reason</span><strong>{driverHolds[selectedDriver.id].reason}</strong></div>
+                  ) : null}
+                  {driverHolds[selectedDriver.id] ? (
+                    <button type="button" className="secondary-action compact-button" onClick={() => { setReleaseHoldTarget(driverHolds[selectedDriver.id]); setHoldError(''); setHoldMessage('') }}>
+                      Release hold
+                    </button>
+                  ) : (
+                    <button type="button" className="secondary-action compact-button" onClick={() => openForceHoldModal(selectedDriver)}>
+                      Force offline
+                    </button>
+                  )}
+                  {holdMessage ? <p className="field-note">{holdMessage}</p> : null}
+                  {holdError ? <span className="field-error">{holdError}</span> : null}
                   <div><span>Pakyawan</span><strong>
                     {selectedDriver.canAcceptPakyawan ? 'Eligible' : 'Not enabled'}
                     <button
@@ -2512,6 +2650,100 @@ useEffect(() => {
               onClick={() => void handleRemoveDriver()}
             >
               {isRemovingDriver ? 'Removing...' : 'Remove Driver'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {forceHoldTarget ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isForcingHold ? undefined : () => setForceHoldTarget(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="force-offline-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="force-offline-title">Force driver offline</h3>
+          <p className="confirm-copy">
+            This will set live presence to offline/unavailable and withdraw live offers. An active ride, if any, will be preserved. The driver will remain blocked from going online until an admin releases the hold.
+          </p>
+          <p className="confirm-driver">
+            <strong>{forceHoldTarget.name}</strong>
+            <span>{forceHoldTarget.phone}</span>
+          </p>
+          <label className="field-label" htmlFor="force-hold-reason">Reason</label>
+          <input
+            id="force-hold-reason"
+            className="input-field slim-input"
+            type="text"
+            placeholder="Why is this driver being held offline?"
+            value={holdReason}
+            disabled={isForcingHold}
+            onChange={(event) => { setHoldReason(event.target.value); setHoldError('') }}
+          />
+          {holdError ? <span className="field-error">{holdError}</span> : null}
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isForcingHold}
+              onClick={() => setForceHoldTarget(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-action danger-button"
+              disabled={isForcingHold || !holdReason.trim()}
+              onClick={() => void handleForceHold()}
+            >
+              {isForcingHold ? 'Holding...' : 'Force offline'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {releaseHoldTarget ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isReleasingHold ? undefined : () => setReleaseHoldTarget(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="release-hold-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="release-hold-title">Release admin hold</h3>
+          <p className="confirm-copy">
+            Releasing this hold removes the Admin block. It does not automatically set the driver online — the driver must go online normally afterward.
+          </p>
+          {holdError ? <span className="field-error">{holdError}</span> : null}
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isReleasingHold}
+              onClick={() => setReleaseHoldTarget(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isReleasingHold}
+              onClick={() => void handleReleaseHold()}
+            >
+              {isReleasingHold ? 'Releasing...' : 'Release hold'}
             </button>
           </div>
         </div>
