@@ -1663,7 +1663,7 @@ useEffect(() => {
                       <th>Vehicle</th>
                       <th>Plate</th>
                       <th>Account</th>
-                      <th>Presence</th>
+                      <th>Profile / Presence</th>
                       <th>Login</th>
                       <th>Pakyawan</th>
                       <th>Pa-Deliver</th>
@@ -1691,6 +1691,7 @@ useEffect(() => {
                           </span>
                         </td>
                         <td>
+                          <span className="muted-copy">Profile</span>
                           <select
                             className="inline-select"
                             value={driver.availability}
@@ -1701,6 +1702,7 @@ useEffect(() => {
                             <option value="Online">Online</option>
                             <option value="Busy">Busy</option>
                           </select>
+                          <span className="muted-copy">Live presence</span>
                           <span className={`status-pill ${presenceStatus(driver.id).toLowerCase()}`} title="Authoritative presence">
                             {presenceStatus(driver.id)}
                           </span>
