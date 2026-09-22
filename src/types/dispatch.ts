@@ -37,3 +37,12 @@ export type PendingOffer = {
   offer: RideOffer
   ride: Ride
 }
+
+export type AdminCancelRideResult = {
+  ride_id: string
+  success: boolean
+  already_cancelled: boolean
+  previous_status: string | null
+  new_status: string | null
+  reason: string
+}

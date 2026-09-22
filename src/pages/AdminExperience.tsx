@@ -8,8 +8,8 @@ import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides,
 import { fetchAdminDriverPresence, subscribeToAdminPresence, type AdminDriverPresence } from '../lib/adminPresence'
 import { fetchAdminDriverHolds, forceDriverOffline, releaseDriverHold, subscribeToAdminHolds, type AdminDriverHold, type ForceOfflineResult } from '../lib/adminHolds'
 import { driverLocationStatus } from '../lib/driverPresence'
-import { adminRetryRide } from '../lib/dispatch'
-import type { DispatchResult } from '../types/dispatch'
+import { adminCancelRide, adminRetryRide } from '../lib/dispatch'
+import type { AdminCancelRideResult, DispatchResult } from '../types/dispatch'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import {
@@ -340,6 +340,11 @@ export function AdminExperience({
   const [isRetryingRide, setIsRetryingRide] = useState(false)
   const [retryRideError, setRetryRideError] = useState('')
   const [retryRideResult, setRetryRideResult] = useState<DispatchResult | null>(null)
+  const [cancelRideTarget, setCancelRideTarget] = useState<{ id: string; Rider: string; pickup: string; destination: string; status: string } | null>(null)
+  const [cancelReason, setCancelReason] = useState('')
+  const [isCancellingRide, setIsCancellingRide] = useState(false)
+  const [cancelRideError, setCancelRideError] = useState('')
+  const [cancelRideResult, setCancelRideResult] = useState<AdminCancelRideResult | null>(null)
   const [retryWaitText, setRetryWaitText] = useState('')
 
   const resetRetryUi = () => {
@@ -646,6 +651,46 @@ useEffect(() => {
       setRetryRideError(error instanceof Error && error.message ? error.message : 'Unable to retry dispatch. Please try again.')
     } finally {
       setIsRetryingRide(false)
+    }
+  }
+
+  const openCancelRideModal = (ride: { id: string; Rider: string; pickup: string; destination: string; status: unknown }) => {
+    setCancelRideTarget({ id: ride.id, Rider: ride.Rider, pickup: ride.pickup, destination: ride.destination, status: String(ride.status) })
+    setCancelReason('')
+    setCancelRideError('')
+    setCancelRideResult(null)
+  }
+
+  const handleCancelRide = async () => {
+    if (!cancelRideTarget || isCancellingRide) {
+      return
+    }
+
+    const reason = cancelReason.trim()
+
+    if (!reason) {
+      setCancelRideError('Enter a reason for cancelling this ride.')
+      return
+    }
+
+    setIsCancellingRide(true)
+    setCancelRideError('')
+
+    try {
+      const result = await adminCancelRide(cancelRideTarget.id, reason)
+      setCancelRideResult(result)
+      setCancelRideTarget(null)
+      setCancelReason('')
+
+      // Manual fallback refresh; the realtime subscription also
+      // invalidates this dataset when the cancellation writes land.
+      await refreshAdminRideNow()
+    } catch (error) {
+      console.error('Unable to cancel ride:', error)
+      setCancelRideResult(null)
+      setCancelRideError(error instanceof Error && error.message ? error.message : 'Unable to cancel this ride. Please try again.')
+    } finally {
+      setIsCancellingRide(false)
     }
   }
 
@@ -2286,6 +2331,16 @@ useEffect(() => {
                     {retryRideResult && !confirmingRetry ? <p className="field-note">{retryResultText(retryRideResult)}</p> : null}
                   </div>
                 ) : null}
+                {['requested', 'accepted', 'arrived', 'in_progress'].includes(selectedRide.status) ? (
+                  <div className="quote-box">
+                    <span className="field-label">Cancellation</span>
+                    <button type="button" className="secondary-action compact-button" onClick={() => openCancelRideModal(selectedRide)}>
+                      Cancel ride
+                    </button>
+                  </div>
+                ) : null}
+                {cancelRideResult ? <p className="field-note">Ride cancelled{cancelRideResult.already_cancelled ? ' (already cancelled).' : '.'}</p> : null}
+                {cancelRideError ? <span className="field-error">{cancelRideError}</span> : null}
               </>
             ) : (
               <div className="empty-state-box">
@@ -2744,6 +2799,60 @@ useEffect(() => {
               onClick={() => void handleReleaseHold()}
             >
               {isReleasingHold ? 'Releasing...' : 'Release hold'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {cancelRideTarget ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isCancellingRide ? undefined : () => setCancelRideTarget(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-ride-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="cancel-ride-title">Cancel ride</h3>
+          <p className="confirm-copy">
+            This is an Admin operational cancellation. Live offers will be withdrawn and the driver released. Status: {rideStatusLabels[cancelRideTarget.status as keyof typeof rideStatusLabels] ?? cancelRideTarget.status}.
+          </p>
+          <p className="confirm-driver">
+            <strong>{cancelRideTarget.Rider}</strong>
+            <span>{cancelRideTarget.pickup} → {cancelRideTarget.destination}</span>
+          </p>
+          <label className="field-label" htmlFor="cancel-ride-reason">Reason</label>
+          <input
+            id="cancel-ride-reason"
+            className="input-field slim-input"
+            type="text"
+            placeholder="Why is this ride being cancelled?"
+            value={cancelReason}
+            disabled={isCancellingRide}
+            onChange={(event) => { setCancelReason(event.target.value); setCancelRideError('') }}
+          />
+          {cancelRideError ? <span className="field-error">{cancelRideError}</span> : null}
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isCancellingRide}
+              onClick={() => setCancelRideTarget(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-action danger-button"
+              disabled={isCancellingRide || !cancelReason.trim()}
+              onClick={() => void handleCancelRide()}
+            >
+              {isCancellingRide ? 'Cancelling...' : 'Cancel ride'}
             </button>
           </div>
         </div>

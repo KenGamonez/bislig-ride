@@ -1,6 +1,6 @@
 import { supabase } from './supabase'
 import { fetchRideById } from './rides'
-import type { DispatchResult, DriverPresence, PendingOffer, RideOffer } from '../types/dispatch'
+import type { AdminCancelRideResult, DispatchResult, DriverPresence, PendingOffer, RideOffer } from '../types/dispatch'
 import type { Ride } from '../types/ride'
 
 export async function setDriverPresence(
@@ -45,6 +45,21 @@ export async function adminRetryRide(rideId: string): Promise<DispatchResult> {
   }
 
   return data as DispatchResult
+}
+
+export async function adminCancelRide(rideId: string, reason: string): Promise<AdminCancelRideResult> {
+  const { data, error } = await supabase
+    .rpc('admin_cancel_ride', {
+      p_ride_id: rideId,
+      p_reason: reason,
+    })
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as AdminCancelRideResult
 }
 
 export async function acceptRideOffer(rideId: string, driverId: string): Promise<Ride> {
