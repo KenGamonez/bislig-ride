@@ -29,6 +29,7 @@ type DatabaseDriverApplication = {
   drivers_license_path: string | null
   status: DriverApplicationStatus
   created_at: string
+  driver_id: string | null
 }
 
 function mapApplication(row: DatabaseDriverApplication): DriverApplication {
@@ -50,6 +51,7 @@ function mapApplication(row: DatabaseDriverApplication): DriverApplication {
     drivers_license_path: row.drivers_license_path ?? '',
     status: row.status,
     created_at: row.created_at,
+    driver_id: row.driver_id ?? null,
   }
 }
 
@@ -82,6 +84,22 @@ export async function updateDriverApplicationStatus(
     .from('driver_applications')
     .update({ status })
     .eq('id', id)
+    .select('*')
+    .single()
+
+  if (error) throw error
+
+  return mapApplication(data as DatabaseDriverApplication)
+}
+
+export async function linkDriverApplicationDriver(
+  applicationId: string,
+  driverId: string
+) {
+  const { data, error } = await supabase
+    .from('driver_applications')
+    .update({ driver_id: driverId })
+    .eq('id', applicationId)
     .select('*')
     .single()
 

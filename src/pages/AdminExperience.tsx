@@ -10,7 +10,7 @@ import { fetchAdminDriverHolds, forceDriverOffline, releaseDriverHold, subscribe
 import { driverLocationStatus } from '../lib/driverPresence'
 import { adminCancelRide, adminRetryRide } from '../lib/dispatch'
 import type { AdminCancelRideResult, DispatchResult } from '../types/dispatch'
-import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
+import { fetchDriverApplications, linkDriverApplicationDriver, updateDriverApplicationStatus } from '../lib/driverApplications'
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import {
   removeUploadedDriverPhoto,
@@ -929,6 +929,124 @@ useEffect(() => {
       setApplications((current) => current.map((application) => application.id === id ? updated : application))
     } catch {
       setApplicationError('Unable to update this application. Please try again.')
+    }
+  }
+
+  const [isProvisioning, setIsProvisioning] = useState(false)
+  const [provisionError, setProvisionError] = useState('')
+  const [provisionedCredentials, setProvisionedCredentials] = useState<{ username: string; password: string; driverName: string } | null>(null)
+
+  const handleProvisionDriver = async () => {
+    if (!selectedApplication || isProvisioning) {
+      return
+    }
+
+    if (selectedApplication.status !== 'approved' || selectedApplication.driver_id) {
+      return
+    }
+
+    const fullName = selectedApplication.full_name.trim()
+    const phone = selectedApplication.mobile_number.trim()
+    const email = selectedApplication.email.trim()
+    const vehicleType = selectedApplication.vehicle_type.trim()
+    const vehicleModel = selectedApplication.vehicle_number.trim() || selectedApplication.vehicle_type.trim() || selectedApplication.plate_number?.trim() || ''
+    const plateNumber = selectedApplication.plate_number?.trim() || ''
+
+    if (!fullName || !phone) {
+      setProvisionError('This application is missing contact details.')
+      return
+    }
+
+    if (!email || !isValidEmailLike(email)) {
+      setProvisionError('This application has no valid email address. Add the driver manually instead.')
+      return
+    }
+
+    if (!vehicleType || !vehicleModel || !plateNumber) {
+      setProvisionError('This application is missing vehicle details. Add the driver manually instead.')
+      return
+    }
+
+    const baseUsername = normalizeUsername(fullName)
+
+    if (!baseUsername) {
+      setProvisionError('Could not derive a username from the applicant name.')
+      return
+    }
+
+    setIsProvisioning(true)
+    setProvisionError('')
+    setProvisionedCredentials(null)
+
+    try {
+      // Recovery path: a previous attempt may have created the driver row
+      // without linking it. Link the existing account instead of duplicating.
+      const existingDriver = drivers.find((driver) => driver.email.toLowerCase() === email.toLowerCase())
+
+      if (existingDriver) {
+        const linked = await linkDriverApplicationDriver(selectedApplication.id, existingDriver.id)
+        setApplications((current) => current.map((application) => application.id === linked.id ? { ...linked, driver_id: linked.driver_id } : application))
+        setProvisionedCredentials(null)
+        return
+      }
+
+      let username = baseUsername
+      let suffix = 1
+
+      while (await isDriverUsernameTaken(username) && suffix <= 10) {
+        suffix += 1
+        username = `${baseUsername}${suffix}`
+      }
+
+      if (await isDriverUsernameTaken(username)) {
+        throw new Error('Could not derive a unique username. Add the driver manually instead.')
+      }
+
+      const initialPassword = generateTemporaryPassword()
+
+      // Driver row first: a row without auth is a normal recoverable state
+      // in this system (Manage login flow), while an auth account without a
+      // driver row would be orphaned.
+      const created = await createDriver({
+        full_name: fullName,
+        phone,
+        email,
+        vehicle_type: vehicleType,
+        vehicle_model: vehicleModel,
+        plate_number: plateNumber,
+        vehicle_capacity: null,
+        status: 'active',
+        availability: 'offline',
+        username,
+      })
+
+      const account = await createDriverAuthUser(email, initialPassword)
+      await updateDriver(created.id, { auth_user_id: account.authUserId })
+
+      const emailConfirmed = await confirmDriverAuthEmail(account.authUserId).catch(() => false)
+      const linked = await linkDriverApplicationDriver(selectedApplication.id, created.id)
+
+      setApplications((current) => current.map((application) => application.id === linked.id ? { ...linked, driver_id: linked.driver_id } : application))
+
+      const items = await fetchDrivers()
+      const mappedDrivers = items.map(mapDriverRecord)
+      setDrivers(mappedDrivers)
+      setSelectedDriverId(created.id)
+
+      setProvisionedCredentials({
+        username,
+        password: initialPassword,
+        driverName: created.full_name,
+      })
+
+      if (account.needsEmailConfirmation && !emailConfirmed) {
+        console.warn('Driver auth email confirmation is still pending.')
+      }
+    } catch (error) {
+      console.error('Unable to provision driver:', error)
+      setProvisionError(error instanceof Error && error.message ? error.message : 'Unable to provision this driver. Please try again.')
+    } finally {
+      setIsProvisioning(false)
     }
   }
 
@@ -2574,7 +2692,7 @@ useEffect(() => {
             {applicationError ? <p className="form-error-message submit-error">{applicationError}</p> : null}
             {isLoadingApplications ? <p className="muted-copy">Loading applications...</p> : applications.length === 0 ? <div className="empty-state-box"><p>No driver applications found.</p></div> : (
               <div className="table-wrap"><table className="admin-table"><thead><tr><th>Applicant</th><th>Mobile</th><th>Barangay</th><th>Vehicle</th><th>Operating area</th><th>Status</th><th>Submitted</th></tr></thead><tbody>
-                {applications.map((application) => <tr key={application.id} onClick={() => setSelectedApplicationId(application.id)} className={selectedApplicationId === application.id ? 'selected-row' : ''}>
+                {applications.map((application) => <tr key={application.id} onClick={() => { setSelectedApplicationId(application.id); setProvisionedCredentials(null); setProvisionError('') }} className={selectedApplicationId === application.id ? 'selected-row' : ''}>
                   <td>{application.full_name}</td><td>{application.mobile_number}</td><td>{application.barangay}</td><td>{application.vehicle_number}</td><td>{application.operating_area}</td>
                   <td><span className={`status-pill ${application.status}`}>{driverApplicationStatusLabels[application.status]}</span></td><td>{new Date(application.created_at).toLocaleDateString()}</td>
                 </tr>)}
@@ -2586,7 +2704,37 @@ useEffect(() => {
           </div><div className="application-documents"><h4 className="detail-documents-heading">Uploaded Documents</h4>
             <div className="application-document"><span>Driver's Photo</span>{applicationPhotoUrl ? <a className="application-image-link" href={applicationPhotoUrl} target="_blank" rel="noopener noreferrer"><img className="application-image" src={applicationPhotoUrl} alt="Driver's photo" /></a> : <p className="muted-copy">No photo uploaded.</p>}</div>
             <div className="application-document"><span>Driver's License</span>{applicationLicenseUrl ? <a className="application-image-link" href={applicationLicenseUrl} target="_blank" rel="noopener noreferrer"><img className="application-image" src={applicationLicenseUrl} alt="Driver's license" /></a> : <p className="muted-copy">No license uploaded.</p>}</div>
-          </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{driverApplicationStatusLabels[status]}</option>)}</select></label></> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
+          </div><label className="field-block application-status-control"><span className="field-label">Application status</span><select className="input-field" value={selectedApplication.status} onChange={(event) => void handleApplicationStatusChange(selectedApplication.id, event.target.value as DriverApplicationStatus)}>{driverApplicationStatuses.map((status) => <option key={status} value={status}>{driverApplicationStatusLabels[status]}</option>)}</select></label>
+          {selectedApplication.status === 'approved' && !selectedApplication.driver_id ? (
+            <div className="quote-box">
+              <span className="field-label">Driver provisioning</span>
+              <button type="button" className="secondary-action compact-button" disabled={isProvisioning} onClick={() => void handleProvisionDriver()}>
+                {isProvisioning ? 'Provisioning…' : 'Provision driver'}
+              </button>
+            </div>
+          ) : null}
+          {selectedApplication.driver_id ? (
+            <div className="quote-box">
+              <span className="field-label">Linked driver</span>
+              <p className="field-note">{drivers.find((driver) => driver.id === selectedApplication.driver_id)?.name ?? 'Linked driver'}</p>
+              <button type="button" className="secondary-action compact-button" onClick={() => { setActiveTab('drivers'); setSelectedDriverId(selectedApplication.driver_id as string) }}>
+                View driver
+              </button>
+            </div>
+          ) : null}
+          {provisionError ? <span className="field-error">{provisionError}</span> : null}
+          {provisionedCredentials ? (
+            <div className="credentials-box">
+              <p className="field-note">Driver account created for {provisionedCredentials.driverName}. The initial password is shown only once.</p>
+              <div className="detail-grid">
+                <div><span>Username</span><strong>{provisionedCredentials.username}</strong></div>
+                <div><span>Initial password</span><strong>{provisionedCredentials.password}</strong></div>
+              </div>
+              <button type="button" className="ghost-button" onClick={() => setProvisionedCredentials(null)}>
+                Dismiss
+              </button>
+            </div>
+          ) : null}</> : <div className="empty-state-box"><p>Select an application to view details.</p></div>}</aside>
         </section>
       ) : null}
 

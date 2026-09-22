@@ -25,6 +25,7 @@ export type DriverApplication = {
   drivers_license_path: string
   status: DriverApplicationStatus
   created_at: string
+  driver_id: string | null
 }
 
-export type DriverApplicationInsert = Omit<DriverApplication, 'id' | 'status' | 'created_at'>
+export type DriverApplicationInsert = Omit<DriverApplication, 'id' | 'status' | 'created_at' | 'driver_id'>
