@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import sanjayPhoto from '../assets/Sanjay Monteroso.jpg'
 import { AppHeader } from '../components/AppHeader'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
-import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides } from '../lib/adminLiveData'
+import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides, subscribeToAdminRideNow, type AdminLiveRideOffer } from '../lib/adminLiveData'
 import { adminRetryRide } from '../lib/dispatch'
 import type { DispatchResult } from '../types/dispatch'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
@@ -330,7 +330,7 @@ export function AdminExperience({
   const [quotePesos, setQuotePesos] = useState('')
   const [quoteError, setQuoteError] = useState('')
   const [isQuoting, setIsQuoting] = useState(false)
-  const [liveRideOffers, setLiveRideOffers] = useState<Record<string, string>>({})
+  const [liveRideOffers, setLiveRideOffers] = useState<Record<string, AdminLiveRideOffer>>({})
   const [confirmingRetry, setConfirmingRetry] = useState(false)
   const [isRetryingRide, setIsRetryingRide] = useState(false)
   const [retryRideError, setRetryRideError] = useState('')
@@ -380,6 +380,13 @@ export function AdminExperience({
     recentRides: [],
   })
 
+  const refreshAdminRideNow = useCallback(async () => {
+    const rides = await fetchAdminLiveRides()
+    setLiveRides(rides)
+    setLiveRideOffers(await fetchAdminLiveRideOffers(rides.map((ride: any) => ride.id)))
+    return rides
+  }, [])
+
   useEffect(() => {
     if (!isLoggedIn) return
 
@@ -411,6 +418,16 @@ export function AdminExperience({
       .finally(() => {
       })
   }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    return subscribeToAdminRideNow(() => {
+      refreshAdminRideNow().catch((error) => {
+        console.error('Unable to refresh live admin rides:', error)
+      })
+    })
+  }, [isLoggedIn, refreshAdminRideNow])
 useEffect(() => {
     if (!isLoggedIn) return
 
@@ -564,9 +581,9 @@ useEffect(() => {
       setRetryRideResult(result)
       setConfirmingRetry(false)
 
-      const rides = await fetchAdminLiveRides()
-      setLiveRides(rides)
-      setLiveRideOffers(await fetchAdminLiveRideOffers(rides.map((ride: any) => ride.id)))
+      // Manual fallback refresh; the realtime subscription also
+      // invalidates this dataset when the dispatch writes land.
+      await refreshAdminRideNow()
     } catch (error) {
       console.error('Unable to retry dispatch:', error)
       setRetryRideError(error instanceof Error && error.message ? error.message : 'Unable to retry dispatch. Please try again.')
@@ -649,6 +666,12 @@ useEffect(() => {
 
   const selectedDriver = drivers.find((driver) => driver.id === selectedDriverId) ?? drivers[0]
   const selectedRide = liveRides.find((ride) => ride.id === selectedRideId) ?? liveRides.find((ride) => ['accepted', 'arrived', 'in_progress'].includes(ride.status)) ?? liveRides[0]
+  const selectedRideOffer = selectedRide && (selectedRide.status === 'requested' || selectedRide.status === 'no_driver') && !selectedRide.driverId
+    ? liveRideOffers[selectedRide.id] ?? null
+    : null
+  const selectedRideOfferDriver = selectedRideOffer?.driverId
+    ? drivers.find((driver) => driver.id === selectedRideOffer.driverId)?.name ?? 'Driver'
+    : null
   const selectedApplication = applications.find((application) => application.id === selectedApplicationId)
   const selectedContactMessage = contactMessages.find((message) => message.id === selectedContactMessageId)
   const selectedPakyawanBooking = pakyawanBookings.find((booking) => booking.id === selectedPakyawanBookingId)
@@ -2040,6 +2063,15 @@ useEffect(() => {
                   <div><span>Requested</span><strong>{selectedRide.requestedAt}</strong></div>
                   <div><span>Fare</span><strong>{selectedRide.fare}</strong></div>
                 </div>
+                {(selectedRide.status === 'requested' || selectedRide.status === 'no_driver') && !selectedRide.driverId ? (
+                  selectedRideOffer ? (
+                    <p className="field-note">
+                      Live offer · Round {selectedRideOffer.dispatchRound}{selectedRideOfferDriver ? ` · ${selectedRideOfferDriver}` : ''} · expires {new Date(selectedRideOffer.expiresAt).toLocaleTimeString()}.
+                    </p>
+                  ) : (
+                    <p className="field-note">No live offer.</p>
+                  )
+                ) : null}
                 {(selectedRide.status === 'requested' || selectedRide.status === 'no_driver') && !selectedRide.driverId && !liveRideOffers[selectedRide.id] ? (
                   <div className="quote-box">
                     <span className="field-label">Dispatch</span>
