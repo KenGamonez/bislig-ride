@@ -3,8 +3,11 @@
 --
 -- Scope of this step:
 --
---   Admin selects a PENDING Pakyawan booking, enters a price, and submits the
---   quote. The booking becomes QUOTED with price_cents set. Nothing else.
+--   Admin selects a PENDING Pakyawan booking that already has an assigned
+--   driver, enters a price, and submits the quote. The booking becomes
+--   QUOTED with price_cents set. Nothing else. Driverless pending
+--   bookings are rejected so they can never strand in quoted/scheduled
+--   (P1.10: legacy pull and dispatch serve pending rows only).
 --
 -- What this adds:
 --
@@ -28,9 +31,10 @@
 --
 -- Concurrency:
 --
---   The UPDATE is conditional on (id AND status = 'pending'), so if two
---   admins quote the same booking, the second call updates zero rows and
---   raises a clear 'Only pending Pakyawan bookings can be quoted.' exception.
+--   The UPDATE is conditional on (id AND status = 'pending' AND
+--   driver_id IS NOT NULL), so if two admins quote the same booking, the
+--   second call updates zero rows and raises a clear exception. A
+--   driverless pending booking is rejected with its own distinct error.
 
 create or replace function public.admin_quote_pakyawan(p_booking_id uuid, p_price_cents integer)
 returns public.pakyawan_bookings
@@ -66,11 +70,21 @@ begin
          updated_at = now()
    where id = p_booking_id
      and status = 'pending'
+     and driver_id is not null
   returning * into v_row;
 
   if not found then
     if not exists (select 1 from public.pakyawan_bookings where id = p_booking_id) then
       raise exception 'Pakyawan booking not found.';
+    end if;
+
+    if exists (
+      select 1 from public.pakyawan_bookings
+       where id = p_booking_id
+         and status = 'pending'
+         and driver_id is null
+    ) then
+      raise exception 'Only pending bookings with an assigned driver can be quoted.';
     end if;
 
     raise exception 'Only pending Pakyawan bookings can be quoted.';
