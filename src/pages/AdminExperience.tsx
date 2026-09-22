@@ -29,9 +29,9 @@ import {
   validatePasswordStrength,
 } from '../lib/driverAccounts'
 import { fetchAdminRideCancellations, type AdminCancellation } from '../lib/rideCancellations'
-import { fetchPakyawanBookings, quotePakyawanBooking } from '../lib/scheduledBookings'
+import { adminCancelPakyawanBooking, fetchPakyawanBookings, quotePakyawanBooking, type AdminCancelPakyawanResult } from '../lib/scheduledBookings'
 import type { PakyawanBooking } from '../types/scheduledBooking'
-import { fetchDeliveriesForAdmin, fetchDeliveryProofIds, fetchDeliveryProofPaths } from '../lib/deliveries'
+import { adminCancelDelivery, fetchDeliveriesForAdmin, fetchDeliveryProofIds, fetchDeliveryProofPaths, type AdminCancelDeliveryResult } from '../lib/deliveries'
 import { getDeliveryProofSignedUrl } from '../lib/deliveryProof'
 import type { DeliveryBooking } from '../types/delivery'
 import { formatCentavos } from '../lib/fare'
@@ -354,6 +354,16 @@ export function AdminExperience({
   const [isCancellingRide, setIsCancellingRide] = useState(false)
   const [cancelRideError, setCancelRideError] = useState('')
   const [cancelRideResult, setCancelRideResult] = useState<AdminCancelRideResult | null>(null)
+  const [cancelPakyawanTarget, setCancelPakyawanTarget] = useState<{ id: string; customer: string; route: string; status: string } | null>(null)
+  const [pakyawanCancelReason, setPakyawanCancelReason] = useState('')
+  const [isCancellingPakyawan, setIsCancellingPakyawan] = useState(false)
+  const [pakyawanCancelError, setPakyawanCancelError] = useState('')
+  const [pakyawanCancelResult, setPakyawanCancelResult] = useState<AdminCancelPakyawanResult | null>(null)
+  const [cancelDeliveryTarget, setCancelDeliveryTarget] = useState<{ id: string; sender: string; route: string; status: string } | null>(null)
+  const [deliveryCancelReason, setDeliveryCancelReason] = useState('')
+  const [isCancellingDelivery, setIsCancellingDelivery] = useState(false)
+  const [deliveryCancelError, setDeliveryCancelError] = useState('')
+  const [deliveryCancelResult, setDeliveryCancelResult] = useState<AdminCancelDeliveryResult | null>(null)
   const [retryWaitText, setRetryWaitText] = useState('')
 
   const resetRetryUi = () => {
@@ -724,6 +734,84 @@ useEffect(() => {
       setCancelRideError(error instanceof Error && error.message ? error.message : 'Unable to cancel this ride. Please try again.')
     } finally {
       setIsCancellingRide(false)
+    }
+  }
+
+  const openCancelPakyawanModal = (booking: { id: string; customer_name: string; pickup_location: string; destination: string; status: unknown }) => {
+    setCancelPakyawanTarget({ id: booking.id, customer: booking.customer_name, route: `${booking.pickup_location} → ${booking.destination}`, status: String(booking.status) })
+    setPakyawanCancelReason('')
+    setPakyawanCancelError('')
+    setPakyawanCancelResult(null)
+  }
+
+  const handleCancelPakyawan = async () => {
+    if (!cancelPakyawanTarget || isCancellingPakyawan) {
+      return
+    }
+
+    const reason = pakyawanCancelReason.trim()
+
+    if (!reason) {
+      setPakyawanCancelError('Enter a reason for cancelling this booking.')
+      return
+    }
+
+    setIsCancellingPakyawan(true)
+    setPakyawanCancelError('')
+
+    try {
+      const result = await adminCancelPakyawanBooking(cancelPakyawanTarget.id, reason)
+      setPakyawanCancelResult(result)
+      setCancelPakyawanTarget(null)
+      setPakyawanCancelReason('')
+
+      const items = await fetchPakyawanBookings()
+      setPakyawanBookings(items)
+    } catch (error) {
+      console.error('Unable to cancel Pakyawan booking:', error)
+      setPakyawanCancelResult(null)
+      setPakyawanCancelError(error instanceof Error && error.message ? error.message : 'Unable to cancel this booking. Please try again.')
+    } finally {
+      setIsCancellingPakyawan(false)
+    }
+  }
+
+  const openCancelDeliveryModal = (delivery: { id: string; sender_name: string; pickup_address: string; delivery_address: string; status: unknown }) => {
+    setCancelDeliveryTarget({ id: delivery.id, sender: delivery.sender_name, route: `${delivery.pickup_address} → ${delivery.delivery_address}`, status: String(delivery.status) })
+    setDeliveryCancelReason('')
+    setDeliveryCancelError('')
+    setDeliveryCancelResult(null)
+  }
+
+  const handleCancelDelivery = async () => {
+    if (!cancelDeliveryTarget || isCancellingDelivery) {
+      return
+    }
+
+    const reason = deliveryCancelReason.trim()
+
+    if (!reason) {
+      setDeliveryCancelError('Enter a reason for cancelling this delivery.')
+      return
+    }
+
+    setIsCancellingDelivery(true)
+    setDeliveryCancelError('')
+
+    try {
+      const result = await adminCancelDelivery(cancelDeliveryTarget.id, reason)
+      setDeliveryCancelResult(result)
+      setCancelDeliveryTarget(null)
+      setDeliveryCancelReason('')
+
+      const items = await fetchDeliveriesForAdmin()
+      setDeliveries(items)
+    } catch (error) {
+      console.error('Unable to cancel delivery:', error)
+      setDeliveryCancelResult(null)
+      setDeliveryCancelError(error instanceof Error && error.message ? error.message : 'Unable to cancel this delivery. Please try again.')
+    } finally {
+      setIsCancellingDelivery(false)
     }
   }
 
@@ -2797,8 +2885,18 @@ useEffect(() => {
                 {isQuoting ? 'Quoting...' : 'Quote Booking'}
               </button>
             </div>
-            {quoteError ? <span className="field-error">{quoteError}</span> : null}
-          </div> : null}</> : <div className="empty-state-box"><p>Select a booking to view details.</p></div>}</aside>
+              {quoteError ? <span className="field-error">{quoteError}</span> : null}
+            </div> : null}
+                {['pending', 'quoted', 'scheduled', 'driver_on_way', 'driver_arrived', 'in_progress'].includes(selectedPakyawanBooking.status) ? (
+                  <div className="quote-box">
+                    <span className="field-label">Cancellation</span>
+                    <button type="button" className="secondary-action compact-button" onClick={() => openCancelPakyawanModal(selectedPakyawanBooking)}>
+                      Cancel booking
+                    </button>
+                  </div>
+                ) : null}
+                {pakyawanCancelResult ? <p className="field-note">Booking cancelled{pakyawanCancelResult.already_cancelled ? ' (already cancelled).' : '.'}</p> : null}
+                {pakyawanCancelError ? <span className="field-error">{pakyawanCancelError}</span> : null}</> : <div className="empty-state-box"><p>Select a booking to view details.</p></div>}</aside>
         </section>
       ) : null}
       {activeTab === 'deliveries' ? (
@@ -2870,6 +2968,16 @@ useEffect(() => {
               return <p className="muted-copy">Loading proof photo...</p>
             })()
           ) : null}
+                {!['delivered', 'cancelled'].includes(selectedDelivery.status) ? (
+                  <div className="quote-box">
+                    <span className="field-label">Cancellation</span>
+                    <button type="button" className="secondary-action compact-button" onClick={() => openCancelDeliveryModal(selectedDelivery)}>
+                      Cancel delivery
+                    </button>
+                  </div>
+                ) : null}
+                {deliveryCancelResult ? <p className="field-note">Delivery cancelled{deliveryCancelResult.already_cancelled ? ' (already cancelled).' : '.'}</p> : null}
+                {deliveryCancelError ? <span className="field-error">{deliveryCancelError}</span> : null}
           </> : <div className="empty-state-box"><p>Select a delivery to view details.</p></div>}</aside>
         </section>
       ) : null}
@@ -3060,6 +3168,114 @@ useEffect(() => {
               onClick={() => void handleCancelRide()}
             >
               {isCancellingRide ? 'Cancelling...' : 'Cancel ride'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {cancelPakyawanTarget ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isCancellingPakyawan ? undefined : () => setCancelPakyawanTarget(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-pakyawan-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="cancel-pakyawan-title">Cancel booking</h3>
+          <p className="confirm-copy">
+            This is an Admin operational cancellation. Live offers will be withdrawn. Status: {cancelPakyawanTarget.status}.
+          </p>
+          <p className="confirm-driver">
+            <strong>{cancelPakyawanTarget.customer}</strong>
+            <span>{cancelPakyawanTarget.route}</span>
+          </p>
+          <label className="field-label" htmlFor="cancel-pakyawan-reason">Reason</label>
+          <input
+            id="cancel-pakyawan-reason"
+            className="input-field slim-input"
+            type="text"
+            placeholder="Why is this booking being cancelled?"
+            value={pakyawanCancelReason}
+            disabled={isCancellingPakyawan}
+            onChange={(event) => { setPakyawanCancelReason(event.target.value); setPakyawanCancelError('') }}
+          />
+          {pakyawanCancelError ? <span className="field-error">{pakyawanCancelError}</span> : null}
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isCancellingPakyawan}
+              onClick={() => setCancelPakyawanTarget(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-action danger-button"
+              disabled={isCancellingPakyawan || !pakyawanCancelReason.trim()}
+              onClick={() => void handleCancelPakyawan()}
+            >
+              {isCancellingPakyawan ? 'Cancelling...' : 'Cancel booking'}
+            </button>
+          </div>
+        </div>
+      </div>
+    ) : null}
+
+    {cancelDeliveryTarget ? (
+      <div
+        className="ride-chat-overlay"
+        role="presentation"
+        onClick={isCancellingDelivery ? undefined : () => setCancelDeliveryTarget(null)}
+      >
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="cancel-delivery-title"
+          className="remove-driver-dialog"
+          onClick={(event) => event.stopPropagation()}
+        >
+          <h3 id="cancel-delivery-title">Cancel delivery</h3>
+          <p className="confirm-copy">
+            This is an Admin operational cancellation. Live offers will be withdrawn. Status: {cancelDeliveryTarget.status}.
+          </p>
+          <p className="confirm-driver">
+            <strong>{cancelDeliveryTarget.sender}</strong>
+            <span>{cancelDeliveryTarget.route}</span>
+          </p>
+          <label className="field-label" htmlFor="cancel-delivery-reason">Reason</label>
+          <input
+            id="cancel-delivery-reason"
+            className="input-field slim-input"
+            type="text"
+            placeholder="Why is this delivery being cancelled?"
+            value={deliveryCancelReason}
+            disabled={isCancellingDelivery}
+            onChange={(event) => { setDeliveryCancelReason(event.target.value); setDeliveryCancelError('') }}
+          />
+          {deliveryCancelError ? <span className="field-error">{deliveryCancelError}</span> : null}
+          <div className="form-actions">
+            <button
+              type="button"
+              className="secondary-action"
+              disabled={isCancellingDelivery}
+              onClick={() => setCancelDeliveryTarget(null)}
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              className="primary-action danger-button"
+              disabled={isCancellingDelivery || !deliveryCancelReason.trim()}
+              onClick={() => void handleCancelDelivery()}
+            >
+              {isCancellingDelivery ? 'Cancelling...' : 'Cancel delivery'}
             </button>
           </div>
         </div>

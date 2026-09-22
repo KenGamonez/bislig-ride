@@ -133,6 +133,25 @@ export async function setDeliveryDriverPrice(deliveryId: string, priceCents: num
   return data as DeliveryBooking
 }
 
+export type AdminCancelDeliveryResult = {
+  delivery_id: string
+  success: boolean
+  already_cancelled: boolean
+  previous_status: string | null
+  new_status: string | null
+  reason: string
+}
+
+export async function adminCancelDelivery(deliveryId: string, reason: string): Promise<AdminCancelDeliveryResult> {
+  const { data, error } = await supabase
+    .rpc('admin_cancel_delivery', { p_delivery_id: deliveryId, p_reason: reason })
+    .single()
+
+  if (error) throw error
+
+  return data as AdminCancelDeliveryResult
+}
+
 export async function confirmDeliveryQuote(deliveryId: string, accessToken: string): Promise<DeliveryBooking> {
   const { data, error } = await supabase
     .rpc('confirm_delivery_quote', { p_delivery_id: deliveryId, p_access_token: accessToken })

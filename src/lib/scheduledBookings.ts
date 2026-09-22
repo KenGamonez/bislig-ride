@@ -82,6 +82,25 @@ export async function quotePakyawanBooking(bookingId: string, priceCents: number
   return data as PakyawanBooking
 }
 
+export type AdminCancelPakyawanResult = {
+  booking_id: string
+  success: boolean
+  already_cancelled: boolean
+  previous_status: string | null
+  new_status: string | null
+  reason: string
+}
+
+export async function adminCancelPakyawanBooking(bookingId: string, reason: string): Promise<AdminCancelPakyawanResult> {
+  const { data, error } = await supabase
+    .rpc('admin_cancel_pakyawan', { p_booking_id: bookingId, p_reason: reason })
+    .single()
+
+  if (error) throw error
+
+  return data as AdminCancelPakyawanResult
+}
+
 const PAKYAWAN_OFFER_BOOKING_COLUMNS =
   'id,customer_name,customer_phone,booking_date,pickup_time,pickup_location,destination,passengers,trip_type,estimated_hours,special_requests,status,driver_id,created_at'
 
