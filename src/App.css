@@ -14187,3 +14187,69 @@ a:focus-visible {
 }
 
 /* Open number turns green (Ride Now pattern); no per-service background boxes */
+
+/* Ride Now POPULAR — restrained black status label, inline with title */
+.service-dashboard .service-accordion-popular {
+  display: inline-block;
+  margin-left: 8px;
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--color-black);
+  color: var(--color-white);
+  font-size: 0.6rem;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  line-height: 1.4;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+/* Panel actions — restore pre-redesign service navigation */
+.service-dashboard .service-accordion-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 2px 14px 14px;
+  padding: 10px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--color-white);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.service-dashboard .service-accordion-action:hover {
+  border-color: var(--color-gray-300);
+}
+
+.service-dashboard .service-accordion-action-arrow {
+  color: var(--color-gray-500);
+  line-height: 1;
+  transition: transform var(--transition), color var(--transition);
+}
+
+.service-dashboard .service-accordion-action:hover .service-accordion-action-arrow {
+  transform: translateX(3px);
+  color: var(--color-green-deep);
+}
+
+.service-dashboard .service-accordion-action-primary,
+.service-dashboard .service-accordion-action-primary:focus-visible {
+  background: var(--color-green);
+  border: none;
+  color: var(--color-black);
+  font-weight: 800;
+  box-shadow: 0 2px 10px rgba(0, 232, 138, 0.25);
+}
+
+.service-dashboard .service-accordion-action-primary:hover {
+  background: #00c877;
+  border: none;
+}
+
+.service-dashboard .service-accordion-action-primary .service-accordion-action-arrow {
+  color: var(--color-black);
+}

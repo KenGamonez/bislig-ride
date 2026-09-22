@@ -30,16 +30,20 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
           >
             <span className="service-accordion-number">01</span>
             <span className="service-accordion-label">
-              <strong>{t('dash.rideNow')}</strong>
+              <strong>{t('dash.rideNow')}<span className="service-accordion-popular">{t('dash.popular')}</span></strong>
             </span>
             <span className="service-accordion-chevron" aria-hidden="true"></span>
           </button>
           <div className={openSection === 'ride' ? 'service-accordion-panel is-open' : 'service-accordion-panel'}>
             <p className="service-accordion-desc">{t('dash.rideNowCopy')}</p>
+            <button type="button" className="service-accordion-action service-accordion-action-primary" onClick={onSelectRideNow}>
+              {t('dash.rideNow')}
+              <span className="service-accordion-action-arrow" aria-hidden="true">→</span>
+            </button>
           </div>
         </div>
 
-        <div className={openSection === 'pakyawan' ? 'service-accordion-item pakyawan-item is-open' : 'service-accordion-item pakyawan-item'}>
+        <div className={openSection === 'pakyawan' ? 'service-accordion-item service-pakyawan is-open' : 'service-accordion-item service-pakyawan'}>
           <button
             type="button"
             className="service-accordion-header"
@@ -54,7 +58,10 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
             <span className="service-accordion-chevron" aria-hidden="true"></span>
           </button>
           <div className={openSection === 'pakyawan' ? 'service-accordion-panel is-open' : 'service-accordion-panel'}>
-            {/* Pakyawan content */}
+            <a className="service-accordion-action" href="/pakyawan">
+              {t('dash.pakyawan')}
+              <span className="service-accordion-action-arrow" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
 
@@ -73,7 +80,10 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
             <span className="service-accordion-chevron" aria-hidden="true"></span>
           </button>
           <div className={openSection === 'pa-deliver' ? 'service-accordion-panel is-open' : 'service-accordion-panel'}>
-            {/* Pa-Deliver content */}
+            <a className="service-accordion-action" href="/pa-deliver">
+              {t('dash.paDeliver')}
+              <span className="service-accordion-action-arrow" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
 
@@ -92,7 +102,10 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
             <span className="service-accordion-chevron" aria-hidden="true"></span>
           </button>
           <div className={openSection === 'car-rental' ? 'service-accordion-panel is-open' : 'service-accordion-panel'}>
-            {/* Car Rental content */}
+            <a className="service-accordion-action" href="/car-rentals">
+              {t('dash.carRentals')}
+              <span className="service-accordion-action-arrow" aria-hidden="true">→</span>
+            </a>
           </div>
         </div>
       </div>
