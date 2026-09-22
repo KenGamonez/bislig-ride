@@ -277,6 +277,8 @@ export function AdminExperience({
   const [drivers, setDrivers] = useState<(AdminDriver & { canAcceptDeliveries: boolean })[]>([])
   const [liveRides, setLiveRides] = useState<any[]>([])
   const [liveCustomers, setLiveCustomers] = useState<any[]>([])
+  const [presenceMap, setPresenceMap] = useState<Record<string, AdminDriverPresence>>({})
+  const [driverHolds, setDriverHolds] = useState<Record<string, AdminDriverHold>>({})
       const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
   const [driverError, setDriverError] = useState('')
   const [driverSearch, setDriverSearch] = useState('')
@@ -480,8 +482,8 @@ useEffect(() => {
     if (!isLoggedIn) return
 
     fetchAdminDriverHolds()
-      .then((holds) => {
-        setDriverHolds(holds)
+      .then((loaded) => {
+        setDriverHolds(loaded)
       })
       .catch((error) => {
         console.error('Unable to load driver holds:', error)
@@ -872,8 +874,6 @@ useEffect(() => {
     setIsLoggingOut(false)
   }
 
-  const [presenceMap, setPresenceMap] = useState<Record<string, AdminDriverPresence>>({})
-  const [driverHolds, setDriverHolds] = useState<Record<string, AdminDriverHold>>({})
   const [forceHoldTarget, setForceHoldTarget] = useState<AdminDriver | null>(null)
   const [holdReason, setHoldReason] = useState('')
   const [isForcingHold, setIsForcingHold] = useState(false)
