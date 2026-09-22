@@ -13418,11 +13418,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 /* --- 4. Discover — secondary editorial block --- */
 .customer-layout .discover-section {
-  gap: 18px;
+  gap: 16px;
   margin-top: 4px;
   margin-left: 0;
   margin-right: 0;
-  padding-top: 36px;
+  padding-top: 28px;
   border-top: 1px solid var(--color-gray-200);
 }
 
@@ -13433,7 +13433,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .customer-layout .discover-heading .eyebrow {
   color: var(--color-gray-500);
   font-size: 0.68rem;
-  letter-spacing: 0.2em;
+  letter-spacing: 0.12em;
 }
 
 .customer-layout .discover-heading h2 {
@@ -13665,6 +13665,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   .app-header .language-toggle {
     padding: 2px;
+  }
+
+  .app-header .header-inner {
+    padding: 0 16px;
+  }
+
+  .header-right-controls {
+    gap: 8px;
   }
 }
 
@@ -14112,6 +14120,10 @@ a:focus-visible {
   outline: none;
 }
 
+.service-dashboard .service-accordion-header:active {
+  background: var(--color-gray-100);
+}
+
 .service-dashboard .service-accordion-number {
   flex-shrink: 0;
   width: 26px;
@@ -14142,8 +14154,8 @@ a:focus-visible {
 .service-dashboard .service-accordion-label small {
   display: block;
   color: var(--color-gray-500);
-  font-size: 0.7rem;
-  line-height: 1.4;
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .service-dashboard .service-accordion-chevron {
@@ -14182,8 +14194,8 @@ a:focus-visible {
   margin: 0;
   padding: 0 14px 12px;
   color: var(--text-secondary);
-  font-size: 0.72rem;
-  line-height: 1.4;
+  font-size: 0.75rem;
+  line-height: 1.5;
 }
 
 /* Open number turns green (Ride Now pattern); no per-service background boxes */
