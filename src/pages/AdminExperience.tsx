@@ -549,6 +549,42 @@ useEffect(() => {
         })
     })
   }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    fetchDriverApplications()
+      .then((items) => {
+        setApplications(items)
+      })
+      .catch((error) => {
+        console.error('Unable to preload driver applications:', error)
+      })
+
+    getContactMessages()
+      .then((items) => {
+        setContactMessages(items)
+      })
+      .catch((error) => {
+        console.error('Unable to preload contact messages:', error)
+      })
+
+    fetchPakyawanBookings()
+      .then((items) => {
+        setPakyawanBookings(items)
+      })
+      .catch((error) => {
+        console.error('Unable to preload Pakyawan bookings:', error)
+      })
+
+    fetchDeliveriesForAdmin()
+      .then((items) => {
+        setDeliveries(items)
+      })
+      .catch((error) => {
+        console.error('Unable to preload deliveries:', error)
+      })
+  }, [isLoggedIn])
   useEffect(() => {
     let isMounted = true
 
@@ -1180,13 +1216,63 @@ useEffect(() => {
     return driverLocationStatus(presence.updatedAt) === 'active' ? 'Online' : 'Stale'
   }
 
+  const busyDrivers = drivers.filter((driver) => presenceStatus(driver.id) === 'Busy')
+  const activePakyawan = pakyawanBookings.filter((booking) => !['completed', 'cancelled'].includes(booking.status))
+  const activeDeliveries = deliveries.filter((delivery) => DELIVERY_ACTIVE_STATUSES.includes(delivery.status))
+  const pendingApplications = applications.filter((application) => application.status === 'pending')
+  const newMessages = contactMessages.filter((message) => message.status === 'new')
+  const noDriverRides = liveRides.filter((ride: any) => ride.status === 'no_driver')
+  const heldDrivers = drivers.filter((driver) => driverHolds[driver.id])
+  const exceptionDeliveries = deliveries.filter((delivery) => DELIVERY_EXCEPTION_STATUSES.includes(delivery.status))
+  const unassignedPakyawan = pakyawanBookings.filter((booking) =>
+    (booking.status === 'quoted' || booking.status === 'scheduled') && !booking.driver_id,
+  )
+  const recentRides = [...liveRides]
+    .sort((a: any, b: any) => String(b.requestedAtIso ?? '').localeCompare(String(a.requestedAtIso ?? '')))
+    .slice(0, 5)
+
+  const attentionItems: Array<{ key: string; text: string; onSelect: () => void }> = [
+    ...noDriverRides.map((ride: any) => ({
+      key: `no-driver-${ride.id}`,
+      text: `Ride ${String(ride.id).slice(0, 8)}… has no driver`,
+      onSelect: () => { setActiveTab('active-rides'); setSelectedRideId(ride.id) },
+    })),
+    ...pendingApplications.map((application) => ({
+      key: `application-${application.id}`,
+      text: `Application from ${application.full_name} awaits review`,
+      onSelect: () => { setActiveTab('driver-applications'); setSelectedApplicationId(application.id) },
+    })),
+    ...newMessages.map((message) => ({
+      key: `message-${message.id}`,
+      text: `New ${message.inquiry_type} message from ${message.full_name}`,
+      onSelect: () => { setActiveTab('contact-messages'); setSelectedContactMessageId(message.id) },
+    })),
+    ...heldDrivers.map((driver) => ({
+      key: `hold-${driver.id}`,
+      text: `${driver.name} is under Admin hold`,
+      onSelect: () => { setActiveTab('drivers'); setSelectedDriverId(driver.id) },
+    })),
+    ...exceptionDeliveries.map((delivery) => ({
+      key: `delivery-exception-${delivery.id}`,
+      text: `Delivery ${String(delivery.id).slice(0, 8)}… is ${delivery.status}`,
+      onSelect: () => { setActiveTab('deliveries'); setSelectedDeliveryId(delivery.id) },
+    })),
+    ...unassignedPakyawan.map((booking) => ({
+      key: `pakyawan-unassigned-${booking.id}`,
+      text: `Pakyawan booking ${String(booking.id).slice(0, 8)}… is ${booking.status} with no driver`,
+      onSelect: () => { setActiveTab('pakyawan'); setSelectedPakyawanBookingId(booking.id) },
+    })),
+  ]
+
   const overviewStats = [
     { label: 'Total Drivers', value: String(drivers.length), accent: true },
     { label: 'Online Drivers', value: String(drivers.filter((driver) => presenceStatus(driver.id) === 'Online').length) },
+    { label: 'Busy Drivers', value: String(busyDrivers.length) },
     { label: 'Active Rides', value: String(liveRides.filter((ride: any) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)).length) },
-    { label: 'Completed Rides', value: String(liveRides.filter((ride: any) => ride.status === 'completed').length) },
-    { label: 'Cancelled Rides', value: String(liveRides.filter((ride: any) => ride.status === 'cancelled').length) },
-    { label: 'Total Customers', value: String(liveCustomers.length) },
+    { label: 'Active Pakyawan', value: String(activePakyawan.length) },
+    { label: 'Active Deliveries', value: String(activeDeliveries.length) },
+    { label: 'Pending Applications', value: String(pendingApplications.length) },
+    { label: 'New Messages', value: String(newMessages.length) },
   ]
 
   const handleDriverNameChange = (name: string) => {
@@ -1757,6 +1843,28 @@ useEffect(() => {
 
           <div className="admin-panel">
             <div className="panel-header-row">
+              <h3>Needs attention</h3>
+            </div>
+            {attentionItems.length === 0 ? (
+              <p className="field-note">All clear — nothing needs attention right now.</p>
+            ) : (
+              <ul className="mini-list">
+                {attentionItems.map((item) => (
+                  <li key={item.key}>
+                    <div>
+                      <strong>{item.text}</strong>
+                    </div>
+                    <button type="button" className="ghost-button" onClick={item.onSelect}>
+                      View
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+
+          <div className="admin-panel">
+            <div className="panel-header-row">
               <h3>Driver Network</h3>
             </div>
             <ul className="mini-list">
@@ -1772,6 +1880,27 @@ useEffect(() => {
                 </li>
               ))}
             </ul>
+          </div>
+
+          <div className="admin-panel">
+            <div className="panel-header-row">
+              <h3>Recent rides</h3>
+            </div>
+            {recentRides.length === 0 ? (
+              <p className="field-note">No recent rides.</p>
+            ) : (
+              <ul className="mini-list">
+                {recentRides.map((ride: any) => (
+                  <li key={ride.id}>
+                    <div>
+                      <strong>{ride.Rider}</strong>
+                      <span>{ride.requestedAt}</span>
+                    </div>
+                    <span className="status-pill online">{rideStatusLabels[ride.status as keyof typeof rideStatusLabels] ?? ride.status}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
           </div>
         </section>
       ) : null}
