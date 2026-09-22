@@ -4,7 +4,7 @@ import { AppHeader } from '../components/AppHeader'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
-import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides, subscribeToAdminRideNow, type AdminLiveRideOffer } from '../lib/adminLiveData'
+import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides, fetchAdminRideOfferHistory, subscribeToAdminRideNow, type AdminLiveRideOffer, type AdminRideOffer } from '../lib/adminLiveData'
 import { fetchAdminDriverPresence, subscribeToAdminPresence, type AdminDriverPresence } from '../lib/adminPresence'
 import { fetchAdminDriverHolds, forceDriverOffline, releaseDriverHold, subscribeToAdminHolds, type AdminDriverHold, type ForceOfflineResult } from '../lib/adminHolds'
 import { driverLocationStatus } from '../lib/driverPresence'
@@ -263,6 +263,14 @@ const rideStatusLabels: Record<AdminRide['status'], string> = {
   cancelled: 'Cancelled',
 }
 
+const rideOfferStatusLabels: Record<string, string> = {
+  offered: 'Offered',
+  accepted: 'Accepted',
+  declined: 'Declined',
+  expired: 'Expired',
+  withdrawn: 'Withdrawn',
+}
+
 export function AdminExperience({
   onBack,
   view,
@@ -277,6 +285,7 @@ export function AdminExperience({
   const [drivers, setDrivers] = useState<(AdminDriver & { canAcceptDeliveries: boolean })[]>([])
   const [liveRides, setLiveRides] = useState<any[]>([])
   const [liveCustomers, setLiveCustomers] = useState<any[]>([])
+  const [rideOfferHistory, setRideOfferHistory] = useState<AdminRideOffer[]>([])
   const [presenceMap, setPresenceMap] = useState<Record<string, AdminDriverPresence>>({})
   const [driverHolds, setDriverHolds] = useState<Record<string, AdminDriverHold>>({})
       const [isLoadingDrivers, setIsLoadingDrivers] = useState(false)
@@ -436,8 +445,30 @@ export function AdminExperience({
       refreshAdminRideNow().catch((error) => {
         console.error('Unable to refresh live admin rides:', error)
       })
+
+      if (selectedRideId) {
+        fetchAdminRideOfferHistory(selectedRideId)
+          .then((history) => {
+            setRideOfferHistory(history)
+          })
+          .catch((error) => {
+            console.error('Unable to refresh ride offer history:', error)
+          })
+      }
     })
-  }, [isLoggedIn, refreshAdminRideNow])
+  }, [isLoggedIn, refreshAdminRideNow, selectedRideId])
+
+  useEffect(() => {
+    if (!isLoggedIn || !selectedRideId) return
+
+    fetchAdminRideOfferHistory(selectedRideId)
+      .then((history) => {
+        setRideOfferHistory(history)
+      })
+      .catch((error) => {
+        console.error('Unable to load ride offer history:', error)
+      })
+  }, [isLoggedIn, selectedRideId])
 useEffect(() => {
     if (!isLoggedIn) return
 
@@ -646,6 +677,7 @@ useEffect(() => {
       // Manual fallback refresh; the realtime subscription also
       // invalidates this dataset when the dispatch writes land.
       await refreshAdminRideNow()
+      setRideOfferHistory(await fetchAdminRideOfferHistory(selectedRide.id))
     } catch (error) {
       console.error('Unable to retry dispatch:', error)
       setRetryRideError(error instanceof Error && error.message ? error.message : 'Unable to retry dispatch. Please try again.')
@@ -685,6 +717,7 @@ useEffect(() => {
       // Manual fallback refresh; the realtime subscription also
       // invalidates this dataset when the cancellation writes land.
       await refreshAdminRideNow()
+      setRideOfferHistory(await fetchAdminRideOfferHistory(cancelRideTarget.id))
     } catch (error) {
       console.error('Unable to cancel ride:', error)
       setCancelRideResult(null)
@@ -2304,6 +2337,32 @@ useEffect(() => {
                   ) : (
                     <p className="field-note">No live offer.</p>
                   )
+                ) : null}
+                {(rideOfferHistory.length > 0 || selectedRide.status === 'requested' || selectedRide.status === 'no_driver') ? (
+                  <div>
+                    <span className="field-label">Dispatch activity</span>
+                    {selectedRide.status === 'no_driver' ? (
+                      <p className="field-note">Dispatch ended without an assignment.</p>
+                    ) : null}
+                    {rideOfferHistory.length > 0 ? (
+                      <ul className="mini-list">
+                        {rideOfferHistory.map((offer) => {
+                          const offerDriver = offer.driverId ? drivers.find((driver) => driver.id === offer.driverId)?.name ?? 'Driver' : 'Driver'
+                          const isLive = liveRideOffers[selectedRide.id]?.id === offer.id
+                          return (
+                            <li key={offer.id}>
+                              <div>
+                                <strong>{offerDriver}{isLive ? ' · Live offer' : ''}</strong>
+                                <small>{rideOfferStatusLabels[offer.status] ?? offer.status} · Round {offer.dispatchRound} · Offered {new Date(offer.offeredAt).toLocaleString()} · Expires {new Date(offer.expiresAt).toLocaleString()}{offer.decidedAt ? ` · Decided ${new Date(offer.decidedAt).toLocaleString()}` : ''}</small>
+                              </div>
+                            </li>
+                          )
+                        })}
+                      </ul>
+                    ) : (
+                      <p className="field-note">No recorded offers.</p>
+                    )}
+                  </div>
                 ) : null}
                 {(selectedRide.status === 'requested' || selectedRide.status === 'no_driver') && !selectedRide.driverId && !liveRideOffers[selectedRide.id] ? (
                   <div className="quote-box">

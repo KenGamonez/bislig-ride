@@ -146,6 +146,43 @@ export function subscribeToAdminRideNow(onInvalidate: () => void): () => void {
   }
 }
 
+export type AdminRideOffer = {
+  id: string
+  rideId: string
+  driverId: string | null
+  dispatchRound: number
+  status: string
+  offeredAt: string
+  expiresAt: string
+  decidedAt: string | null
+}
+
+export async function fetchAdminRideOfferHistory(rideId: string): Promise<AdminRideOffer[]> {
+  if (!rideId) {
+    return []
+  }
+
+  const { data: offers, error } = await supabase
+    .from('ride_offers')
+    .select('id, ride_id, driver_id, dispatch_round, status, offered_at, expires_at, decided_at')
+    .eq('ride_id', rideId)
+    .order('dispatch_round', { ascending: true })
+    .order('offered_at', { ascending: true })
+
+  if (error) throw error
+
+  return (offers ?? []).map((offer) => ({
+    id: offer.id,
+    rideId: offer.ride_id,
+    driverId: offer.driver_id,
+    dispatchRound: offer.dispatch_round,
+    status: offer.status,
+    offeredAt: offer.offered_at,
+    expiresAt: offer.expires_at,
+    decidedAt: offer.decided_at,
+  }))
+}
+
 export async function fetchAdminLiveCustomers(): Promise<LiveAdminCustomer[]> {
   const { data: rides, error } = await supabase
     .from('rides')
