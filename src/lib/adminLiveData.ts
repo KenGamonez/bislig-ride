@@ -10,6 +10,7 @@ export type LiveAdminRide = {
   destination: string
   status: 'requested' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled'
   requestedAt: string
+  requestedAtIso: string
   fare: string
   paymentMethod: string
   driverId: string | null
@@ -66,11 +67,38 @@ export async function fetchAdminLiveRides(): Promise<LiveAdminRide[]> {
     destination: ride.destination_address,
     status: ride.status,
     requestedAt: new Date(ride.created_at).toLocaleString(),
+    requestedAtIso: ride.created_at,
     fare: '—',
     paymentMethod: 'Not connected',
     driverId: ride.driver_id,
     customerAuthId: ride.customer_auth_id,
   }))
+}
+
+export async function fetchAdminLiveRideOffers(rideIds: string[]): Promise<Record<string, string>> {
+  const liveOffers: Record<string, string> = {}
+
+  if (rideIds.length === 0) {
+    return liveOffers
+  }
+
+  // Live offer uses the exact dispatch-core definition: offered and unexpired.
+  const { data: offers, error } = await supabase
+    .from('ride_offers')
+    .select('id, ride_id')
+    .in('ride_id', rideIds)
+    .eq('status', 'offered')
+    .gt('expires_at', new Date().toISOString())
+
+  if (error) throw error
+
+  for (const offer of offers ?? []) {
+    if (!liveOffers[offer.ride_id]) {
+      liveOffers[offer.ride_id] = offer.id
+    }
+  }
+
+  return liveOffers
 }
 
 export async function fetchAdminLiveCustomers(): Promise<LiveAdminCustomer[]> {

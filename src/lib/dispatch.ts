@@ -37,6 +37,16 @@ export async function dispatchRide(rideId: string): Promise<DispatchResult> {
   return data as DispatchResult
 }
 
+export async function adminRetryRide(rideId: string): Promise<DispatchResult> {
+  const { data, error } = await supabase.rpc('admin_retry_ride', { p_ride_id: rideId }).single()
+
+  if (error) {
+    throw error
+  }
+
+  return data as DispatchResult
+}
+
 export async function acceptRideOffer(rideId: string, driverId: string): Promise<Ride> {
   const { data, error } = await supabase
     .rpc('accept_ride_offer', {

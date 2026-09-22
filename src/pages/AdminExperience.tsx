@@ -4,7 +4,9 @@ import { AppHeader } from '../components/AppHeader'
 import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
-import { fetchAdminLiveCustomers, fetchAdminLiveRides } from '../lib/adminLiveData'
+import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides } from '../lib/adminLiveData'
+import { adminRetryRide } from '../lib/dispatch'
+import type { DispatchResult } from '../types/dispatch'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
 import { createSignedApplicationFileUrl } from '../lib/driverApplicationFiles'
 import {
@@ -328,6 +330,27 @@ export function AdminExperience({
   const [quotePesos, setQuotePesos] = useState('')
   const [quoteError, setQuoteError] = useState('')
   const [isQuoting, setIsQuoting] = useState(false)
+  const [liveRideOffers, setLiveRideOffers] = useState<Record<string, string>>({})
+  const [confirmingRetry, setConfirmingRetry] = useState(false)
+  const [isRetryingRide, setIsRetryingRide] = useState(false)
+  const [retryRideError, setRetryRideError] = useState('')
+  const [retryRideResult, setRetryRideResult] = useState<DispatchResult | null>(null)
+  const [retryWaitText, setRetryWaitText] = useState('')
+
+  const resetRetryUi = () => {
+    setConfirmingRetry(false)
+    setRetryRideError('')
+    setRetryRideResult(null)
+    setRetryWaitText('')
+  }
+
+  const openRetryConfirm = (ride: { status: unknown; requestedAtIso: string; requestedAt: string }) => {
+    const waitMinutes = Math.max(0, Math.floor((Date.now() - new Date(ride.requestedAtIso).getTime()) / 60000))
+    setRetryWaitText(`Status ${rideStatusLabels[ride.status as keyof typeof rideStatusLabels]} · waiting ${waitMinutes} min since ${ride.requestedAt}. Dispatch will be retried.`)
+    setRetryRideError('')
+    setRetryRideResult(null)
+    setConfirmingRetry(true)
+  }
   const [cancellationFilter, setCancellationFilter] = useState<'all' | 'rider' | 'driver'>('all')
   const [isAuthReady, setIsAuthReady] = useState(false)
   const [isLoggingOut, setIsLoggingOut] = useState(false)
@@ -376,6 +399,11 @@ export function AdminExperience({
           )?.id ||
           ''
         )
+
+        return fetchAdminLiveRideOffers(rides.map((ride: any) => ride.id))
+      })
+      .then((offers) => {
+        setLiveRideOffers(offers)
       })
       .catch((error) => {
         console.error('Unable to load live admin data:', error)
@@ -497,6 +525,55 @@ useEffect(() => {
       .catch(() => setDeliveryError('Unable to load deliveries. Check admin access and try again.'))
       .finally(() => setIsLoadingDeliveries(false))
   }, [activeTab, isLoggedIn])
+
+  const retryResultText = (result: DispatchResult): string => {
+    if (result.driver_assigned) {
+      return 'Driver accepted automatically.'
+    }
+
+    if (result.offer_id) {
+      return 'Driver offer sent.'
+    }
+
+    if (result.ride_status === 'no_driver') {
+      return 'No eligible driver currently available.'
+    }
+
+    return `Dispatch state: ${result.ride_status ?? 'unknown'}.`
+  }
+
+  const handleRetryDispatch = async () => {
+    if (isRetryingRide || !selectedRide) {
+      return
+    }
+
+    if (selectedRide.status !== 'requested' && selectedRide.status !== 'no_driver') {
+      return
+    }
+
+    if (selectedRide.driverId || liveRideOffers[selectedRide.id]) {
+      return
+    }
+
+    setIsRetryingRide(true)
+    setRetryRideError('')
+    setRetryRideResult(null)
+
+    try {
+      const result = await adminRetryRide(selectedRide.id)
+      setRetryRideResult(result)
+      setConfirmingRetry(false)
+
+      const rides = await fetchAdminLiveRides()
+      setLiveRides(rides)
+      setLiveRideOffers(await fetchAdminLiveRideOffers(rides.map((ride: any) => ride.id)))
+    } catch (error) {
+      console.error('Unable to retry dispatch:', error)
+      setRetryRideError(error instanceof Error && error.message ? error.message : 'Unable to retry dispatch. Please try again.')
+    } finally {
+      setIsRetryingRide(false)
+    }
+  }
 
   const handleQuotePakyawan = async () => {
     if (isQuoting || !selectedPakyawanBooking || selectedPakyawanBooking.status !== 'pending') {
@@ -1931,7 +2008,7 @@ useEffect(() => {
                       <span>{ride.driver}</span>
                       <span>{ride.requestedAt}</span>
                     </div>
-                    <button type="button" className="ghost-button" onClick={() => setSelectedRideId(ride.id)}>
+                    <button type="button" className="ghost-button" onClick={() => { setSelectedRideId(ride.id); resetRetryUi() }}>
                       View ride
                     </button>
                   </li>
@@ -1963,6 +2040,32 @@ useEffect(() => {
                   <div><span>Requested</span><strong>{selectedRide.requestedAt}</strong></div>
                   <div><span>Fare</span><strong>{selectedRide.fare}</strong></div>
                 </div>
+                {(selectedRide.status === 'requested' || selectedRide.status === 'no_driver') && !selectedRide.driverId && !liveRideOffers[selectedRide.id] ? (
+                  <div className="quote-box">
+                    <span className="field-label">Dispatch</span>
+                    {!confirmingRetry ? (
+                      <button type="button" className="secondary-action compact-button" onClick={() => openRetryConfirm(selectedRide)}>
+                        Retry dispatch
+                      </button>
+                    ) : (
+                      <>
+                        <p className="field-note">
+                          {retryWaitText}
+                        </p>
+                        <div className="quote-row">
+                          <button type="button" className="secondary-action compact-button" disabled={isRetryingRide} onClick={() => void handleRetryDispatch()}>
+                            {isRetryingRide ? 'Retrying…' : 'Confirm retry'}
+                          </button>
+                          <button type="button" className="ghost-button" disabled={isRetryingRide} onClick={() => setConfirmingRetry(false)}>
+                            Cancel
+                          </button>
+                        </div>
+                      </>
+                    )}
+                    {retryRideError ? <span className="field-error">{retryRideError}</span> : null}
+                    {retryRideResult && !confirmingRetry ? <p className="field-note">{retryResultText(retryRideResult)}</p> : null}
+                  </div>
+                ) : null}
               </>
             ) : (
               <div className="empty-state-box">
