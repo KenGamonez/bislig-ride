@@ -5,6 +5,8 @@ import { AdminLogin } from '../components/AdminLogin'
 import { MapView } from '../components/MapView'
 import { type AdminDriver, type AdminRide, type DriverAvailability, type DriverStatus } from '../lib/adminDemoData'
 import { fetchAdminLiveCustomers, fetchAdminLiveRideOffers, fetchAdminLiveRides, subscribeToAdminRideNow, type AdminLiveRideOffer } from '../lib/adminLiveData'
+import { fetchAdminDriverPresence, subscribeToAdminPresence, type AdminDriverPresence } from '../lib/adminPresence'
+import { driverLocationStatus } from '../lib/driverPresence'
 import { adminRetryRide } from '../lib/dispatch'
 import type { DispatchResult } from '../types/dispatch'
 import { fetchDriverApplications, updateDriverApplicationStatus } from '../lib/driverApplications'
@@ -446,6 +448,32 @@ useEffect(() => {
       })
       .finally(() => setIsLoadingDrivers(false))
   }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    fetchAdminDriverPresence()
+      .then((rows) => {
+        setPresenceMap(rows)
+      })
+      .catch((error) => {
+        console.error('Unable to load driver presence:', error)
+      })
+  }, [isLoggedIn])
+
+  useEffect(() => {
+    if (!isLoggedIn) return
+
+    return subscribeToAdminPresence(() => {
+      fetchAdminDriverPresence()
+        .then((loaded) => {
+          setPresenceMap(loaded)
+        })
+        .catch((error) => {
+          console.error('Unable to refresh driver presence:', error)
+        })
+    })
+  }, [isLoggedIn])
   useEffect(() => {
     let isMounted = true
 
@@ -817,9 +845,25 @@ useEffect(() => {
     setIsLoggingOut(false)
   }
 
+  const [presenceMap, setPresenceMap] = useState<Record<string, AdminDriverPresence>>({})
+
+  const presenceStatus = (driverId: string): 'Online' | 'Stale' | 'Offline' | 'Busy' => {
+    const presence = presenceMap[driverId]
+
+    if (!presence || !presence.isOnline) {
+      return 'Offline'
+    }
+
+    if (presence.currentRideId) {
+      return 'Busy'
+    }
+
+    return driverLocationStatus(presence.updatedAt) === 'active' ? 'Online' : 'Stale'
+  }
+
   const overviewStats = [
     { label: 'Total Drivers', value: String(drivers.length), accent: true },
-    { label: 'Online Drivers', value: String(drivers.filter((driver) => driver.availability === 'Online').length) },
+    { label: 'Online Drivers', value: String(drivers.filter((driver) => presenceStatus(driver.id) === 'Online').length) },
     { label: 'Active Rides', value: String(liveRides.filter((ride: any) => ['requested', 'accepted', 'arrived', 'in_progress'].includes(ride.status)).length) },
     { label: 'Completed Rides', value: String(liveRides.filter((ride: any) => ride.status === 'completed').length) },
     { label: 'Cancelled Rides', value: String(liveRides.filter((ride: any) => ride.status === 'cancelled').length) },
@@ -1322,10 +1366,10 @@ useEffect(() => {
                 <li key={driver.id}>
                   <div>
                     <strong>{driver.name}</strong>
-                    <span>{driver.availability}</span>
+                    <span>{presenceStatus(driver.id)}</span>
                   </div>
-                  <span className={`status-pill ${driver.availability.toLowerCase()}`}>
-                    {driver.availability}
+                  <span className={`status-pill ${presenceStatus(driver.id).toLowerCase()}`}>
+                    {presenceStatus(driver.id)}
                   </span>
                 </li>
               ))}
@@ -1651,12 +1695,15 @@ useEffect(() => {
                             className="inline-select"
                             value={driver.availability}
                             onChange={(event) => handleAvailabilityChange(driver.id, event.target.value as DriverAvailability)}
-                            aria-label={`Presence for ${driver.name}`}
+                            aria-label={`Profile availability for ${driver.name}`}
                           >
                             <option value="Offline">Offline</option>
                             <option value="Online">Online</option>
                             <option value="Busy">Busy</option>
                           </select>
+                          <span className={`status-pill ${presenceStatus(driver.id).toLowerCase()}`} title="Authoritative presence">
+                            {presenceStatus(driver.id)}
+                          </span>
                         </td>
                         <td>
                           <span className={`status-pill ${driver.authUserId ? 'online' : 'offline'}`}>
@@ -1727,7 +1774,8 @@ useEffect(() => {
                   <div><span>Capacity</span><strong>{formatVehicleCapacity(selectedDriver.vehicleCapacity)}</strong></div>
                   <div><span>Plate</span><strong>{selectedDriver.plateNumber}</strong></div>
                   <div><span>Status</span><strong>{selectedDriver.status}</strong></div>
-                  <div><span>Availability</span><strong>{selectedDriver.availability}</strong></div>
+                  <div><span>Presence</span><strong>{presenceStatus(selectedDriver.id)}{presenceMap[selectedDriver.id] ? ` · updated ${new Date(presenceMap[selectedDriver.id].updatedAt).toLocaleString()}` : ' · no presence row'}</strong></div>
+                  <div><span>Profile availability</span><strong>{selectedDriver.availability}</strong></div>
                   <div><span>Pakyawan</span><strong>
                     {selectedDriver.canAcceptPakyawan ? 'Eligible' : 'Not enabled'}
                     <button

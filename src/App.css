@@ -2074,6 +2074,11 @@ a.secondary-action {
   color: var(--color-red);
 }
 
+.status-pill.stale {
+  background: rgba(10,10,10,0.06);
+  color: var(--color-gray-700);
+}
+
 .status-pill.pending {
   background: rgba(10,10,10,0.06);
   color: var(--color-gray-500);
