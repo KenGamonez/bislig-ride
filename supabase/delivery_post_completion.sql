@@ -138,6 +138,15 @@ end $$;
 -- 3. Message RPCs: dual authorization, server-derived sender role.
 -- ---------------------------------------------------------------------------
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION
+-- (send_delivery_message)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior
+-- (restores the delivered-only restriction, locking in-trip chat out).
+-- ============================================================================
 create or replace function public.send_delivery_message(
   p_delivery_id uuid,
   p_access_token uuid,

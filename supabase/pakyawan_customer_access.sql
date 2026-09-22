@@ -103,6 +103,15 @@ grant execute on function public.get_pakyawan_booking(uuid, uuid) to anon, authe
 -- 3. Customer confirm: quoted -> confirmed, nothing else.
 -- ---------------------------------------------------------------------------
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION
+-- (confirm_pakyawan_booking)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior
+-- (restores the ghost confirmed state the customer UI never handles).
+-- ============================================================================
 create or replace function public.confirm_pakyawan_booking(p_booking_id uuid, p_access_token uuid)
 returns public.pakyawan_bookings
 language plpgsql

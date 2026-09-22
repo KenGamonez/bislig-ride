@@ -24,6 +24,14 @@
 
 drop policy if exists "Riders can cancel their own rides" on public.rides;
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION (cancel_ride)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior
+-- (loses offer withdrawal + driver release on cancel).
+-- ============================================================================
 create or replace function public.cancel_ride(
   p_ride_id uuid,
   p_cancelled_by uuid,

@@ -40,6 +40,15 @@
 --     GPS, fare, ratings, UI untouched). All new objects use delivery_*
 --     naming and remain isolated.
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION
+-- (advance_delivery_status)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior
+-- (re-opens assigned -> ... -> delivered, bypassing proof-gating).
+-- ============================================================================
 create or replace function public.advance_delivery_status(p_delivery_id uuid, p_next_status text)
 returns setof public.deliveries
 language plpgsql

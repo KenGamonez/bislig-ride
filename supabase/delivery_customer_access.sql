@@ -91,6 +91,15 @@ grant execute on function public.create_delivery_booking(uuid, text, text, text,
 -- 2. Customer read: exactly one delivery, only with the matching token.
 -- ---------------------------------------------------------------------------
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION
+-- (get_delivery_booking)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior
+-- (drops proof_available, breaking the proof-photo UI).
+-- ============================================================================
 create or replace function public.get_delivery_booking(p_delivery_id uuid, p_access_token uuid)
 returns public.deliveries
 language plpgsql

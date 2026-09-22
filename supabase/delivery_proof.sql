@@ -280,6 +280,16 @@ grant execute on function public.complete_delivery_with_proof(uuid, text) to aut
 --    normal path. All other transitions are unchanged.
 -- ---------------------------------------------------------------------------
 
+-- ============================================================================
+-- SUPERSEDED — DO NOT APPLY THIS FUNCTION DEFINITION
+-- (advance_delivery_status)
+-- Canonical authoritative definition:
+-- supabase/_canonical/rpc_consolidation_v1.sql
+-- This historical definition is retained for provenance only.
+-- Re-applying it can regress the live production behavior.
+-- NOTE: the authoritative get_delivery_booking definition in this
+-- same file (section 5) is NOT superseded and must keep working.
+-- ============================================================================
 create or replace function public.advance_delivery_status(p_delivery_id uuid, p_next_status text)
 returns setof public.deliveries
 language plpgsql
