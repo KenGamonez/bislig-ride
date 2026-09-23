@@ -14460,3 +14460,257 @@ a:focus-visible {
     transform: none !important;
   }
 }
+
+/* ============================================================
+   DRIVER LOGIN — PREMIUM BISLIG RIDE IDENTITY
+   ============================================================ */
+
+.auth-shell.driver-auth-shell {
+  background: #f4f5f6;
+  padding: 22px 16px 48px;
+}
+
+.auth-card.driver-auth-card {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(145deg, #0B1518 0%, #101E20 55%, #0E1C1A 100%);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.32), 0 1px 0 rgba(255,255,255,0.04) inset;
+  padding: 28px 24px 26px;
+}
+
+.auth-card.driver-auth-card::before {
+  content: '';
+  position: absolute;
+  top: -36px;
+  right: -28px;
+  width: 220px;
+  height: 220px;
+  background: linear-gradient(135deg, rgba(0, 232, 138, 0.14) 0%, rgba(0, 232, 138, 0) 62%);
+  clip-path: polygon(18% 0, 100% 0, 82% 100%, 0 100%);
+  transform: rotate(8deg);
+  pointer-events: none;
+  opacity: 0.9;
+}
+
+.auth-card.driver-auth-card::after {
+  content: '';
+  position: absolute;
+  left: -22px;
+  bottom: 28px;
+  width: 140px;
+  height: 90px;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0) 70%);
+  clip-path: polygon(12% 0, 100% 0, 88% 100%, 0 100%);
+  transform: skewX(-8deg);
+  pointer-events: none;
+}
+
+.auth-card.driver-auth-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.auth-card.driver-auth-card .auth-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  backdrop-filter: blur(6px);
+  transition: background var(--transition), border-color var(--transition), color var(--transition), transform var(--transition);
+}
+
+.auth-card.driver-auth-card .auth-back:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.driver-auth-card .auth-header {
+  gap: 6px;
+  margin-top: 2px;
+}
+
+.driver-auth-card .auth-eyebrow {
+  color: var(--color-green);
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+}
+
+.driver-auth-card .auth-header h2 {
+  color: #FFFFFF;
+  font-size: clamp(1.85rem, 6vw, 2.35rem);
+  font-weight: 900;
+  letter-spacing: -0.05em;
+  line-height: 0.95;
+}
+
+.auth-subtitle {
+  margin: 2px 0 0;
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.88rem;
+  line-height: 1.45;
+}
+
+.auth-card.driver-auth-card .field-label {
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.auth-card.driver-auth-card .input-field {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: #FFFFFF;
+  min-height: 46px;
+  border-radius: 12px;
+  font-weight: 500;
+}
+
+.auth-card.driver-auth-card .input-field::placeholder {
+  color: rgba(255, 255, 255, 0.38);
+}
+
+.auth-card.driver-auth-card .input-field:hover {
+  background: rgba(255, 255, 255, 0.09);
+  border-color: rgba(255, 255, 255, 0.14);
+}
+
+.auth-card.driver-auth-card .input-field:focus {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: var(--color-green);
+  box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.18);
+}
+
+.auth-card.driver-auth-card .input-field.has-error {
+  border-color: rgba(244, 68, 79, 0.55);
+  background: rgba(244, 68, 79, 0.10);
+}
+
+.password-field-wrap {
+  position: relative;
+}
+
+.password-field-wrap .input-field {
+  padding-right: 44px;
+}
+
+.password-visibility-toggle {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 8px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.52);
+  cursor: pointer;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.password-visibility-toggle:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--color-green);
+}
+
+.password-visibility-toggle:active {
+  transform: translateY(-50%) scale(0.96);
+}
+
+.password-visibility-toggle:focus-visible {
+  outline: 2px solid rgba(0, 232, 138, 0.45);
+  outline-offset: 1px;
+  color: var(--color-green);
+}
+
+.auth-card.driver-auth-card .primary-action.request-ride-action {
+  width: 100%;
+  min-height: 48px;
+  margin-top: 4px;
+  background: var(--color-green);
+  color: #071012;
+  font-weight: 900;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 8px 20px rgba(0, 232, 138, 0.28), 0 1px 0 rgba(255,255,255,0.22) inset;
+  transition: transform var(--transition), box-shadow var(--transition), background var(--transition), filter var(--transition);
+}
+
+.auth-card.driver-auth-card .primary-action.request-ride-action:hover {
+  background: #00d87f;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0, 232, 138, 0.32), 0 1px 0 rgba(255,255,255,0.22) inset;
+  filter: brightness(1.02);
+}
+
+.auth-card.driver-auth-card .primary-action.request-ride-action:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.auth-card.driver-auth-card .primary-action.request-ride-action:disabled {
+  opacity: 0.72;
+  transform: none;
+  box-shadow: 0 4px 12px rgba(0, 232, 138, 0.18);
+}
+
+.auth-card.driver-auth-card .auth-links {
+  justify-content: center;
+  gap: 16px;
+  margin-top: 2px;
+}
+
+.auth-card.driver-auth-card .link-button {
+  color: rgba(255, 255, 255, 0.70);
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-decoration: none;
+  text-underline-offset: 4px;
+}
+
+.auth-card.driver-auth-card .link-button:hover {
+  color: var(--color-green);
+  text-decoration: underline;
+}
+
+.auth-card.driver-auth-card .auth-error {
+  background: rgba(244, 68, 79, 0.12);
+  border: 1px solid rgba(244, 68, 79, 0.22);
+  color: #ffb4b8;
+  padding: 10px 12px;
+  border-radius: 12px;
+  font-size: 0.84rem;
+  line-height: 1.45;
+}
+
+@media (max-width: 380px) {
+  .auth-card.driver-auth-card {
+    padding: 22px 16px 20px;
+    border-radius: 16px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auth-card.driver-auth-card .primary-action.request-ride-action,
+  .auth-card.driver-auth-card .auth-back,
+  .password-visibility-toggle {
+    transition: none !important;
+    transform: none !important;
+  }
+}

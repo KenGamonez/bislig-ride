@@ -107,8 +107,8 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
         primaryLabel={t('nav.myRides')}
         onPrimaryAction={() => onViewChange('Rider')}
       />
-      <div className="auth-shell">
-        <div className="auth-card">
+      <div className="auth-shell driver-auth-shell">
+        <div className="auth-card driver-auth-card">
           <button type="button" className="secondary-action compact-button auth-back" onClick={onBack}>
             <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
               <path d="M19 12H5" />
@@ -120,6 +120,7 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
           <div className="auth-header">
             <p className="eyebrow auth-eyebrow">{t('auth.driverAccess')}</p>
             <h2>{mode === 'login' ? t('auth.welcomeBack') : mode === 'forgot' ? t('auth.resetPassword') : t('auth.checkInbox')}</h2>
+            {mode === 'login' ? <p className="auth-subtitle">Sign in to manage your rides.</p> : null}
           </div>
 
           {error ? <p className="auth-error" role="alert">{error}</p> : null}
@@ -141,27 +142,40 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
 
               <label className="field-block">
                 <span className="field-label">{t('auth.password')}</span>
-                <input
-                  className="input-field"
-                  type={showPassword ? 'text' : 'password'}
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="••••••••"
-                  autoComplete="current-password"
-                  disabled={loading}
-                />
+                <div className="password-field-wrap">
+                  <input
+                    className="input-field"
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(event) => setPassword(event.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="password-visibility-toggle"
+                    onClick={() => setShowPassword((current) => !current)}
+                    disabled={loading}
+                    aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
+                    aria-pressed={showPassword}
+                  >
+                    {showPassword ? (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M9.88 9.88a3 3 0 1 0 4.24 4.24" />
+                        <path d="M10.73 5.08A10.94 10.94 0 0 1 12 5c7 0 10 7 10 7a13.16 13.16 0 0 1-1.67 2.68" />
+                        <path d="M6.61 6.61A13.94 13.94 0 0 0 2 12s3 7 10 7a9.59 9.59 0 0 0 5.39-1.61" />
+                        <line x1="2" y1="2" x2="22" y2="22" />
+                      </svg>
+                    ) : (
+                      <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                        <circle cx="12" cy="12" r="3" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
               </label>
-
-              <div className="auth-links">
-                <button
-                  type="button"
-                  className="link-button"
-                  onClick={() => setShowPassword((current) => !current)}
-                  disabled={loading}
-                >
-                  {showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
-                </button>
-              </div>
 
               <button
                 type="submit"
