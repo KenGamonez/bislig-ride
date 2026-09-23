@@ -56,6 +56,7 @@ const packageTypes = ['Documents', 'Parcels', 'Food', 'Clothing', 'Gadgets', 'Ot
 
 export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const { t } = useLanguage()
+  const [deliveryTiming, setDeliveryTiming] = useState<'now' | 'scheduled'>('now')
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [step, setStep] = useState(1)
@@ -158,8 +159,16 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     if (target === 2) {
       if (!form.pickup_address.trim()) nextErrors.pickup_address = t('err.required')
       if (!form.delivery_address.trim()) nextErrors.delivery_address = t('err.required')
-      if (!form.preferred_date.trim()) nextErrors.preferred_date = t('err.required')
-      if (!form.preferred_time.trim()) nextErrors.preferred_time = t('err.required')
+      if (deliveryTiming === 'scheduled') {
+        if (!form.preferred_date.trim()) nextErrors.preferred_date = t('err.required')
+        if (!form.preferred_time.trim()) nextErrors.preferred_time = t('err.required')
+        if (form.preferred_date.trim() && form.preferred_time.trim()) {
+          const scheduled = new Date(`${form.preferred_date}T${form.preferred_time}`)
+          if (Number.isFinite(scheduled.getTime()) && scheduled <= new Date()) {
+            nextErrors.preferred_time = t('pad.pastDateTime')
+          }
+        }
+      }
     }
 
     if (target === 3) {
@@ -183,8 +192,6 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       'package_size',
       'pickup_address',
       'delivery_address',
-      'preferred_date',
-      'preferred_time',
       'sender_name',
       'sender_phone',
     ]
@@ -192,6 +199,17 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     requiredFields.forEach((name) => {
       if (!form[name].trim()) nextErrors[name] = t('err.required')
     })
+
+    if (deliveryTiming === 'scheduled') {
+      if (!form.preferred_date.trim()) nextErrors.preferred_date = t('err.required')
+      if (!form.preferred_time.trim()) nextErrors.preferred_time = t('err.required')
+      if (form.preferred_date.trim() && form.preferred_time.trim()) {
+        const scheduled = new Date(`${form.preferred_date}T${form.preferred_time}`)
+        if (Number.isFinite(scheduled.getTime()) && scheduled <= new Date()) {
+          nextErrors.preferred_time = t('pad.pastDateTime')
+        }
+      }
+    }
 
     const phone = form.sender_phone.trim()
     if (phone && !/^[0-9+\-\s()]+$/.test(phone)) {
@@ -235,8 +253,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
         package_size: form.package_size.trim(),
         pickup_address: form.pickup_address.trim(),
         delivery_address: form.delivery_address.trim(),
-        preferred_date: form.preferred_date,
-        preferred_time: form.preferred_time,
+        preferred_date: deliveryTiming === 'scheduled' ? form.preferred_date : null,
+        preferred_time: deliveryTiming === 'scheduled' ? form.preferred_time : null,
       })
       try {
         window.localStorage.setItem(`bislig-ride-padeliver-${created.id}`, created.access_token)
@@ -569,6 +587,29 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     if (step === 2) {
       return (
         <div className="flow-fields">
+          <div className="flow-date-group">
+            <span className="field-label">{t('pad.whenNeed')}</span>
+            <div className="flow-date-row" role="group" aria-label={t('pad.whenNeed')}>
+              <button
+                type="button"
+                className={deliveryTiming === 'now' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+                onClick={() => setDeliveryTiming('now')}
+              >
+                {t('pad.timingNow')}
+              </button>
+              <button
+                type="button"
+                className={deliveryTiming === 'scheduled' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+                onClick={() => setDeliveryTiming('scheduled')}
+              >
+                {t('pad.timingScheduled')}
+              </button>
+            </div>
+            {deliveryTiming === 'now' ? (
+              <p className="field-note">{t('pad.asapNote')}</p>
+            ) : null}
+          </div>
+
           <div className="pad-route">
             {routeField('pickup_address', t('pad.pickupAddress'), 'is-pickup')}
 
@@ -592,13 +633,14 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             {routeField('delivery_address', t('pad.deliveryAddress'), 'is-delivery')}
           </div>
 
-          <div className="flow-date-group">
-            <span className="field-label">{t('pad.whenNeed')}</span>
-            <div className="flow-date-row">
-              {field('preferred_date', t('pad.preferredDate'), 'date', undefined, getToday())}
-              {field('preferred_time', t('pad.preferredTime'), 'time')}
+          {deliveryTiming === 'scheduled' ? (
+            <div className="flow-date-group">
+              <div className="flow-date-row">
+                {field('preferred_date', t('pad.preferredDate'), 'date', undefined, getToday())}
+                {field('preferred_time', t('pad.preferredTime'), 'time')}
+              </div>
             </div>
-          </div>
+          ) : null}
         </div>
       )
     }

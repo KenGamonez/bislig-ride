@@ -15,7 +15,7 @@ import { formatVehicleCapacity, formatVehicleType } from '../lib/vehicle'
 import { fetchLatestRideCancellation, subscribeToRideCancellations } from '../lib/rideCancellations'
 import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type ReputationSummary } from '../lib/reputation'
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
-import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
+import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, formatDeliveryTiming, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
@@ -2869,7 +2869,7 @@ const displayedDriver = driverProfile ?? demoDriver
                 </div>
                 <div className="pakyawan-meta">
                   <span>
-                    {popupBooking.preferred_date} · {popupBooking.preferred_time}
+                    {formatDeliveryTiming(popupBooking.preferred_date, popupBooking.preferred_time)}
                   </span>
                   <span>
                     {popupBooking.package_type} · {popupBooking.package_size}
@@ -3135,7 +3135,7 @@ const displayedDriver = driverProfile ?? demoDriver
                   </div>
                   <div className="pakyawan-meta">
                     <span>
-                      {confirmedBooking.preferred_date} · {confirmedBooking.preferred_time}
+                      {formatDeliveryTiming(confirmedBooking.preferred_date, confirmedBooking.preferred_time)}
                     </span>
                     {typeof confirmedBooking.price_cents === 'number' &&
                     Number.isFinite(confirmedBooking.price_cents) ? (
@@ -3262,7 +3262,7 @@ const displayedDriver = driverProfile ?? demoDriver
                 </div>
                 <div className="pakyawan-meta">
                   <span>
-                    {booking.preferred_date} · {booking.preferred_time}
+                    {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
                   </span>
                   <span>
                     {booking.package_type} · {booking.package_size}
@@ -3345,7 +3345,7 @@ const displayedDriver = driverProfile ?? demoDriver
                     {booking.pickup_address} → {booking.delivery_address}
                   </strong>
                   <span>
-                    {booking.preferred_date} · {booking.preferred_time}
+                    {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
                   </span>
                   {booking.status === 'assigned' ? (
                     <>
@@ -3572,7 +3572,7 @@ const displayedDriver = driverProfile ?? demoDriver
                         {booking.pickup_address} → {booking.delivery_address}
                       </strong>
                       <span className="delv-meta">
-                        {booking.preferred_date} · {booking.preferred_time}
+                        {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
                       </span>
                     </div>
                     <div className="delv-side">

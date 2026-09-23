@@ -7,8 +7,8 @@ export type DeliveryBookingInsert = {
   package_size: string
   pickup_address: string
   delivery_address: string
-  preferred_date: string
-  preferred_time: string
+  preferred_date: string | null
+  preferred_time: string | null
 }
 
 export type DeliveryBooking = DeliveryBookingInsert & {

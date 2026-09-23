@@ -17,6 +17,35 @@ export async function fetchDriverDeliveries(driverId: string): Promise<DeliveryB
   return (data ?? []) as DeliveryBooking[]
 }
 
+export function formatDeliveryTiming(
+  preferredDate: string | null | undefined,
+  preferredTime: string | null | undefined,
+): string {
+  if (!preferredDate) {
+    return 'ASAP'
+  }
+
+  return preferredTime ? `${preferredDate} · ${preferredTime}` : preferredDate
+}
+
+export function isDeliveryDue(
+  preferredDate: string | null | undefined,
+  preferredTime: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!preferredDate) {
+    return true
+  }
+
+  const scheduled = new Date(`${preferredDate}T${preferredTime || '00:00'}`)
+
+  if (!Number.isFinite(scheduled.getTime())) {
+    return true
+  }
+
+  return scheduled <= now
+}
+
 export async function fetchAvailableDeliveries(): Promise<DeliveryBooking[]> {
   const { data, error } = await supabase
     .from('deliveries')
@@ -28,7 +57,12 @@ export async function fetchAvailableDeliveries(): Promise<DeliveryBooking[]> {
 
   if (error) throw error
 
-  return (data ?? []) as DeliveryBooking[]
+  // Client-side mirror of the server due-gate: hide future-scheduled
+  // deliveries so drivers are not offered jobs they cannot yet accept.
+  // The RLS policy remains the authoritative enforcement.
+  return ((data ?? []) as DeliveryBooking[]).filter((delivery) =>
+    isDeliveryDue(delivery.preferred_date, delivery.preferred_time),
+  )
 }
 
 export async function acceptDeliveryBooking(deliveryId: string, driverId: string): Promise<DeliveryBooking> {
