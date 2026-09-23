@@ -4788,6 +4788,56 @@ a.secondary-action {
   outline-offset: 2px;
 }
 
+/* Discoverability: soft green halo + occasional ripple (closed state only) */
+.mobile-menu-toggle:not(.is-open) {
+  box-shadow: 0 0 0 6px rgba(0, 232, 138, 0.07);
+}
+
+.mobile-menu-toggle:not(.is-open)::after {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 232, 138, 0.28);
+  pointer-events: none;
+  animation: hamburger-ripple 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+}
+
+.mobile-menu-toggle:not(.is-open):hover {
+  box-shadow: 0 0 0 8px rgba(0, 232, 138, 0.10), 0 4px 12px rgba(10,10,10,0.08);
+  border-color: rgba(0, 232, 138, 0.32);
+}
+
+.mobile-menu-toggle:not(.is-open):active::after {
+  animation: none;
+  opacity: 0;
+}
+
+@keyframes hamburger-ripple {
+  0% {
+    transform: scale(0.96);
+    opacity: 0.55;
+  }
+  60% {
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.22);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mobile-menu-toggle:not(.is-open),
+  .mobile-menu-toggle:not(.is-open)::after {
+    animation: none !important;
+    transition: none !important;
+  }
+  .mobile-menu-toggle:not(.is-open)::after {
+    display: none;
+  }
+}
+
 .mobile-menu-icon {
   position: relative;
   width: 18px;
@@ -14269,4 +14319,148 @@ a:focus-visible {
 
 .service-dashboard .service-accordion-action-primary .service-accordion-action-arrow {
   color: var(--color-black);
+}
+
+/* ============================================================
+   BISLIG RIDE — CREATIVE INTERACTION SYSTEM (visual only)
+   Quiet when idle, alive when interacted with.
+   All microinteractions 120–300ms; transform/opacity/color only.
+   No layout animation, no continuous motion, no JS.
+   ============================================================ */
+
+/* --- Accordion row: one coordinated hover system --- */
+.service-dashboard .service-accordion-header {
+  position: relative;
+}
+
+.service-dashboard .service-accordion-header::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--color-green);
+  transform: scaleY(0);
+  transform-origin: center;
+  transition: transform 180ms ease-out;
+}
+
+.service-dashboard .service-accordion-header:hover::before,
+.service-dashboard .service-accordion-header:focus-visible::before,
+.service-dashboard .service-accordion-item.is-open .service-accordion-header::before {
+  transform: scaleY(1);
+}
+
+.service-dashboard .service-accordion-label strong {
+  transition: transform 180ms ease-out, color 180ms ease;
+}
+
+.service-dashboard .service-accordion-header:hover .service-accordion-label strong {
+  transform: translateX(3px);
+}
+
+.service-dashboard .service-accordion-number {
+  transition: color 180ms ease;
+}
+
+.service-dashboard .service-accordion-label small {
+  transition: color 180ms ease;
+}
+
+.service-dashboard .service-accordion-header:hover .service-accordion-label small {
+  color: var(--color-gray-700);
+}
+
+.service-dashboard .service-accordion-popular {
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.service-dashboard .service-accordion-item.is-open .service-accordion-popular {
+  background: var(--color-green);
+  color: var(--color-black);
+}
+
+/* --- Panel actions: directional CTA language --- */
+.service-dashboard .service-accordion-action {
+  transition: transform 180ms ease-out, background-color 180ms ease, border-color 180ms ease;
+}
+
+.service-dashboard .service-accordion-action:hover {
+  transform: translateY(-1px);
+}
+
+.service-dashboard .service-accordion-action:active {
+  transform: scale(0.98);
+}
+
+/* --- Discovery cards: editorial hover --- */
+.discover-card h3 {
+  transition: transform 180ms ease-out;
+}
+
+.discover-card:hover h3 {
+  transform: translateX(2px);
+}
+
+.discover-card:active {
+  transform: scale(0.99);
+}
+
+/* --- Header brand: quiet response --- */
+.brand-link {
+  transition: opacity 160ms ease;
+}
+
+.brand-link:hover {
+  opacity: 0.8;
+}
+
+/* --- Bottom nav: native-feel feedback (mobile only) --- */
+@media (max-width: 767px) {
+  .bottom-nav-item {
+    transition: color var(--transition), transform 120ms ease-out;
+  }
+
+  .bottom-nav-item:active {
+    transform: scale(0.96);
+  }
+
+  .bottom-nav-item .bottom-nav-icon {
+    transition: transform 180ms ease-out;
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-icon {
+    transform: translateY(-1px);
+  }
+
+  .bottom-nav-indicator {
+    transform: translateX(-50%) scaleX(0);
+    transition: background var(--transition), transform 220ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-indicator {
+    transform: translateX(-50%) scaleX(1);
+  }
+}
+
+/* --- Reduced motion: stillness, state preserved --- */
+@media (prefers-reduced-motion: reduce) {
+  .service-dashboard .service-accordion-header::before {
+    display: none;
+  }
+
+  .service-dashboard .service-accordion-label strong,
+  .service-dashboard .service-accordion-action,
+  .service-dashboard .service-accordion-action-arrow,
+  .discover-card,
+  .discover-card h3,
+  .discover-cta-arrow,
+  .brand-link,
+  .bottom-nav-item,
+  .bottom-nav-item .bottom-nav-icon,
+  .bottom-nav-indicator {
+    transition: none !important;
+    transform: none !important;
+  }
 }
