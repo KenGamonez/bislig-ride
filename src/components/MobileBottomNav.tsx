@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { useAppInstall } from '../lib/appInstall'
 import { useLanguage } from '../lib/i18n'
 
 export type MobileBottomNavTab = 'home' | 'rides' | 'profile'
@@ -9,8 +11,24 @@ type MobileBottomNavProps = {
 
 export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps) {
   const { t } = useLanguage()
+  const { canInstall, isInstalled, isIOS, promptInstall } = useAppInstall()
+  const [showInstallSheet, setShowInstallSheet] = useState(false)
+
+  const handleInstallTap = () => {
+    if (canInstall && !isInstalled) {
+      void promptInstall().then((outcome) => {
+        if (outcome === 'unavailable') {
+          setShowInstallSheet(true)
+        }
+      })
+      return
+    }
+
+    setShowInstallSheet(true)
+  }
 
   return (
+    <>
     <nav className="mobile-bottom-nav" aria-label={t('header.ariaPrimary')}>
       <button
         type="button"
@@ -49,19 +67,54 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
 
       <button
         type="button"
-        className={activeTab === 'profile' ? 'bottom-nav-item is-active' : 'bottom-nav-item'}
-        aria-current={activeTab === 'profile' ? 'page' : undefined}
-        onClick={() => onTabChange('profile')}
+        className="bottom-nav-item"
+        onClick={handleInstallTap}
+        aria-label={t('nav.install')}
       >
         <span className="bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="12" cy="8" r="4" />
-            <path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5" />
+            <path d="M12 3v11" />
+            <path d="m7 10 5 5 5-5" />
+            <path d="M5 21h14" />
           </svg>
         </span>
-        <span className="bottom-nav-label">{t('nav.profile')}</span>
+        <span className="bottom-nav-label">{t('nav.install')}</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
     </nav>
+      {showInstallSheet ? (
+        <div
+          className="ride-chat-overlay"
+          role="presentation"
+          onClick={() => setShowInstallSheet(false)}
+        >
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="app-install-title"
+            className="remove-driver-dialog"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h3 id="app-install-title">{t('install.title')}</h3>
+            {isInstalled ? (
+              <p className="confirm-copy">{t('install.installedNote')}</p>
+            ) : isIOS ? (
+              <div className="confirm-copy">
+                <p>{t('install.iosStep1')}</p>
+                <p>{t('install.iosStep2')}</p>
+                <p>{t('install.iosStep3')}</p>
+              </div>
+            ) : (
+              <p className="confirm-copy">{t('install.unsupportedNote')}</p>
+            )}
+            <div className="form-actions">
+              <button type="button" className="secondary-action" onClick={() => setShowInstallSheet(false)}>
+                {t('install.close')}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+    </>
   )
 }
