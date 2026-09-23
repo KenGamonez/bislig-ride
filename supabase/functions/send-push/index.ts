@@ -7,6 +7,11 @@
 //   - pakyawan_offers INSERT (status offered)        -> driver_id
 //   - delivery_offers INSERT (status offered)        -> driver_id
 //
+// Accepts the standard Database Webhook envelope
+// ({type, table, record, old_record}) and derives the push event,
+// or the direct {type, driver_id, ...} contract. Non-push-worthy
+// webhook deliveries return 200 with skipped:true.
+//
 // Reads that driver's rows from public.push_subscriptions with the
 // service_role client, sends Web Push via VAPID, and deletes endpoints
 // that return permanent errors (404/410). Never mutates ride, booking,
@@ -55,6 +60,118 @@ type SubscriptionRow = {
   p256dh: string;
   auth: string;
 };
+
+type WebhookRecord = Record<string, unknown> | null | undefined;
+
+type WebhookEnvelope = {
+  type?: unknown;
+  table?: unknown;
+  record?: WebhookRecord;
+  old_record?: WebhookRecord;
+};
+
+function isUuid(value: unknown): value is string {
+  return typeof value === "string" && UUID_RE.test(value);
+}
+
+function textOf(value: unknown): string | null {
+  return typeof value === "string" ? value : null;
+}
+
+// Accepts EITHER the direct push contract ({ type: <event>, driver_id,
+// ride_id?, ... }) OR the standard Supabase Database Webhook envelope
+// ({ type: "INSERT"|"UPDATE", table, record, old_record }). Returns null
+// when the payload is well-formed but not push-worthy (e.g. an UPDATE
+// that did not assign a driver, or an already-decided offer).
+function normalizeEvent(input: unknown): PushEvent | "skip" | null {
+  if (!input || typeof input !== "object") return null;
+
+  const direct = input as PushEvent;
+
+  if (
+    typeof direct.type === "string" &&
+    (ALLOWED_TYPES as string[]).includes(direct.type) &&
+    !("record" in (input as Record<string, unknown>))
+  ) {
+    return direct;
+  }
+
+  const envelope = input as WebhookEnvelope;
+
+  if (
+    (envelope.type !== "INSERT" && envelope.type !== "UPDATE") ||
+    typeof envelope.table !== "string" ||
+    !envelope.record ||
+    typeof envelope.record !== "object"
+  ) {
+    return null;
+  }
+
+  const record = envelope.record as Record<string, unknown>;
+  const oldRecord = (
+    envelope.old_record && typeof envelope.old_record === "object"
+      ? envelope.old_record
+      : {}
+  ) as Record<string, unknown>;
+
+  switch (envelope.table) {
+    case "ride_offers": {
+      if (envelope.type !== "INSERT") return "skip";
+      if (record.status !== "offered") return "skip";
+      if (!isUuid(record.driver_id)) return "skip";
+      return {
+        type: "ride_offer",
+        driver_id: record.driver_id,
+        ride_id: textOf(record.ride_id),
+        offer_id: textOf(record.id),
+      };
+    }
+    case "pakyawan_bookings": {
+      if (envelope.type !== "UPDATE") return "skip";
+      if (oldRecord.driver_id != null) return "skip";
+      if (!isUuid(record.driver_id)) return "skip";
+      return {
+        type: "pakyawan_assignment",
+        driver_id: record.driver_id,
+        booking_id: textOf(record.id),
+      };
+    }
+    case "deliveries": {
+      if (envelope.type !== "UPDATE") return "skip";
+      if (oldRecord.driver_id != null) return "skip";
+      if (!isUuid(record.driver_id)) return "skip";
+      return {
+        type: "delivery_assignment",
+        driver_id: record.driver_id,
+        delivery_id: textOf(record.id),
+      };
+    }
+    case "pakyawan_offers": {
+      if (envelope.type !== "INSERT") return "skip";
+      if (record.status !== "offered") return "skip";
+      if (!isUuid(record.driver_id)) return "skip";
+      return {
+        type: "pakyawan_offer",
+        driver_id: record.driver_id,
+        booking_id: textOf(record.booking_id),
+        offer_id: textOf(record.id),
+      };
+    }
+    case "delivery_offers": {
+      if (envelope.type !== "INSERT") return "skip";
+      if (record.status !== "offered") return "skip";
+      if (!isUuid(record.driver_id)) return "skip";
+      return {
+        type: "delivery_offer",
+        driver_id: record.driver_id,
+        delivery_id: textOf(record.delivery_id),
+        offer_id: textOf(record.id),
+      };
+    }
+    default:
+      return null;
+  }
+}
 
 function json(status: number, body: Record<string, unknown>): Response {
   return new Response(JSON.stringify(body), {
@@ -167,20 +284,25 @@ serve(async (req: Request): Promise<Response> => {
     }
   }
 
-  let event: PushEvent;
+  let raw: unknown;
 
   try {
-    event = (await req.json()) as PushEvent;
+    raw = await req.json();
   } catch {
     return json(400, { error: "Invalid JSON payload." });
   }
 
-  if (
-    typeof event.type !== "string" ||
-    !(ALLOWED_TYPES as string[]).includes(event.type)
-  ) {
+  const normalized = normalizeEvent(raw);
+
+  if (normalized === null) {
     return json(400, { error: "Unsupported event type." });
   }
+
+  if (normalized === "skip") {
+    return json(200, { sent: 0, failed: 0, removed: 0, skipped: true });
+  }
+
+  const event: PushEvent = normalized;
 
   if (typeof event.driver_id !== "string" || !UUID_RE.test(event.driver_id)) {
     return json(400, { error: "A valid driver_id is required." });
