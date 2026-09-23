@@ -19,10 +19,14 @@ import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, comp
 import { fetchDriverRideHistory } from '../lib/rides'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
+  ensureDriverPushSubscription,
+  isIOSDevice,
+  isPushSupported,
   notificationPermission,
   playRequestChime,
   playChatNotification,
   requestNotificationPermission,
+  saveDriverPushSubscription,
   showBrowserNotification,
 } from '../lib/notifications'
 import { startRideLocationWatch, subscribeToRideLocation } from '../lib/rideLocation'
@@ -2067,9 +2071,33 @@ const displayedDriver = driverProfile ?? demoDriver
     })
   }
 
+  const [pushStatus, setPushStatus] = useState<'idle' | 'working' | 'ready' | 'unavailable'>('idle')
+
   const handleEnableNotifications = async () => {
     const result = await requestNotificationPermission()
     setNotificationPermissionState(result)
+
+    if (result !== 'granted') {
+      return
+    }
+
+    // Best-effort background push registration. Foreground chimes and
+    // in-app notifications keep working regardless of the outcome.
+    setPushStatus('working')
+
+    try {
+      const pushResult = await ensureDriverPushSubscription()
+
+      if (pushResult.status === 'subscribed' && driverId) {
+        await saveDriverPushSubscription(driverId)
+        setPushStatus('ready')
+      } else {
+        setPushStatus('unavailable')
+      }
+    } catch (error) {
+      console.error('Unable to enable background push:', error)
+      setPushStatus('unavailable')
+    }
   }
 
   const handleDismissNotification = (id: string) => {
@@ -2502,6 +2530,12 @@ const displayedDriver = driverProfile ?? demoDriver
             </ul>
           )}
 
+          <p className="muted-copy">
+            {isPushSupported()
+              ? 'Enable phone notifications so Bislig Ride can alert you about new ride requests even when you switch apps.'
+              : 'This browser does not support background alerts — foreground alerts still work.'}
+            {isIOSDevice() && isPushSupported() ? ' On iPhone, add Bislig Ride to your Home Screen first for background alerts.' : ''}
+          </p>
           {'Notification' in window && notificationPermissionState !== 'granted' ? (
             <button
               type="button"
@@ -2510,6 +2544,15 @@ const displayedDriver = driverProfile ?? demoDriver
             >
               Enable desktop notifications
             </button>
+          ) : null}
+          {pushStatus === 'working' ? (
+            <p className="muted-copy">Setting up background alerts…</p>
+          ) : null}
+          {pushStatus === 'ready' ? (
+            <p className="muted-copy">Background alerts are on for this device.</p>
+          ) : null}
+          {pushStatus === 'unavailable' && notificationPermissionState === 'granted' ? (
+            <p className="muted-copy">Background alerts are unavailable on this browser — foreground alerts still work.</p>
           ) : null}
         </div>
       ) : null}
