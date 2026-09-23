@@ -2308,7 +2308,7 @@ const displayedDriver = driverProfile ?? demoDriver
   // Presentation-only formatting for the mobile Pakyawan request card.
   const formatPakyawanCardDate = (value: string | null | undefined): { main: string; sub: string } => {
     if (!value) {
-      return { main: '—', sub: '' }
+      return { main: 'ASAP', sub: '' }
     }
 
     const parsed = new Date(`${value}T00:00:00`)

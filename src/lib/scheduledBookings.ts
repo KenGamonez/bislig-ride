@@ -46,6 +46,35 @@ export async function confirmPakyawanBooking(bookingId: string, accessToken: str
   return row
 }
 
+export function formatPakyawanTiming(
+  bookingDate: string | null | undefined,
+  pickupTime: string | null | undefined,
+): string {
+  if (!bookingDate) {
+    return 'ASAP'
+  }
+
+  return pickupTime ? `${bookingDate} · ${pickupTime}` : bookingDate
+}
+
+export function isPakyawanDue(
+  bookingDate: string | null | undefined,
+  pickupTime: string | null | undefined,
+  now: Date = new Date(),
+): boolean {
+  if (!bookingDate) {
+    return true
+  }
+
+  const scheduled = new Date(`${bookingDate}T${pickupTime || '00:00'}`)
+
+  if (!Number.isFinite(scheduled.getTime())) {
+    return true
+  }
+
+  return scheduled <= now
+}
+
 export async function fetchAvailablePakyawanBookings(): Promise<PakyawanBooking[]> {
   const { data, error } = await supabase
     .from('pakyawan_bookings')
@@ -57,7 +86,9 @@ export async function fetchAvailablePakyawanBookings(): Promise<PakyawanBooking[
 
   if (error) throw error
 
-  return data ?? []
+  return ((data ?? []) as PakyawanBooking[]).filter((booking) =>
+    isPakyawanDue(booking.booking_date, booking.pickup_time),
+  )
 }
 
 export async function fetchPakyawanBookings(): Promise<PakyawanBooking[]> {

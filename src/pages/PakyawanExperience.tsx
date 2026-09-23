@@ -54,6 +54,7 @@ const getToday = () => {
 
 export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const { t } = useLanguage()
+  const [pakyawanTiming, setPakyawanTiming] = useState<'now' | 'scheduled'>('now')
   const [form, setForm] = useState(initialForm)
   const [errors, setErrors] = useState<FormErrors>({})
   const [submitError, setSubmitError] = useState('')
@@ -123,12 +124,19 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const validate = () => {
     const nextErrors: FormErrors = {}
     const requiredFields: Array<keyof PakyawanBookingForm> = [
-      'booking_date', 'pickup_time', 'pickup_location', 'destination', 'passengers', 'trip_type', 'customer_name', 'customer_phone',
+      'pickup_location', 'destination', 'passengers', 'trip_type', 'customer_name', 'customer_phone',
     ]
     requiredFields.forEach((field) => {
       if (!form[field].trim()) nextErrors[field] = t('err.required')
     })
-    if (form.booking_date && form.booking_date < getToday()) nextErrors.booking_date = t('pak.futureDate')
+    if (pakyawanTiming === 'scheduled') {
+      if (!form.booking_date.trim()) nextErrors.booking_date = t('err.required')
+      if (!form.pickup_time.trim()) nextErrors.pickup_time = t('err.required')
+      if (form.booking_date.trim() && form.pickup_time.trim()) {
+        const scheduled = new Date(`${form.booking_date}T${form.pickup_time}`)
+        if (Number.isFinite(scheduled.getTime()) && scheduled <= new Date()) nextErrors.pickup_time = t('pak.pastDateTime')
+      } else if (form.booking_date && form.booking_date < getToday()) nextErrors.booking_date = t('pak.futureDate')
+    }
     if (form.passengers && (!/^\d+$/.test(form.passengers) || Number(form.passengers) < 1)) nextErrors.passengers = t('pak.onePassenger')
     if (form.estimated_hours && (!/^\d+$/.test(form.estimated_hours) || Number(form.estimated_hours) < 1)) nextErrors.estimated_hours = t('pak.durationHours')
     setErrors(nextErrors)
@@ -139,12 +147,18 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     const nextErrors: FormErrors = {}
 
     if (target === 1) {
-      if (!form.booking_date.trim()) {
-        nextErrors.booking_date = t('err.required')
-      } else if (form.booking_date < getToday()) {
-        nextErrors.booking_date = t('pak.futureDate')
+      if (pakyawanTiming === 'scheduled') {
+        if (!form.booking_date.trim()) {
+          nextErrors.booking_date = t('err.required')
+        } else if (form.booking_date < getToday()) {
+          nextErrors.booking_date = t('pak.futureDate')
+        }
+        if (!form.pickup_time.trim()) nextErrors.pickup_time = t('err.required')
+        if (form.booking_date.trim() && form.pickup_time.trim()) {
+          const scheduled = new Date(`${form.booking_date}T${form.pickup_time}`)
+          if (Number.isFinite(scheduled.getTime()) && scheduled <= new Date()) nextErrors.pickup_time = t('pak.pastDateTime')
+        }
       }
-      if (!form.pickup_time.trim()) nextErrors.pickup_time = t('err.required')
     }
 
     if (target === 2) {
@@ -199,8 +213,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
         customer_id: null,
         customer_name: form.customer_name.trim(),
         customer_phone: form.customer_phone.trim(),
-        booking_date: form.booking_date,
-        pickup_time: form.pickup_time,
+        booking_date: pakyawanTiming === 'scheduled' ? form.booking_date : null,
+        pickup_time: pakyawanTiming === 'scheduled' ? form.pickup_time : null,
         pickup_location: form.pickup_location.trim(),
         destination: form.destination.trim(),
         passengers: Number(form.passengers),
@@ -555,10 +569,32 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
 
     return (
       <div className="flow-fields">
-        <div className="flow-date-row">
-          {field('booking_date', t('pak.tripDate'), 'date', undefined, getToday())}
-          {field('pickup_time', t('pak.pickupTime'), 'time')}
+        <div className="flow-date-group">
+          <span className="field-label">{t('pak.step1.hint')}</span>
+          <div className="flow-date-row" role="group" aria-label={t('pak.step1.hint')}>
+            <button
+              type="button"
+              className={pakyawanTiming === 'now' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+              onClick={() => setPakyawanTiming('now')}
+            >
+              {t('pak.timingNow')}
+            </button>
+            <button
+              type="button"
+              className={pakyawanTiming === 'scheduled' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+              onClick={() => setPakyawanTiming('scheduled')}
+            >
+              {t('pak.timingScheduled')}
+            </button>
+          </div>
+          {pakyawanTiming === 'now' ? <p className="field-note">{t('pak.asapNote')}</p> : null}
         </div>
+        {pakyawanTiming === 'scheduled' ? (
+          <div className="flow-date-row">
+            {field('booking_date', t('pak.tripDate'), 'date', undefined, getToday())}
+            {field('pickup_time', t('pak.pickupTime'), 'time')}
+          </div>
+        ) : null}
       </div>
     )
   }

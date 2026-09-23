@@ -5,8 +5,8 @@ export type PakyawanBookingInsert = {
   customer_id: string | null
   customer_name: string
   customer_phone: string
-  booking_date: string
-  pickup_time: string
+  booking_date: string | null
+  pickup_time: string | null
   pickup_location: string
   destination: string
   passengers: number
