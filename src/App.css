@@ -4788,53 +4788,49 @@ a.secondary-action {
   outline-offset: 2px;
 }
 
-/* Discoverability: soft green halo + occasional ripple (closed state only) */
-.mobile-menu-toggle:not(.is-open) {
-  box-shadow: 0 0 0 6px rgba(0, 232, 138, 0.07);
+/* Discoverability: subtle green glow on the three lines only (closed state) */
+.mobile-menu-toggle:not(.is-open) .mobile-menu-icon span {
+  animation: hamburger-line-glow 3.4s ease-in-out infinite;
 }
 
-.mobile-menu-toggle:not(.is-open)::after {
-  content: '';
-  position: absolute;
-  inset: -2px;
-  border-radius: 14px;
-  border: 1px solid rgba(0, 232, 138, 0.28);
-  pointer-events: none;
-  animation: hamburger-ripple 3.4s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+.mobile-menu-toggle:not(.is-open) .mobile-menu-icon span:nth-child(1) {
+  animation-delay: 0s;
 }
 
-.mobile-menu-toggle:not(.is-open):hover {
-  box-shadow: 0 0 0 8px rgba(0, 232, 138, 0.10), 0 4px 12px rgba(10,10,10,0.08);
-  border-color: rgba(0, 232, 138, 0.32);
+.mobile-menu-toggle:not(.is-open) .mobile-menu-icon span:nth-child(2) {
+  animation-delay: 0.14s;
 }
 
-.mobile-menu-toggle:not(.is-open):active::after {
-  animation: none;
-  opacity: 0;
+.mobile-menu-toggle:not(.is-open) .mobile-menu-icon span:nth-child(3) {
+  animation-delay: 0.28s;
 }
 
-@keyframes hamburger-ripple {
-  0% {
-    transform: scale(0.96);
-    opacity: 0.55;
-  }
-  60% {
-    opacity: 0;
-  }
+.mobile-menu-toggle:not(.is-open):hover .mobile-menu-icon span {
+  box-shadow: 0 0 8px rgba(0, 232, 138, 0.5);
+}
+
+.mobile-menu-toggle:not(.is-open):active .mobile-menu-icon span {
+  animation: none !important;
+  box-shadow: none !important;
+}
+
+@keyframes hamburger-line-glow {
+  0%,
   100% {
-    transform: scale(1.22);
-    opacity: 0;
+    box-shadow: 0 0 0 rgba(0, 232, 138, 0);
+    filter: brightness(1);
+  }
+  28% {
+    box-shadow: 0 0 8px rgba(0, 232, 138, 0.52);
+    filter: brightness(1.08);
   }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mobile-menu-toggle:not(.is-open),
-  .mobile-menu-toggle:not(.is-open)::after {
+  .mobile-menu-toggle:not(.is-open) .mobile-menu-icon span {
     animation: none !important;
-    transition: none !important;
-  }
-  .mobile-menu-toggle:not(.is-open)::after {
-    display: none;
+    box-shadow: none !important;
+    filter: none !important;
   }
 }
 
