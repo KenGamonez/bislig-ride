@@ -20,8 +20,9 @@
 --   * A Motorcycle ride matches any motorcycle driver (capacity effectively 1 —
 --     the ride UI only ever allows 1 passenger).
 --   * An Umbak/Tricycle ride requires drivers.vehicle_capacity >= the ride's
---     passenger_count (5+ is stored as 5, so capacity >= 5 matches only
---     drivers configured to carry 5+).
+--     passenger_count (vehicle maximums: umbak 5, tricycle 7; '5+' requests
+--     store 5, '6'/'7' store 6/7, so capacity >= N matches drivers
+--     configured to carry N+).
 --   * Legacy rides with vehicle_type NULL bypass both filters (unchanged
 --     behaviour) so pre-existing ride history stays dispatchable exactly as
 --     before and no capacity is ever invented for a driver.

@@ -35,7 +35,7 @@ import { adminCancelDelivery, fetchDeliveriesForAdmin, fetchDeliveryProofIds, fe
 import { getDeliveryProofSignedUrl } from '../lib/deliveryProof'
 import type { DeliveryBooking } from '../types/delivery'
 import { formatCentavos } from '../lib/fare'
-import { formatVehicleCapacity, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
+import { formatCapacityOption, formatVehicleCapacity, passengerCapacityOptionsFor, VEHICLE_LABELS, VEHICLE_TYPES, type VehicleType } from '../lib/vehicle'
 import { driverApplicationStatuses, driverApplicationStatusLabels, type DriverApplication, type DriverApplicationStatus } from '../types/driverApplication'
 import { contactMessageStatusLabels, type ContactMessage, type ContactMessageStatus } from '../types/contactMessage'
 import { supabase } from '../lib/supabase'
@@ -179,11 +179,9 @@ const DriverVehicleEditor: React.FC<{
               }}
             >
               <option value="">Not set</option>
-              {[1, 2, 3, 4, 5].map((capacity) => (
+              {passengerCapacityOptionsFor(draft.vehicleType as VehicleType).map((capacity) => (
                 <option key={capacity} value={capacity}>
-                  {capacity === 5
-                    ? '5 passengers (5+)'
-                    : `${capacity} ${capacity === 1 ? 'passenger' : 'passengers'}`}
+                  {formatCapacityOption(draft.vehicleType as VehicleType, capacity)}
                 </option>
               ))}
             </select>
@@ -2081,9 +2079,9 @@ useEffect(() => {
                           }))
                         }
                       >
-                        {[1, 2, 3, 4, 5].map((capacity) => (
+                        {passengerCapacityOptionsFor(driverDraft.vehicleType as VehicleType).map((capacity) => (
                           <option key={capacity} value={capacity}>
-                            {capacity === 5 ? '5 passengers (5+)' : `${capacity} ${capacity === 1 ? 'passenger' : 'passengers'}`}
+                            {formatCapacityOption(driverDraft.vehicleType as VehicleType, capacity)}
                           </option>
                         ))}
                       </select>

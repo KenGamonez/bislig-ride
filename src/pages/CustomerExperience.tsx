@@ -150,8 +150,12 @@ export function CustomerExperience({ currentView = 'Rider', onSwitchView }: Cust
     const parsed = Number.parseInt(String(value ?? '1'), 10)
     const safeValue = Number.isFinite(parsed) ? parsed : 1
 
-    if (safeValue >= 5) {
+    if (safeValue === 5) {
       return t('book.fivePlusPassengers')
+    }
+
+    if (safeValue >= 6) {
+      return t('book.nPassengers', { count: safeValue })
     }
 
     return safeValue === 1
