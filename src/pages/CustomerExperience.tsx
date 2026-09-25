@@ -2258,7 +2258,7 @@ onClick={() => setRating(star)}
       ) : null}
 
       <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
-      <AnnouncementTicker variant="fixed" />
+      {!showRideLauncher && <AnnouncementTicker variant="fixed" />}
 
     </div>
   )

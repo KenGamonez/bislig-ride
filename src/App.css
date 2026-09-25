@@ -10638,102 +10638,144 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 /* =========================================================
-   SERVICE LAUNCHER â€” app home (service dashboard + discovery)
+   /* =========================================================
+   SERVICE LAUNCHER — app home (service dashboard + discovery)
    Scoped to the launcher home only; booking layout untouched.
    ========================================================= */
 
 .service-launcher-layout {
   display: block;
+  padding: 0 20px;
 }
 
 .service-dashboard {
   display: grid;
-  gap: 28px;
+  gap: 32px;
+  max-width: 640px;
+  margin: 0 auto;
 }
 
-/* --- Compact greeting hero --- */
-.service-greeting {
-  position: relative;
-  overflow: hidden;
-  padding: 30px 28px 28px;
-  background: linear-gradient(135deg, var(--color-black) 0%, var(--color-black-soft) 100%);
-  border: 1px solid var(--color-border-dark);
-  border-radius: var(--radius-lg) var(--radius-lg) var(--radius-md) var(--radius-md);
-  color: var(--color-white);
+/* --- Hero Section --- */
+.home-hero {
+  display: grid;
+  gap: 16px;
+  text-align: left;
+  padding: 8px 0;
 }
 
-.service-greeting::before {
-  content: '';
-  position: absolute;
-  top: -120px;
-  right: -80px;
-  width: 260px;
-  height: 260px;
-  border: 1px solid rgba(0, 232, 138, 0.18);
-  box-shadow: 0 0 0 40px rgba(0, 232, 138, 0.04), 0 0 0 84px rgba(0, 232, 138, 0.03);
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.service-greeting .eyebrow {
-  position: relative;
-  z-index: 1;
+.home-hero-eyebrow {
   display: flex;
   align-items: center;
-  gap: 8px;
-  margin-bottom: 10px;
-  color: var(--color-orange);
-  font-size: 0.7rem;
-  letter-spacing: 0.22em;
-}
-
-.service-greeting .eyebrow::after {
-  content: '';
-  width: 26px;
-  height: 1px;
-  background: rgba(0, 232, 138, 0.45);
-}
-
-.service-greeting h1 {
-  position: relative;
-  z-index: 1;
+  gap: 12px;
   margin: 0;
-  font-size: clamp(2rem, 4vw, 2.9rem);
-  line-height: 1.04;
-  letter-spacing: -0.045em;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
   text-transform: uppercase;
-  color: var(--color-white);
+  color: var(--text-muted);
 }
 
-.service-greeting .hero-accent {
-  color: var(--color-orange);
-  display: block;
+.home-hero-eyebrow::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--border);
 }
 
-.service-greeting .subtitle {
-  position: relative;
-  z-index: 1;
-  margin: 10px 0 0;
-  color: rgba(255, 255, 255, 0.66);
-  font-size: 0.92rem;
+.home-hero-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
 }
 
-/* --- Service dashboard grid --- */
+.home-hero-subtitle {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* --- Service Section --- */
+.service-section {
+  display: grid;
+  gap: 20px;
+}
+
+.service-section-header {
+  display: grid;
+  gap: 8px;
+}
+
+.service-section-label {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.service-section-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.service-section-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* --- Service Grid --- */
 .service-grid {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
+  grid-template-columns: 1fr;
 }
 
+@media (min-width: 640px) {
+  .service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .service-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Driver grid - always single column on mobile, 2-col on tablet+ */
+.driver-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .driver-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Service Card --- */
 .service-card {
   position: relative;
   display: flex;
   align-items: flex-start;
-  gap: 12px;
+  gap: 14px;
   padding: 18px 16px;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: var(--color-white);
+  background: var(--surface);
   color: var(--text-primary);
   text-align: left;
   font: inherit;
@@ -10744,41 +10786,50 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .service-card:hover {
   border-color: var(--color-gray-300);
-  box-shadow: var(--shadow-xs);
-  transform: translateY(-1px);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
 }
 
 .service-card:focus-visible,
 .discover-card:focus-visible {
-  outline: 2px solid var(--color-orange);
+  outline: 2px solid var(--brand-orange);
   outline-offset: 2px;
 }
 
 .service-card-icon {
   flex-shrink: 0;
-  width: 42px;
-  height: 42px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  width: 44px;
+  height: 44px;
   border-radius: 12px;
-  background: var(--color-gray-100);
-  color: var(--color-gray-700);
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  transition: background var(--transition), color var(--transition);
+}
+
+.service-card:hover .service-card-icon {
+  background: var(--brand-orange-soft);
+  color: var(--brand-orange);
 }
 
 .service-card-copy {
   display: grid;
-  gap: 3px;
+  gap: 4px;
   min-width: 0;
 }
 
 .service-card-copy strong {
   font-size: 0.92rem;
+  font-weight: 700;
   letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.3;
 }
 
 .service-card-copy small {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   line-height: 1.4;
   color: var(--text-secondary);
 }
@@ -10786,69 +10837,198 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .service-card-arrow {
   flex-shrink: 0;
   margin-left: auto;
-  color: var(--color-gray-400);
-  font-size: 1.15rem;
-  transition: transform var(--transition), color var(--transition);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
 }
 
 .service-card:hover .service-card-arrow {
-  color: var(--color-gray-700);
+  background: var(--brand-orange);
+  color: var(--color-white);
   transform: translateX(3px);
 }
 
-/* Primary â€” Ride Now */
+/* Primary — Ride Now */
 .service-card--primary {
-  grid-column: 1 / -1;
-  align-items: center;
-  gap: 14px;
-  padding: 22px 20px;
-  background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
-  border: 1px solid var(--color-orange);
-  box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.28), 0 0 22px rgba(0, 232, 138, 0.16);
+  border-color: var(--brand-orange);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  box-shadow: 0 0 0 1px var(--brand-orange-soft), var(--shadow-soft);
 }
 
 .service-card--primary:hover {
-  border-color: var(--color-orange);
+  border-color: var(--brand-orange-dark);
+  box-shadow: 0 0 0 1px var(--brand-orange), var(--shadow-elevated);
 }
 
 .service-card--primary .service-card-icon {
-  background: rgba(0, 232, 138, 0.14);
-  color: var(--color-orange);
-  box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.35);
+  background: var(--brand-orange-soft);
+  color: var(--brand-orange);
 }
 
-.service-card--primary .service-card-copy {
-  padding-right: 58px;
+.service-card--primary:hover .service-card-icon {
+  background: var(--brand-orange);
+  color: var(--color-white);
 }
 
 .service-card--primary .service-card-copy strong {
-  color: var(--color-white);
-  font-size: 1.05rem;
+  color: var(--text-primary);
 }
 
 .service-card--primary .service-card-copy small {
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--text-secondary);
 }
 
 .service-card--primary .service-card-arrow {
-  color: var(--color-orange);
+  background: var(--brand-orange);
+  color: var(--color-white);
+}
+
+.service-card--primary:hover .service-card-arrow {
+  background: var(--brand-orange-dark);
+  transform: translateX(3px);
 }
 
 .service-card-badge {
   position: absolute;
-  top: 10px;
+  top: 12px;
   right: 12px;
   padding: 3px 8px;
   border-radius: var(--radius-pill);
-  background: rgba(0, 232, 138, 0.16);
-  color: var(--color-orange);
+  background: var(--brand-orange);
+  color: var(--color-white);
   font-size: 0.56rem;
   font-weight: 800;
-  letter-spacing: 0.14em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
 }
 
-/* --- Discover carousel --- */
+/* --- Service Section --- */
+.service-section {
+  display: grid;
+  gap: 20px;
+}
+
+.service-section-header {
+  display: grid;
+  gap: 8px;
+}
+
+.service-section-label {
+  margin: 0;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.service-section-title {
+  margin: 0;
+  font-size: clamp(1.25rem, 2.5vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.service-section-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* --- Service Grid --- */
+.service-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .service-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* Driver grid - always single column on mobile, 2-col on tablet+ */
+.driver-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 640px) {
+  .driver-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* --- Service Card Arrow (SVG) --- */
+.service-card-arrow svg {
+  transition: transform var(--transition);
+}
+
+.service-card:hover .service-card-arrow svg {
+  transform: translateX(3px);
+}
+
+/* --- Hero Section --- */
+.home-hero {
+  display: grid;
+  gap: 16px;
+  text-align: left;
+  padding: 8px 0;
+}
+
+.home-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.home-hero-eyebrow::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+}
+
+.home-hero-title {
+  margin: 0;
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--text-primary);
+}
+
+.home-hero-subtitle {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}/* --- Discover carousel --- */
 .discover-section {
   display: grid;
   gap: 14px;

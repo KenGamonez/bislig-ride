@@ -12,13 +12,14 @@ interface ServiceItem {
   href?: string
   onClick?: () => void
   isPrimary?: boolean
+  badge?: string
 }
 
 const transportServices: ServiceItem[] = [
   {
     id: 'ride-now',
     label: 'Ride Now',
-    description: 'Get moving around Bislig City',
+    description: 'Get a ride around Bislig — quick pickup, fair fare.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
@@ -28,12 +29,13 @@ const transportServices: ServiceItem[] = [
       </svg>
     ),
     onClick: () => {},
-    isPrimary: true
+    isPrimary: true,
+    badge: 'FASTEST'
   },
   {
     id: 'pakyawan',
     label: 'Pakyawan',
-    description: 'Reserve a vehicle for longer trips',
+    description: 'Book a vehicle for longer trips or private use.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z" />
@@ -47,7 +49,7 @@ const transportServices: ServiceItem[] = [
   {
     id: 'pa-deliver',
     label: 'Pa-deliver',
-    description: 'Send packages across Bislig',
+    description: 'Send packages across Bislig.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M12 2v20" />
@@ -60,7 +62,7 @@ const transportServices: ServiceItem[] = [
   {
     id: 'car-rentals',
     label: 'Car Rentals',
-    description: 'Rent a vehicle by the day',
+    description: 'Rent a vehicle by the day.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M4 17h-1a1 1 0 0 1-1-1v-5l2-4.5A2 2 0 0 1 5.8 5.5H18.2a2 2 0 0 1 1.8 1.5L22 11v5a1 1 0 0 1-1 1h-1a2.5 2.5 0 0 1-5 0H9a2.5 2.5 0 0 1-5 0Z" />
@@ -77,7 +79,7 @@ const driverServices: ServiceItem[] = [
   {
     id: 'become-driver',
     label: 'Become a Driver',
-    description: 'Join thousands of drivers earning on their own terms',
+    description: 'Apply once, drive for rides, pakyawan & delivery.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
@@ -91,7 +93,7 @@ const driverServices: ServiceItem[] = [
   {
     id: 'driver-login',
     label: 'Driver Login',
-    description: 'Access your driver dashboard and start earning',
+    description: 'Already driving? Open your dashboard.',
     icon: (
       <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
         <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
@@ -119,18 +121,16 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
       {/* Hero Section */}
       <header className="home-hero">
         <p className="home-hero-eyebrow">YOUR CITY. CONNECTED.</p>
-        <h1 className="home-hero-title">What do you need today?</h1>
-        <p className="home-hero-subtitle">
-          Ride, deliver, or schedule — all in one app built for Bislig.
-        </p>
+        <h1 className="home-hero-title">{t('dash.title1')}</h1>
+        <p className="home-hero-subtitle">{t('dash.subtitle')}</p>
       </header>
 
       {/* Transport Services Section */}
       <div className="service-section">
         <div className="service-section-header">
-          <p className="service-section-label">MOVE AROUND THE CITY</p>
-          <h2 className="service-section-title">Transport</h2>
-          <p className="service-section-subtitle">Available now in Bislig City</p>
+          <p className="service-section-label">{t('dash.transportLabel')}</p>
+          <h2 className="service-section-title">{t('dash.transportTitle')}</h2>
+          <p className="service-section-subtitle">{t('dash.transportSubtitle')}</p>
         </div>
 
         <div className="service-grid">
@@ -161,9 +161,14 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 <strong>{service.label}</strong>
                 <small>{service.description}</small>
               </div>
-              <span className="service-card-arrow" aria-hidden="true">→</span>
-              {service.isPrimary && (
-                <span className="service-card-badge">{t('dash.popular')}</span>
+              <span className="service-card-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
+              {service.isPrimary && service.badge && (
+                <span className="service-card-badge">{service.badge}</span>
               )}
             </article>
           ))}
@@ -173,12 +178,12 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
       {/* Driver Section */}
       <div className="service-section driver-section">
         <div className="service-section-header">
-          <p className="service-section-label">FOR DRIVERS</p>
-          <h2 className="service-section-title">Drive with Hub</h2>
-          <p className="service-section-subtitle">Earn on your own schedule</p>
+          <p className="service-section-label">{t('dash.driverLabel')}</p>
+          <h2 className="service-section-title">{t('dash.driverTitle')}</h2>
+          <p className="service-section-subtitle">{t('dash.driverSubtitle')}</p>
         </div>
 
-        <div className="service-grid">
+        <div className="service-grid driver-grid">
           {driverServices.map((service) => (
             <article
               key={service.id}
@@ -203,10 +208,15 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 {service.icon}
               </div>
               <div className="service-card-copy">
-                <strong>{service.label}</strong>
-                <small>{service.description}</small>
+                <strong>{t(`dash.${service.id === 'become-driver' ? 'becomeDriver' : 'driverLogin'}`)}</strong>
+                <small>{t(`dash.${service.id === 'become-driver' ? 'becomeDriverDesc' : 'driverLoginDesc'}`)}</small>
               </div>
-              <span className="service-card-arrow" aria-hidden="true">→</span>
+              <span className="service-card-arrow" aria-hidden="true">
+                <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14" />
+                  <path d="m12 5 7 7-7 7" />
+                </svg>
+              </span>
             </article>
           ))}
         </div>
