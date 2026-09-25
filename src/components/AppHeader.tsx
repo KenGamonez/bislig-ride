@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import bisligLogo from '../assets/Bislig Ride Logo.png'
+import bisligLogo from '../assets/Bislig Hub logo.png'
 import { LanguageToggle } from './LanguageToggle'
 import { useLanguage } from '../lib/i18n'
 
@@ -76,7 +76,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
         <div className="header-inner">
           <div className="brand-block">
             <a href="/" className="brand-link">
-              <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
+              <img src={bisligLogo} alt="Bislig Hub logo" className="brand-logo" />
             </a>
           </div>
 
@@ -152,7 +152,7 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
       >
         <div className="mobile-nav-top">
           <a href="/" className="mobile-nav-brand" onClick={() => setIsMobileNavOpen(false)}>
-            <img src={bisligLogo} alt="Bislig Ride logo" className="brand-logo" />
+            <img src={bisligLogo} alt="Bislig Hub logo" className="brand-logo" />
           </a>
           <button
             type="button"

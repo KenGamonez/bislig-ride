@@ -2532,9 +2532,9 @@ const displayedDriver = driverProfile ?? demoDriver
 
           <p className="muted-copy">
             {isPushSupported()
-              ? 'Enable phone notifications so Bislig Ride can alert you about new ride requests even when you switch apps.'
+              ? 'Enable phone notifications so Bislig Hub can alert you about new ride requests even when you switch apps.'
               : 'This browser does not support background alerts — foreground alerts still work.'}
-            {isIOSDevice() && isPushSupported() ? ' On iPhone, add Bislig Ride to your Home Screen first for background alerts.' : ''}
+            {isIOSDevice() && isPushSupported() ? ' On iPhone, add Bislig Hub to your Home Screen first for background alerts.' : ''}
           </p>
           {'Notification' in window && notificationPermissionState !== 'granted' ? (
             <button
@@ -3651,7 +3651,7 @@ const displayedDriver = driverProfile ?? demoDriver
               <p className="section-label">PAKYAWAN REQUESTS</p>
               <h3>Pakyawan / scheduled trips</h3>
               <p>
-                Pakyawan request handling is not enabled for this account yet. Contact the Bislig Ride
+                Pakyawan request handling is not enabled for this account yet. Contact the Bislig Hub
                 team to get it switched on.
               </p>
             </div>
@@ -4539,7 +4539,7 @@ const renderOnlineState = () => (
               <h2>Account inactive</h2>
             </div>
             <p className="muted-copy">
-              Your driver account is inactive. Please contact Bislig Ride to reactivate it.
+              Your driver account is inactive. Please contact Bislig Hub to reactivate it.
             </p>
             <button type="button" className="primary-action request-ride-action" onClick={onBack}>
               Back to Ride Booking
@@ -4584,7 +4584,7 @@ const renderOnlineState = () => (
       ) : null}
 
       <div className="driver-back-row">
-        <button type="button" className="driver-back-arrow" onClick={onBack} aria-label="Back to Bislig Ride" title="Back to Bislig Ride">
+        <button type="button" className="driver-back-arrow" onClick={onBack} aria-label="Back to Bislig Hub" title="Back to Bislig Hub">
           <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
             <path d="M19 12H5" />
             <path d="m12 19-7-7 7-7" />
@@ -4594,7 +4594,7 @@ const renderOnlineState = () => (
 
       <header className="driver-dash-header">
         <div className="driver-dash-copy">
-          <p className="driver-kicker">Bislig Ride</p>
+          <p className="driver-kicker">Bislig Hub</p>
           <h2>Driver Dashboard</h2>
           <p className="driver-dash-subtitle">
             {driverOnline ? 'You\u2019re online and ready to accept ride requests.' : 'Go online to start receiving ride requests.'}

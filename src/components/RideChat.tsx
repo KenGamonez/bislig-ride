@@ -156,7 +156,7 @@ export function RideChat({
         <div className="ride-chat-header">
           <div>
             <strong>{t('chat.titleWith', { name: otherPartyName })}</strong>
-            <span>Bislig Ride</span>
+            <span>Bislig Hub</span>
           </div>
 
           <button type="button" className="ride-chat-close" onClick={onClose} aria-label={t('chat.closeAria')}>

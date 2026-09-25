@@ -22,7 +22,7 @@ const en = {
   'nav.myRides': 'My Rides',
   'nav.profile': 'Profile',
   'nav.install': 'Install',
-  'install.title': 'Add Bislig Ride to your Home Screen',
+  'install.title': 'Add Bislig Hub to your Home Screen',
   'install.iosStep1': 'Tap Share',
   'install.iosStep2': 'Tap Add to Home Screen',
   'install.iosStep3': 'Tap Add',
@@ -40,20 +40,20 @@ const en = {
   'nav.ariaMain': 'Main navigation',
   'nav.ariaMobile': 'Mobile navigation',
   'nav.beta': 'Beta',
-  'nav.betaTitle': 'Bislig Ride is in beta',
+  'nav.betaTitle': 'Bislig Hub is in beta',
   'header.footerCity': 'Bislig City',
   'header.footerTagline': 'Ride local. Move freely.',
   'header.ariaPrimary': 'Primary mobile navigation',
 
   /* Footer */
-  'footer.rights': '2026 Bislig Ride. All Rights Reserved.',
+  'footer.rights': '2026 Bislig Hub. All Rights Reserved.',
 
   /* Announcement ticker */
   'ticker.onboarding':
-    'Bislig Ride is currently onboarding our founding drivers',
+    'Bislig Hub is currently onboarding our founding drivers',
   'ticker.moreRides': 'More rides coming soon',
   'ticker.aria':
-    'Bislig Ride announcement: currently onboarding founding drivers',
+    'Bislig Hub announcement: currently onboarding founding drivers',
 
   /* Weather */
   'weather.label': 'Bislig City Weather',
@@ -77,7 +77,7 @@ const en = {
   'weather.mixed': 'Mixed conditions',
 
   /* Homepage service dashboard */
-  'dash.eyebrow': 'Bislig Ride',
+  'dash.eyebrow': 'Bislig Hub',
   'dash.title1': 'What do you need',
   'dash.title2': 'today?',
   'dash.subtitle': 'Choose how you want to move around Bislig City.',
@@ -94,10 +94,10 @@ const en = {
   'dash.carRentalsDesc': 'Rent a vehicle by the day.',
 
   /* Homepage carousel */
-  'carousel.aria': 'Discover more ways to use Bislig Ride',
+  'carousel.aria': 'Discover more ways to use Bislig Hub',
   'carousel.kicker': 'Also available',
   'carousel.title1': 'Discover',
-  'carousel.title2': 'Bislig Ride',
+  'carousel.title2': 'Bislig Hub',
   'carousel.dot': 'Go to card {index} of {total}: {title}',
   'carousel.city.kicker': 'Everyday trips',
   'carousel.city.title': 'City hops, anytime',
@@ -165,7 +165,7 @@ const en = {
   'book.requesting': 'Requesting...',
   'book.requestRide': 'Request Ride',
   'book.lookingDriver':
-    'Looking for an available Bislig Ride driver nearby...',
+    'Looking for an available Bislig Hub driver nearby...',
   'book.noDriverText':
     'We could not find an available driver for this trip at the moment. Try dispatching your ride again or cancel it.',
   'book.onTheWay': 'Your driver is on the way.',
@@ -179,7 +179,7 @@ const en = {
     'Your driver has arrived. The trip will begin when your driver starts the ride.',
   'book.inProgressLead':
     'Your ride is in progress. Your driver will complete the trip when you reach your destination.',
-  'book.thanks': 'Thanks for riding with Bislig Ride.',
+  'book.thanks': 'Thanks for riding with Bislig Hub.',
   'book.continueToPayment': 'Continue to Payment',
   'book.view': 'View',
   'book.tryAgain': 'Try Again',
@@ -258,7 +258,7 @@ const en = {
   'rating.submitting': 'Submitting...',
   'rating.submit': 'Submit Rating',
   'rating.thankYou': 'Thank you!',
-  'rating.feedback': 'Your feedback helps us improve Bislig Ride.',
+  'rating.feedback': 'Your feedback helps us improve Bislig Hub.',
   'rating.failed': 'Unable to submit your rating. Please try again.',
   'rating.ownerOnly': 'This ride can only be rated from the browser or device that booked it.',
   'payment.payment': 'Payment',
@@ -341,7 +341,7 @@ const en = {
     'Live location is off. Your driver can still rely on your recorded pickup point.',
 
   /* Customer profile */
-  'profile.subtitle': 'Your current and previous Bislig Ride trips.',
+  'profile.subtitle': 'Your current and previous Bislig Hub trips.',
   'profile.completedRides': 'Completed rides',
   'profile.allTime': 'All-time trips',
   'profile.rating': 'Rating',
@@ -602,11 +602,11 @@ const en = {
   'auth.sendResetLink': 'Send reset link',
   'auth.backToLogin': 'Back to login',
   'auth.sentNote':
-    'If a Bislig Ride driver account matches that username or email, a password reset link has been sent. It only works for a short time — check your inbox (and spam folder).',
+    'If a Bislig Hub driver account matches that username or email, a password reset link has been sent. It only works for a short time — check your inbox (and spam folder).',
   'auth.errMissingCredentials':
     'Enter your username or email and password to continue.',
   'auth.errInvalidCredentials': 'Incorrect username or password.',
-  'auth.errNotLinked': 'This account is not linked to a Bislig Ride driver.',
+  'auth.errNotLinked': 'This account is not linked to a Bislig Hub driver.',
   'auth.errDeactivated':
     'This driver account is deactivated. Contact the admin to reactivate it.',
   'auth.errForgotMissing': 'Enter your username or email to find your account.',
@@ -616,15 +616,15 @@ const en = {
   /* Driver blocked account (App) */
   'blocked.title': 'Account inactive',
   'blocked.text':
-    'Your driver account is inactive. Please contact Bislig Ride to reactivate it.',
+    'Your driver account is inactive. Please contact Bislig Hub to reactivate it.',
   'blocked.back': 'Back to Ride Booking',
 
   /* Contact */
   'contact.eyebrow': 'GET IN TOUCH',
-  'contact.aria': 'Contact Bislig Ride',
+  'contact.aria': 'Contact Bislig Hub',
   'contact.title': 'Let\'s connect.',
   'contact.intro':
-    'Have a question about Bislig Ride, want to partner with us, feature your business, or discuss a digital project? We\'d love to hear from you.',
+    'Have a question about Bislig Hub, want to partner with us, feature your business, or discuss a digital project? We\'d love to hear from you.',
   'contact.cardLabel': 'BISLIG RIDE',
   'contact.cardTitle': 'Built for Bislig.',
   'contact.infoCopy':
@@ -670,7 +670,7 @@ const en = {
   'contact.sending': 'Sending...',
   'contact.sendMessage': 'Send Message',
   'contact.formNote':
-    'By submitting this form, you agree that Bislig Ride may use the information you provide to respond to your inquiry.',
+    'By submitting this form, you agree that Bislig Hub may use the information you provide to respond to your inquiry.',
   'contact.submitFailed': 'We could not send your message right now. Please try again.',
 } as const
 
@@ -686,7 +686,7 @@ const bi: Record<TranslationKey, string> = {
   'nav.myRides': 'Akong mga Sakay',
   'nav.profile': 'Profile',
   'nav.install': 'I-install',
-  'install.title': 'Ibutang ang Bislig Ride sa imong Home Screen',
+  'install.title': 'Ibutang ang Bislig Hub sa imong Home Screen',
   'install.iosStep1': 'I-tap ang Share',
   'install.iosStep2': 'I-tap ang Add to Home Screen',
   'install.iosStep3': 'I-tap ang Add',
@@ -704,20 +704,20 @@ const bi: Record<TranslationKey, string> = {
   'nav.ariaMain': 'Pangunang nabigasyon',
   'nav.ariaMobile': 'Nabigasyon sa mobile',
   'nav.beta': 'Beta',
-  'nav.betaTitle': 'Ang Bislig Ride kay naa pa sa beta',
+  'nav.betaTitle': 'Ang Bislig Hub kay naa pa sa beta',
   'header.footerCity': 'Bislig City',
   'header.footerTagline': 'Sakay lokal. Lihok nga walay kabalaka.',
   'header.ariaPrimary': 'Pangunang nabigasyon sa mobile',
 
   /* Footer */
-  'footer.rights': '2026 Bislig Ride. Tanang katungod gi-reserba.',
+  'footer.rights': '2026 Bislig Hub. Tanang katungod gi-reserba.',
 
   /* Announcement ticker */
   'ticker.onboarding':
-    'Gitudloan karon sa Bislig Ride ang atong founding drivers',
+    'Gitudloan karon sa Bislig Hub ang atong founding drivers',
   'ticker.moreRides': 'Dugang nga rides, dili madugay',
   'ticker.aria':
-    'Pahibalo sa Bislig Ride: gi-onboard karon ang founding drivers',
+    'Pahibalo sa Bislig Hub: gi-onboard karon ang founding drivers',
 
   /* Weather */
   'weather.label': 'Panahon sa Bislig City',
@@ -741,7 +741,7 @@ const bi: Record<TranslationKey, string> = {
   'weather.mixed': 'Nagkalain-laing panahon',
 
   /* Homepage service dashboard */
-  'dash.eyebrow': 'Bislig Ride',
+  'dash.eyebrow': 'Bislig Hub',
   'dash.title1': 'Unsa ang imong kinahanglan',
   'dash.title2': 'karon?',
   'dash.subtitle': 'Pilia kung unsaon nimo paglibot sa Bislig City.',
@@ -758,10 +758,10 @@ const bi: Record<TranslationKey, string> = {
   'dash.carRentalsDesc': 'Pag-arkila og sakyanan kada adlaw.',
 
   /* Homepage carousel */
-  'carousel.aria': 'Diskobreha ang dugang paagi sa paggamit sa Bislig Ride',
+  'carousel.aria': 'Diskobreha ang dugang paagi sa paggamit sa Bislig Hub',
   'carousel.kicker': 'Naay uban pa',
   'carousel.title1': 'Diskobreha ang',
-  'carousel.title2': 'Bislig Ride',
+  'carousel.title2': 'Bislig Hub',
   'carousel.dot': 'Adto sa card {index} sa {total}: {title}',
   'carousel.city.kicker': 'Adlaw-adlaw nga byahe',
   'carousel.city.title': 'Mga lakaw sa siyudad, bisan kanus-a',
@@ -829,7 +829,7 @@ const bi: Record<TranslationKey, string> = {
   'book.requesting': 'Nag-request...',
   'book.requestRide': 'Mangayo og Ride',
   'book.lookingDriver':
-    'Gipangita karon ang available nga Bislig Ride driver sa duol...',
+    'Gipangita karon ang available nga Bislig Hub driver sa duol...',
   'book.noDriverText':
     'Wala makit-i nga available nga driver para niining byahe karon. Sulayi pag-uli ang dispatch sa imong ride o i-kansela kini.',
   'book.onTheWay': 'Padulong na ang imong driver.',
@@ -843,7 +843,7 @@ const bi: Record<TranslationKey, string> = {
     'Miabot na ang imong driver. Magsugod ang byahe kung i-start na kini sa driver.',
   'book.inProgressLead':
     'Padayon ang imong byahe. Kompletohon sa driver ang byahe kung makaabot na ka sa imong destination.',
-  'book.thanks': 'Salamat sa pagsakay sa Bislig Ride.',
+  'book.thanks': 'Salamat sa pagsakay sa Bislig Hub.',
   'book.continueToPayment': 'Padayon sa Pagbayad',
   'book.view': 'Tan-awon',
   'book.tryAgain': 'Sulayi Pag-usab',
@@ -922,7 +922,7 @@ const bi: Record<TranslationKey, string> = {
   'rating.submitting': 'Nag-submit...',
   'rating.submit': 'Isumit ang Rating',
   'rating.thankYou': 'Salamat kaayo!',
-  'rating.feedback': 'Ang imong feedback makatabang namo nga mapaayo ang Bislig Ride.',
+  'rating.feedback': 'Ang imong feedback makatabang namo nga mapaayo ang Bislig Hub.',
   'rating.failed': 'Dili masumit ang imong rating. Palihog sulayi og balik.',
   'rating.ownerOnly': 'Kini nga sakay ma-rate ra gamit ang browser o device nga gigamit sa pag-book.',
   'payment.payment': 'Pagbayad',
@@ -1007,7 +1007,7 @@ const bi: Record<TranslationKey, string> = {
     'Off ang live location. Makasalig pa gihapon ang driver sa imong na-record nga pickup point.',
 
   /* Customer profile */
-  'profile.subtitle': 'Imong karon ug nangaging mga sakay sa Bislig Ride.',
+  'profile.subtitle': 'Imong karon ug nangaging mga sakay sa Bislig Hub.',
   'profile.completedRides': 'Nahuman nga mga sakay',
   'profile.allTime': 'Tanan nga mga byahe',
   'profile.rating': 'Rating',
@@ -1267,11 +1267,11 @@ const bi: Record<TranslationKey, string> = {
   'auth.sendResetLink': 'Ipadala ang reset link',
   'auth.backToLogin': 'Balik sa login',
   'auth.sentNote':
-    'Kung naay Bislig Ride driver account nga katumbas nianang username o email, naipadala na ang password reset link. Mubo ra kaayo kini nga panahon — susiha ang imong inbox (ug spam folder).',
+    'Kung naay Bislig Hub driver account nga katumbas nianang username o email, naipadala na ang password reset link. Mubo ra kaayo kini nga panahon — susiha ang imong inbox (ug spam folder).',
   'auth.errMissingCredentials':
     'Isulod ang imong username o email ug password aron makapadayon.',
   'auth.errInvalidCredentials': 'Sayop ang username o password.',
-  'auth.errNotLinked': 'Kini nga account dili naka-link sa Bislig Ride driver.',
+  'auth.errNotLinked': 'Kini nga account dili naka-link sa Bislig Hub driver.',
   'auth.errDeactivated':
     'Gi-deactivate kini nga driver account. Kontaka ang admin aron ma-reactivate.',
   'auth.errForgotMissing': 'Isulod ang imong username o email aron makit-an ang imong account.',
@@ -1281,15 +1281,15 @@ const bi: Record<TranslationKey, string> = {
   /* Driver blocked account (App) */
   'blocked.title': 'Inaktibo ang account',
   'blocked.text':
-    'Inaktibo ang imong driver account. Palihog kontaka ang Bislig Ride aron ma-reactivate.',
+    'Inaktibo ang imong driver account. Palihog kontaka ang Bislig Hub aron ma-reactivate.',
   'blocked.back': 'Balik sa Ride Booking',
 
   /* Contact */
   'contact.eyebrow': 'KONTAKA KAMI',
-  'contact.aria': 'Kontaka ang Bislig Ride',
+  'contact.aria': 'Kontaka ang Bislig Hub',
   'contact.title': 'Mag-istorya ta.',
   'contact.intro':
-    'Naay pangutana mahitungod sa Bislig Ride, gusto makipagsosyo kanamo, i-feature ang imong negosyo, o maghisgot og digital project? Ganahan namong madungog ka.',
+    'Naay pangutana mahitungod sa Bislig Hub, gusto makipagsosyo kanamo, i-feature ang imong negosyo, o maghisgot og digital project? Ganahan namong madungog ka.',
   'contact.cardLabel': 'BISLIG RIDE',
   'contact.cardTitle': 'Gitukod para sa Bislig.',
   'contact.infoCopy':
@@ -1335,7 +1335,7 @@ const bi: Record<TranslationKey, string> = {
   'contact.sending': 'Nagpadala...',
   'contact.sendMessage': 'Ipadala ang Mensahe',
   'contact.formNote':
-    'Pinaagi sa pag-submit niining form, mouyon ka nga gamiton sa Bislig Ride ang imong impormasyon aron makatubag sa imong pangutana.',
+    'Pinaagi sa pag-submit niining form, mouyon ka nga gamiton sa Bislig Hub ang imong impormasyon aron makatubag sa imong pangutana.',
   'contact.submitFailed': 'Dili maipadala karon ang imong mensahe. Palihog sulayi og balik.',
 }
 

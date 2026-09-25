@@ -3125,7 +3125,7 @@ useEffect(() => {
         >
           <h3 id="remove-driver-title">Remove Driver?</h3>
           <p className="confirm-copy">
-            Are you sure you want to permanently remove this driver from Bislig Ride? This will remove their driver account and access to the system.
+            Are you sure you want to permanently remove this driver from Bislig Hub? This will remove their driver account and access to the system.
           </p>
           <p className="confirm-driver">
             <strong>{driverToRemove.name}</strong>

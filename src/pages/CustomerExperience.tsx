@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import bisligLogo from '../assets/Bislig Ride Logo.png'
+import bisligLogo from '../assets/Bislig Hub logo.png'
 import { AppHeader } from '../components/AppHeader'
 import { CancelRideModal } from '../components/CancelRideModal'
 import { CustomerProfile } from '../components/CustomerProfile'

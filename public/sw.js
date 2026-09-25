@@ -1,4 +1,4 @@
-/* Bislig Ride service worker — background Web Push only.
+/* Bislig Hub service worker — background Web Push only.
  *
  * Scope: served from /sw.js so it controls the whole origin.
  * No secrets here. No database mutations here.
@@ -30,7 +30,7 @@ self.addEventListener('push', (event) => {
   const title =
     typeof payload.title === 'string' && payload.title
       ? payload.title
-      : 'Bislig Ride';
+      : 'Bislig Hub';
   const body =
     typeof payload.body === 'string' && payload.body
       ? payload.body

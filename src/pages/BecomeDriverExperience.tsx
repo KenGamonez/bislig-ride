@@ -73,7 +73,7 @@ const stepPlans: Array<{
     files: ['drivers_license'],
     eyebrow: 'Step 02',
     title: 'Your Ride',
-    description: "Share the details of the vehicle you'll drive on Bislig Ride.",
+    description: "Share the details of the vehicle you'll drive on Bislig Hub.",
   },
   {
     fields: ['operating_area', 'preferred_schedule', 'reason'],
@@ -349,7 +349,7 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
         <label className="field-block"><span className="field-label">Preferred Operating Area</span><input className={`input-field${errors.operating_area ? ' has-error' : ''}`} value={form.operating_area} onChange={(event) => updateField('operating_area', event.target.value)} />{errors.operating_area ? <span className="form-error-message">{errors.operating_area}</span> : null}</label>
         <label className="field-block"><span className="field-label">Preferred Schedule</span><select className={`input-field${errors.preferred_schedule ? ' has-error' : ''}`} value={form.preferred_schedule} onChange={(event) => updateField('preferred_schedule', event.target.value)}><option value="">Select a schedule</option><option>Morning</option><option>Afternoon</option><option>Evening</option><option>Flexible</option></select>{errors.preferred_schedule ? <span className="form-error-message">{errors.preferred_schedule}</span> : null}</label>
       </div>
-      <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Ride? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label>
+      <label className="field-block field-wide"><span className="field-label">Why are you interested in joining Bislig Hub? (Optional)</span><textarea className="input-field textarea-field" value={form.reason} onChange={(event) => updateField('reason', event.target.value)} /></label>
     </>
   )
 
@@ -373,16 +373,16 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
 
   if (submitted) {
     return <>{header}<main className="application-shell"><section className="application-card application-success">
-      <p className="eyebrow">Application received</p><h1>Thank you for your interest in Bislig Ride!</h1>
+      <p className="eyebrow">Application received</p><h1>Thank you for your interest in Bislig Hub!</h1>
       <p>We've received your application. Our team will review your information and contact you regarding the next steps.</p>
-      <button type="button" className="primary-action" onClick={onHome}>Return to Bislig Ride</button>
+      <button type="button" className="primary-action" onClick={onHome}>Return to Bislig Hub</button>
     </section></main></>
   }
 
   return <>{header}<main className="application-shell">
     <section className="section-header application-header">
       <p className="eyebrow">Driver partnership</p>
-      <h1>Become a <span className="hero-accent">Bislig Ride Driver</span></h1>
+      <h1>Become a <span className="hero-accent">Bislig Hub Driver</span></h1>
       <p className="subtitle">Join the drivers helping people move around Bislig City. Complete your application and we'll review your details.</p>
       <p className="application-intro">Submitting this form is an expression of interest. It does not automatically create an account or guarantee acceptance.</p>
       <p className="application-steps-pill">Application — 3 steps</p>
@@ -392,14 +392,14 @@ export function BecomeDriverExperience({ view, onViewChange, onHome }: BecomeDri
       {renderStep(step)}
       {submitError ? <p className="form-error-message submit-error">{submitError}</p> : null}
       <div className="application-step-nav">
-        <button type="button" className="secondary-action application-back" onClick={handleStepBack}>{step === 0 ? '← Back to Bislig Ride' : '← Back'}</button>
+        <button type="button" className="secondary-action application-back" onClick={handleStepBack}>{step === 0 ? '← Back to Bislig Hub' : '← Back'}</button>
         {step === applicationSteps.length - 1 ? (
           <button type="submit" className="primary-action request-ride-action application-submit" disabled={isSubmitting}>{isSubmitting ? 'Submitting application...' : 'Submit Application'}</button>
         ) : (
           <button type="button" className="primary-action application-continue" onClick={handleStepNext}>Continue</button>
         )}
       </div>
-      {step === applicationSteps.length - 1 ? <p className="application-reassurance">Your application will be reviewed by the Bislig Ride team.</p> : null}
+      {step === applicationSteps.length - 1 ? <p className="application-reassurance">Your application will be reviewed by the Bislig Hub team.</p> : null}
     </form>
   </main></>
 }
