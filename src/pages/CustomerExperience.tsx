@@ -9,7 +9,6 @@ import { MapView } from '../components/MapView'
 import { MobileBottomNav, type MobileBottomNavTab } from '../components/MobileBottomNav'
 import { PassengerUpcoming } from '../components/PassengerUpcoming'
 import { ServiceDashboard } from '../components/ServiceDashboard'
-import { AnnouncementTicker } from '../components/AnnouncementTicker'
 import { WeatherWidget } from '../components/WeatherWidget'
 import { passengerTypes, type DemoPassengerType } from '../lib/demoDriver'
 import {
@@ -2258,7 +2257,7 @@ onClick={() => setRating(star)}
       ) : null}
 
       <MobileBottomNav activeTab={bottomNavTab} onTabChange={handleBottomNavChange} />
-      {!showRideLauncher && <AnnouncementTicker variant="fixed" />}
+      {!showRideLauncher && <div className="hidden" />}
 
     </div>
   )

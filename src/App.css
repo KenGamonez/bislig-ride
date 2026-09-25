@@ -14948,11 +14948,16 @@ a:focus-visible {
 
 .home-hero-title {
   margin: 0;
-  font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+  font-size: clamp(1.75rem, 4.5vw, 2.25rem);
   font-weight: 800;
   letter-spacing: -0.03em;
-  line-height: 1.05;
+  line-height: 1.1;
   color: var(--text-primary);
+  /* Force two-line wrap on mobile */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
 .home-hero-subtitle {
