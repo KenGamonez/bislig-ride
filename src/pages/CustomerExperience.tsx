@@ -2098,7 +2098,7 @@ onClick={() => setRating(star)}
 
   return (
     <div className="app-wrapper">
-<AppHeader
+      <AppHeader
         view={currentView}
         onViewChange={onSwitchView}
         primaryLabel={showProfile ? t('nav.bookRide') : t('nav.myRides')}
@@ -2108,6 +2108,7 @@ onClick={() => setRating(star)}
             : undefined
         }
         onPrimaryAction={() => setShowProfile((current) => !current)}
+        simplified={showRideLauncher}
       />
 
       <main className={showRideLauncher ? 'customer-layout service-launcher-layout' : openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>

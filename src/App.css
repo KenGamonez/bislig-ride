@@ -1,13 +1,13 @@
 ﻿/* =========================================================
-   BISLIG RIDE â€” COMPLETE DESIGN SYSTEM
+   BISLIG HUB — COMPLETE DESIGN SYSTEM
    ========================================================= */
 
 :root {
-  /* === BRAND COLOR TOKENS â€” BISLIG RIDE === */
-  --color-green: #00E88A;
-  --color-green-bright: #2CF5A5;
-  --color-green-deep: #05B472;
-  --color-green-soft: rgba(0,232,138,0.10);
+  /* === BRAND COLOR TOKENS — BISLIG HUB === */
+  --color-orange: #FF6B1A;
+  --color-orange-bright: #FF853D;
+  --color-orange-deep: #E85D15;
+  --color-orange-soft: rgba(255,107,26,0.10);
 
   --color-red: #F0444F;
   --color-red-bright: #FF6B6F;
@@ -32,6 +32,10 @@
   --color-page: #F7F9FA;
 
   /* === SEMANTIC ALIASES === */
+  --brand-orange: var(--color-orange);
+  --brand-orange-dark: var(--color-orange-deep);
+  --brand-orange-light: var(--color-orange-bright);
+  --brand-orange-soft: var(--color-orange-soft);
   --brand-red: var(--color-red);
   --brand-red-dark: #C12B34;
   --brand-red-light: var(--color-red-soft);
@@ -49,7 +53,7 @@
   --text-primary: var(--color-gray-900);
   --text-secondary: var(--color-gray-700);
   --text-muted: var(--color-gray-500);
-  --success: var(--color-green);
+  --success: var(--color-orange);
   --danger: var(--color-red);
   --shadow-xs: 0 1px 2px rgba(7,16,18,0.04);
   --shadow-soft: 0 2px 8px rgba(7,16,18,0.05);
@@ -290,7 +294,7 @@ h4 {
   font-weight: 800;
   letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .beta-indicator::before {
@@ -1044,7 +1048,7 @@ a.secondary-action {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-green);
+  background: var(--color-orange);
   animation: search-dot-bounce 1.4s ease-in-out infinite;
 }
 
@@ -1455,7 +1459,7 @@ a.secondary-action {
 }
 
 .announcement-ticker .ticker-dot {
-  background: var(--color-green-deep);
+  background: var(--color-orange-deep);
   opacity: 0.5;
 }
 
@@ -1511,7 +1515,7 @@ a.secondary-action {
 }
 
 .app-footer-mark {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   font-size: 0.85rem;
   font-weight: 800;
   line-height: 1;
@@ -1667,7 +1671,7 @@ a.secondary-action {
 
 .auth-eyebrow {
   margin-bottom: 0;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   font-size: 0.7rem;
   letter-spacing: 0.22em;
 }
@@ -2884,7 +2888,7 @@ a.secondary-action {
 
 .scheduled-shell .scheduled-header .eyebrow,
 .application-shell .application-header .eyebrow {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.7rem;
   letter-spacing: 0.22em;
 }
@@ -2902,7 +2906,7 @@ a.secondary-action {
 .scheduled-shell .scheduled-header .hero-accent,
 .application-shell .application-header .hero-accent {
   display: block;
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .scheduled-shell .scheduled-header .subtitle,
@@ -2991,7 +2995,7 @@ a.secondary-action {
 
 .scheduled-shell .input-field:focus,
 .application-shell .input-field:focus {
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
 }
 
@@ -3020,7 +3024,7 @@ a.secondary-action {
   min-height: 54px;
   background: var(--color-black);
   border: 1px solid var(--color-black);
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.96rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -3033,7 +3037,7 @@ a.secondary-action {
 .application-shell .request-ride-action:hover,
 .application-shell .request-ride-action:focus-visible {
   background: var(--color-black-soft);
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
 }
 
 .scheduled-shell .request-ride-action:disabled:hover,
@@ -3075,7 +3079,7 @@ a.secondary-action {
 
 .scheduled-card.scheduled-success .eyebrow,
 .application-card.application-success .eyebrow {
-  color: var(--color-green);
+  color: var(--color-orange);
   letter-spacing: 0.22em;
 }
 
@@ -3593,8 +3597,8 @@ a.secondary-action {
   padding: 12px 14px;
   border: 1px solid rgba(22,163,74, 0.25);
   border-radius: 12px;
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
   font-size: 0.82rem;
   font-weight: 600;
 }
@@ -3632,7 +3636,7 @@ a.secondary-action {
   font-size: 12px;
   font-weight: 800;
   letter-spacing: 0.22em;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .contact-intro h1 {
@@ -3687,7 +3691,7 @@ a.secondary-action {
 }
 
 .contact-card-label {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .contact-info-card h2 {
@@ -3799,7 +3803,7 @@ a.secondary-action {
 }
 
 .contact-field > span b {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .contact-field > span small {
@@ -3844,7 +3848,7 @@ a.secondary-action {
 .contact-field input:focus,
 .contact-field select:focus,
 .contact-field textarea:focus {
-  border-color: var(--color-green-deep);
+  border-color: var(--color-orange-deep);
   background: var(--color-white);
   box-shadow: 0 0 0 4px rgba(5, 180, 114, 0.1);
 }
@@ -3886,8 +3890,8 @@ a.secondary-action {
   height: 62px;
   margin-bottom: 24px;
   border-radius: 50%;
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
   font-size: 28px;
   font-weight: 800;
 }
@@ -3974,7 +3978,7 @@ a.secondary-action {
 }
 
 .is-online .status-indicator {
-  background: var(--color-green);
+  background: var(--color-orange);
   box-shadow: 0 0 0 5px rgba(22,163,74, 0.1);
 }
 
@@ -4098,8 +4102,8 @@ a.secondary-action {
 }
 
 .online-badge {
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
 }
 
 .request-badge {
@@ -4113,17 +4117,17 @@ a.secondary-action {
 }
 
 .live-badge {
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
 }
 
 .progress-badge {
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   color: var(--success);
 }
 
 .arrived-badge {
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   color: var(--success);
 }
 
@@ -4210,9 +4214,9 @@ a.secondary-action {
 }
 
 .presence-control .secondary-action.is-active {
-  border-color: var(--color-green);
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  border-color: var(--color-orange);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
 }
 
 .presence-location-status {
@@ -4222,7 +4226,7 @@ a.secondary-action {
 }
 
 .presence-location-status.is-active {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .presence-location-status.is-stale {
@@ -4473,7 +4477,7 @@ a.secondary-action {
 }
 
 .progress-complete {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .progress-active {
@@ -4599,9 +4603,9 @@ a.secondary-action {
 }
 
 .completed-pill {
-  background: var(--color-green-soft);
-  border: 1px solid var(--color-green-bright);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  border: 1px solid var(--color-orange-bright);
+  color: var(--color-orange);
 }
 
 /* =========================================================
@@ -5110,7 +5114,7 @@ a.secondary-action {
     width: 3px;
     height: 0;
     border-radius: 999px;
-    background: var(--color-green);
+    background: var(--color-orange);
     transform: translateY(-50%);
     transition: height 180ms ease;
   }
@@ -5155,7 +5159,7 @@ a.secondary-action {
   .mobile-nav-item:hover .mobile-nav-arrow,
   .mobile-nav-item:focus-visible .mobile-nav-arrow {
     transform: translateX(3px);
-    background: var(--color-green-deep);
+    background: var(--color-orange-deep);
     color: var(--color-white);
   }
 
@@ -5166,7 +5170,7 @@ a.secondary-action {
   }
 
   .mobile-nav-item.mobile-nav-driver .mobile-nav-label {
-    color: var(--color-green-bright);
+    color: var(--color-orange-bright);
   }
 
   .mobile-nav-primary {
@@ -5203,7 +5207,7 @@ a.secondary-action {
     border-radius: 999px;
     border: 1px solid rgba(0, 232, 138, 0.28);
     background: rgba(0, 232, 138, 0.1);
-    color: var(--color-green-bright);
+    color: var(--color-orange-bright);
     font-size: 0.6rem;
     font-weight: 700;
     letter-spacing: 0.12em;
@@ -5920,7 +5924,7 @@ a.secondary-action {
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-green);
+  background: var(--color-orange);
   flex-shrink: 0;
 }
 
@@ -6085,8 +6089,8 @@ a.secondary-action {
 /* Green positive CTA variant */
 .primary-action.is-positive,
 .primary-action.positive-cta {
-  background: var(--color-green);
-  border-color: var(--color-green);
+  background: var(--color-orange);
+  border-color: var(--color-orange);
   box-shadow: 0 2px 8px rgba(22,163,74,0.15);
 }
 
@@ -6257,7 +6261,7 @@ a.secondary-action {
 /* Success state */
 .field-success,
 .form-success {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* --------------------------------------------------------
@@ -6268,7 +6272,7 @@ a.secondary-action {
 .status-online,
 .driver-online-dot,
 .is-online {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* Offline indicator â€” red */
@@ -6280,7 +6284,7 @@ a.secondary-action {
 
 /* Active ride â€” green */
 .status-active {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* Cancelled/error */
@@ -6304,7 +6308,7 @@ a.secondary-action {
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--color-green);
+  background: var(--color-orange);
   animation: status-pulse 2s ease-in-out infinite;
 }
 
@@ -6439,7 +6443,7 @@ a.secondary-action {
 /* Active ride card â€” green accent */
 .ride-active-card {
   border: 1px solid rgba(22,163,74,0.25);
-  border-left: 3px solid var(--color-green);
+  border-left: 3px solid var(--color-orange);
 }
 
 /* Cancelled ride card â€” red accent */
@@ -6509,7 +6513,7 @@ a.secondary-action {
 }
 
 .notification-item.unread {
-  border-left: 2px solid var(--color-green);
+  border-left: 2px solid var(--color-orange);
 }
 
 .notification-item.seen {
@@ -6533,8 +6537,8 @@ a.secondary-action {
 }
 
 .pakyawan-toggle.active {
-  background: var(--color-green);
-  border-color: var(--color-green);
+  background: var(--color-orange);
+  border-color: var(--color-orange);
   color: var(--color-white);
 }
 
@@ -7269,7 +7273,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-status-chip.is-online {
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   border-color: rgba(22,163,74, 0.25);
 }
 
@@ -7306,7 +7310,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-status-chip.is-online .status-chip-label {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .driver-status-chip.is-offline .status-chip-label {
@@ -7352,13 +7356,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 /* Pakyawan nav emphasis */
 .nav-link-pakyawan {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-weight: 700;
 }
 
 .nav-link-pakyawan:hover {
   background: rgba(22,163,74, 0.08);
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* Booking mode picker */
@@ -7404,8 +7408,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .booking-mode-card.is-active .booking-mode-icon {
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
 }
 
 .booking-mode-copy {
@@ -7430,7 +7434,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   height: 20px;
   margin-left: auto;
   border-radius: 999px;
-  background: var(--color-green);
+  background: var(--color-orange);
   position: relative;
 }
 
@@ -7648,8 +7652,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .pakyawan-count {
   padding: 4px 10px;
   border-radius: 999px;
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -7795,7 +7799,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   display: flex;
   align-items: center;
   gap: 6px;
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.72rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -7868,8 +7872,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   justify-self: end;
   padding: 6px 10px;
   border-radius: 999px;
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
   font-size: 0.72rem;
   font-weight: 800;
   letter-spacing: 0.04em;
@@ -7888,7 +7892,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   gap: 12px;
   align-items: start;
   padding: 14px 16px;
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   border: 1px solid rgba(22,163,74, 0.25);
   border-radius: var(--radius-lg);
   min-width: 0;
@@ -7901,7 +7905,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   display: grid;
   place-items: center;
   border-radius: 999px;
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-white);
 }
 
@@ -7913,7 +7917,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .pakyawan-accepted-copy small {
   display: block;
   margin-top: 2px;
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.8rem;
 }
 
@@ -7937,9 +7941,9 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pakyawan-toggle.enabled {
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   border-color: rgba(22,163,74, 0.3);
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* Driver sticky mobile actions */
@@ -8280,7 +8284,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .online-dot,
 .status-indicator.is-online {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 .offline-dot,
@@ -8310,7 +8314,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   bottom: 0;
   left: 0;
   width: 40%;
-  background: linear-gradient(90deg, transparent, var(--color-green-soft), transparent);
+  background: linear-gradient(90deg, transparent, var(--color-orange-soft), transparent);
   animation: waiting-pulse-line 2.4s ease-in-out infinite;
   pointer-events: none;
 }
@@ -8321,7 +8325,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .search-loader {
   border: 2px solid var(--color-gray-200);
-  border-top-color: var(--color-green);
+  border-top-color: var(--color-orange);
 }
 
 @keyframes spin-live-dot {
@@ -8440,7 +8444,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pak-req-eyebrow {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.7rem;
   font-weight: 800;
   text-transform: uppercase;
@@ -8502,7 +8506,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pak-req-dot.is-pickup {
-  background: var(--color-green);
+  background: var(--color-orange);
   box-shadow: 0 0 0 4px rgba(0, 232, 138, 0.14);
 }
 
@@ -8584,7 +8588,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pak-req-price strong {
-  color: var(--color-green-deep, #166534);
+  color: var(--color-orange-deep, #E85D15);
   font-size: 1.2rem;
   font-weight: 800;
   letter-spacing: -0.01em;
@@ -8644,7 +8648,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pad-proof-box .field-label {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .proof-viewer-overlay {
@@ -8714,13 +8718,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pad-rating-box .rating-star.selected {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .pad-rating-box .rating-stars-inline {
   display: inline-flex;
   gap: 2px;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .pad-section-label {
@@ -8878,7 +8882,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pickup-dot {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 /* --------------------------------------------------------
@@ -8919,7 +8923,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   content: '';
   display: block;
   height: 3px;
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 /* --------------------------------------------------------
@@ -8982,17 +8986,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
    -------------------------------------------------------- */
 
 .app-header .nav-link.is-active {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   font-weight: 700;
 }
 
 .app-header .nav-link.is-active::after {
-  background: var(--color-green);
+  background: var(--color-orange);
   transform: scaleX(1);
 }
 
 .app-header .nav-link:hover {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   background: transparent;
 }
 
@@ -9058,7 +9062,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .section-header .eyebrow {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.7rem;
   letter-spacing: 0.22em;
 }
@@ -9078,7 +9082,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .section-header .hero-accent {
-  color: var(--color-green);
+  color: var(--color-orange);
   display: block;
 }
 
@@ -9124,7 +9128,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .booking-mode-card.is-active {
   background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
-  border: 1px solid var(--color-green);
+  border: 1px solid var(--color-orange);
   box-shadow: 0 0 0 1px rgba(0,232,138,0.28), 0 0 22px rgba(0,232,138,0.16);
 }
 
@@ -9136,7 +9140,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 3px 8px;
   border-radius: var(--radius-pill);
   background: rgba(0, 232, 138, 0.16);
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.56rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -9157,7 +9161,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .booking-mode-card.is-active .booking-mode-icon {
   background: rgba(0, 232, 138, 0.14);
-  color: var(--color-green);
+  color: var(--color-orange);
   box-shadow: inset 0 0 0 1px rgba(0,232,138,0.35);
 }
 
@@ -9199,8 +9203,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .booking-mode-card.is-active .booking-mode-check {
-  border-color: var(--color-green);
-  background: var(--color-green);
+  border-color: var(--color-orange);
+  background: var(--color-orange);
 }
 
 .booking-mode-card.is-active .booking-mode-check::after {
@@ -9305,7 +9309,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .input-field:focus {
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
   outline: none;
 }
@@ -9318,7 +9322,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .fare-box .field-label {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .fare-box strong {
@@ -9330,7 +9334,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   min-height: 54px;
   background: var(--color-black);
   border: 1px solid var(--color-black);
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.96rem;
   font-weight: 800;
   letter-spacing: 0.06em;
@@ -9345,13 +9349,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   content: '\2192';
   right: 22px;
   opacity: 1;
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .customer-layout .request-ride-action:hover,
 .customer-layout .request-ride-action:focus-visible {
   background: var(--color-black-soft);
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   box-shadow: 0 0 22px rgba(0, 232, 138, 0.28);
   transform: translateY(-1px);
 }
@@ -9397,7 +9401,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .map-location-confirmed {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* Dark map controls */
@@ -9445,7 +9449,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .map-panel .weather-label {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .customer-layout .map-panel .weather-context,
@@ -9455,7 +9459,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .map-panel .weather-icon {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .customer-layout .map-panel .weather-main strong {
@@ -9549,11 +9553,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .customer-layout .weather-label {
-    color: var(--color-green);
+    color: var(--color-orange);
   }
 
   .customer-layout .weather-icon {
-    color: var(--color-green);
+    color: var(--color-orange);
   }
 
   .customer-layout .weather-main strong {
@@ -9567,7 +9571,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   .accordion-row.is-open .accordion-number,
   .accordion-check {
-    color: var(--color-green);
+    color: var(--color-orange);
   }
 
   .accordion-check {
@@ -9575,7 +9579,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .accordion-trigger:focus-visible {
-    outline: 2px solid var(--color-green);
+    outline: 2px solid var(--color-orange);
     outline-offset: -2px;
   }
 
@@ -9620,7 +9624,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .bottom-nav-item.is-active {
-    color: var(--color-green);
+    color: var(--color-orange);
   }
 
   .bottom-nav-item.is-active .bottom-nav-icon {
@@ -9646,7 +9650,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   }
 
   .bottom-nav-item.is-active .bottom-nav-indicator {
-    background: var(--color-green);
+    background: var(--color-orange);
   }
 }
 
@@ -10004,7 +10008,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   .customer-layout .booking-mode-card.is-active {
     background: var(--color-black-soft);
-    border: 1px solid var(--color-green);
+    border: 1px solid var(--color-orange);
     box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.18);
   }
 
@@ -10027,7 +10031,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
   .customer-layout .booking-mode-card.is-active .booking-mode-copy strong::after {
     content: ' Â· Popular';
-    color: var(--color-green);
+    color: var(--color-orange);
     font-weight: 700;
   }
 
@@ -10456,9 +10460,9 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .share-location-button {
   align-self: flex-start;
-  border: 1px solid var(--color-green);
+  border: 1px solid var(--color-orange);
   border-radius: 10px;
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black);
   font: inherit;
   font-size: 0.8rem;
@@ -10472,14 +10476,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .share-location-button:hover,
 .share-location-button:focus-visible {
-  background: var(--color-green-deep);
-  border-color: var(--color-green-deep);
+  background: var(--color-orange-deep);
+  border-color: var(--color-orange-deep);
   box-shadow: 0 2px 8px rgba(22, 163, 74, 0.18);
 }
 
 .share-location-button:active {
-  background: var(--color-green-deep);
-  border-color: var(--color-green-deep);
+  background: var(--color-orange-deep);
+  border-color: var(--color-orange-deep);
   box-shadow: none;
 }
 
@@ -10531,7 +10535,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 12px 14px 12px 18px;
   background: var(--color-white);
   border: 1px solid var(--color-border-dark);
-  border-left: 3px solid var(--color-green-deep);
+  border-left: 3px solid var(--color-orange-deep);
   border-radius: 14px;
   box-shadow: 0 14px 40px rgba(0, 0, 0, 0.22);
   animation: chat-notification-in 220ms ease-out;
@@ -10579,7 +10583,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .chat-notification-view:hover,
 .chat-notification-view:focus-visible {
-  background: var(--color-green-deep);
+  background: var(--color-orange-deep);
   outline: none;
 }
 
@@ -10678,7 +10682,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   align-items: center;
   gap: 8px;
   margin-bottom: 10px;
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.7rem;
   letter-spacing: 0.22em;
 }
@@ -10702,7 +10706,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .service-greeting .hero-accent {
-  color: var(--color-green);
+  color: var(--color-orange);
   display: block;
 }
 
@@ -10746,7 +10750,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .service-card:focus-visible,
 .discover-card:focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: 2px;
 }
 
@@ -10799,17 +10803,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   gap: 14px;
   padding: 22px 20px;
   background: linear-gradient(150deg, var(--color-black-soft) 0%, var(--color-black) 100%);
-  border: 1px solid var(--color-green);
+  border: 1px solid var(--color-orange);
   box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.28), 0 0 22px rgba(0, 232, 138, 0.16);
 }
 
 .service-card--primary:hover {
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
 }
 
 .service-card--primary .service-card-icon {
   background: rgba(0, 232, 138, 0.14);
-  color: var(--color-green);
+  color: var(--color-orange);
   box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.35);
 }
 
@@ -10827,7 +10831,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .service-card--primary .service-card-arrow {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .service-card-badge {
@@ -10837,7 +10841,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 3px 8px;
   border-radius: var(--radius-pill);
   background: rgba(0, 232, 138, 0.16);
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.56rem;
   font-weight: 800;
   letter-spacing: 0.14em;
@@ -10857,7 +10861,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .discover-heading .eyebrow {
   margin-bottom: 0;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .discover-heading h2 {
@@ -10868,7 +10872,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .discover-heading .hero-accent {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .discover-carousel {
@@ -10915,7 +10919,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .discover-card h3 {
@@ -10943,7 +10947,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .discover-cta-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   transition: transform var(--transition);
 }
 
@@ -10972,11 +10976,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .carousel-dot.is-active {
   width: 20px;
-  background: var(--color-green-deep);
+  background: var(--color-orange-deep);
 }
 
 .carousel-dot:focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: 2px;
 }
 
@@ -11149,13 +11153,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .flow-progress-step.is-current {
   border-color: var(--color-black);
   background: var(--color-black);
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .flow-progress-step.is-done {
   border-color: rgba(0, 232, 138, 0.4);
   background: rgba(0, 232, 138, 0.12);
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .flow-progress-line {
@@ -11166,7 +11170,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .flow-progress-line.is-fill {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 .flow-step {
@@ -11260,7 +11264,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .flow-stepper:focus-within {
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.16);
 }
 
@@ -11349,7 +11353,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pasabuy-category.is-selected {
-  border-color: var(--color-green-deep);
+  border-color: var(--color-orange-deep);
   background: rgba(0, 232, 138, 0.08);
   box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.2);
 }
@@ -11367,7 +11371,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pasabuy-category.is-selected .pasabuy-category-icon {
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black);
 }
 
@@ -11389,8 +11393,8 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pasabuy-category.is-selected .pasabuy-category-check {
-  border-color: var(--color-green-deep);
-  background: var(--color-green);
+  border-color: var(--color-orange-deep);
+  background: var(--color-orange);
 }
 
 .pasabuy-category.is-selected .pasabuy-category-check::after {
@@ -11538,9 +11542,9 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .mini-nav-item.is-active {
-  border-color: var(--color-green);
-  background: var(--color-green-soft);
-  color: var(--color-green);
+  border-color: var(--color-orange);
+  background: var(--color-orange-soft);
+  color: var(--color-orange);
 }
 
 .mini-nav-badge {
@@ -11552,7 +11556,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 0 5px;
   margin-left: 6px;
   border-radius: 999px;
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-white);
   font-size: 0.68rem;
   font-weight: 800;
@@ -11612,7 +11616,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   left: 0;
   bottom: 0;
   width: 3px;
-  background: linear-gradient(var(--color-green), rgba(0, 232, 138, 0.2));
+  background: linear-gradient(var(--color-orange), rgba(0, 232, 138, 0.2));
 }
 
 .driver-dash-header::after {
@@ -11636,7 +11640,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .driver-dash-copy .driver-kicker {
   margin-bottom: 6px;
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .driver-dash-copy h2 {
@@ -11719,7 +11723,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   width: 72px;
   height: 72px;
   background: linear-gradient(135deg, var(--color-black-soft), var(--color-black));
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 1.6rem;
   font-weight: 800;
   line-height: 1;
@@ -11736,7 +11740,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-avatar-dot.is-online {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 .driver-avatar-dot.is-offline {
@@ -11748,7 +11752,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-hero-copy .section-label {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .driver-hero-copy h3 {
@@ -11768,7 +11772,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-hero-rating .rating-stars-inline {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .driver-hero-vehicle {
@@ -11819,7 +11823,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .driver-hero-avail-dot.is-online {
-  background: var(--color-green);
+  background: var(--color-orange);
   box-shadow: 0 0 0 4px rgba(22, 163, 74, 0.12);
 }
 
@@ -11936,16 +11940,16 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 /* Accept CTA — dominant green */
 .driver-dashboard .work-state .accept-cta {
-  background: var(--color-green);
-  border: 1px solid var(--color-green);
+  background: var(--color-orange);
+  border: 1px solid var(--color-orange);
   color: var(--color-black);
   box-shadow: 0 4px 14px rgba(0, 232, 138, 0.22);
 }
 
 .driver-dashboard .work-state .accept-cta:hover,
 .driver-dashboard .work-state .accept-cta:focus-visible {
-  background: var(--color-green-deep);
-  border-color: var(--color-green-deep);
+  background: var(--color-orange-deep);
+  border-color: var(--color-orange-deep);
   color: var(--color-white);
   box-shadow: 0 6px 18px rgba(0, 232, 138, 0.3);
 }
@@ -12080,7 +12084,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .pad-route-dot.is-pickup {
-  background: var(--color-green);
+  background: var(--color-orange);
   box-shadow: 0 0 0 4px rgba(0, 232, 138, 0.14);
 }
 
@@ -12136,7 +12140,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 /* Form card rhythm for the step flow */
@@ -12177,7 +12181,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .application-progress-step.is-complete::before,
 .application-progress-step.is-active::before {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 .application-progress-marker {
@@ -12198,14 +12202,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .application-progress-step.is-active .application-progress-marker {
-  border-color: var(--color-green);
-  color: var(--color-green);
+  border-color: var(--color-orange);
+  color: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.14);
 }
 
 .application-progress-step.is-complete .application-progress-marker {
-  border-color: var(--color-green);
-  background: var(--color-green);
+  border-color: var(--color-orange);
+  background: var(--color-orange);
   color: var(--color-black);
 }
 
@@ -12237,7 +12241,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .application-step-heading .eyebrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   font-size: 0.64rem;
   font-weight: 800;
   letter-spacing: 0.2em;
@@ -12272,17 +12276,17 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 /* Premium upload / drop zones */
 .file-upload-field.has-file .file-upload-control {
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   background: rgba(0, 232, 138, 0.05);
 }
 
 .file-upload-field.has-file .file-upload-icon {
-  color: var(--color-green);
-  border-color: var(--color-green);
+  color: var(--color-orange);
+  border-color: var(--color-orange);
 }
 
 .file-upload-field.has-file .file-upload-title {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .file-upload-field.has-error .file-upload-control {
@@ -12319,7 +12323,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .file-upload-input:focus-visible ~ .file-upload-label {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: 2px;
   border-radius: 8px;
 }
@@ -12532,7 +12536,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .contact-business-note .contact-business-kicker {
-  color: var(--color-green);
+  color: var(--color-orange);
   letter-spacing: 0.18em;
 }
 
@@ -12550,7 +12554,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   align-items: center;
   gap: 8px;
   margin-top: 20px;
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 13px;
   font-weight: 800;
   letter-spacing: 0.1em;
@@ -12566,7 +12570,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .contact-explore-link:hover {
-  color: var(--color-green-bright);
+  color: var(--color-orange-bright);
 }
 
 .contact-explore-link:hover::after {
@@ -12574,7 +12578,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .contact-explore-link:focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: 4px;
   border-radius: 4px;
 }
@@ -12637,7 +12641,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .contact-field select:focus-visible,
 .contact-field textarea:focus-visible {
   outline: none;
-  border-color: var(--color-green-deep);
+  border-color: var(--color-orange-deep);
   background-color: var(--color-white);
   box-shadow: 0 0 0 3px rgba(5, 180, 114, 0.16);
 }
@@ -12766,7 +12770,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-gray-500);
 }
 .customer-layout .section-header h1 .hero-accent {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* --- Booking mode picker: subtle segmented, Ride Now active --- */
@@ -12809,14 +12813,14 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 2px 6px;
   font-size: 0.5rem;
   border-radius: 20px;
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black);
   font-weight: 800;
   letter-spacing: 0.08em;
 }
 .customer-layout .booking-mode-card.is-active .booking-mode-icon {
   background: rgba(0, 232, 138, 0.14);
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 .customer-layout .booking-mode-card.is-active .booking-mode-copy strong {
   color: var(--color-white);
@@ -12840,7 +12844,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-white);
 }
 .customer-layout .mobile-location-action .green-span {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* --- Booking accordion: clean editorial 01-04 --- */
@@ -12861,7 +12865,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   background: var(--color-gray-50);
 }
 .customer-layout .accordion-number {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-weight: 800;
 }
 .customer-layout .accordion-titles strong {
@@ -12883,7 +12887,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   padding: 12px 14px;
 }
 .customer-layout .fare-box .field-label {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 .customer-layout .fare-box strong {
   color: var(--color-black);
@@ -12895,7 +12899,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 /* --- Request ride action: green premium CTA --- */
 .customer-layout .request-ride-action,
 .customer-layout .request-ride-action:focus-visible {
-  background: var(--color-green);
+  background: var(--color-orange);
   border: none;
   color: var(--color-black);
   font-weight: 800;
@@ -12916,7 +12920,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-black);
 }
 .customer-layout .map-panel .weather-label {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 .customer-layout .map-panel .weather-context,
 .customer-layout .map-panel .weather-status,
@@ -12925,7 +12929,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   color: var(--color-gray-500);
 }
 .customer-layout .map-panel .weather-icon {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 /* ============================================================
@@ -13003,11 +13007,11 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .customer-layout .service-greeting .eyebrow,
 .customer-layout .service-greeting .eyebrow::after {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .service-greeting .eyebrow::after {
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 .customer-layout .service-greeting h1 {
@@ -13021,7 +13025,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .service-greeting .hero-accent {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   display: block;
 }
 
@@ -13041,18 +13045,18 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   gap: 14px;
   padding: 22px 20px;
   background: var(--color-white);
-  border: 1px solid var(--color-green);
+  border: 1px solid var(--color-orange);
   box-shadow: 0 0 0 1px rgba(0, 232, 138, 0.22), 0 2px 18px rgba(0, 232, 138, 0.10);
 }
 
 .customer-layout .service-card--primary:hover {
-  border-color: var(--color-green-deep);
+  border-color: var(--color-orange-deep);
   box-shadow: 0 0 0 1px rgba(0, 196, 114, 0.30), 0 6px 24px rgba(0, 232, 138, 0.16);
 }
 
 .customer-layout .service-card--primary .service-card-icon {
   background: rgba(0, 232, 138, 0.14);
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   box-shadow: inset 0 0 0 1px rgba(0, 232, 138, 0.30);
 }
 
@@ -13065,16 +13069,16 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .service-card--primary .service-card-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .service-card--primary:hover .service-card-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   transform: translateX(3px);
 }
 
 .customer-layout .service-card--primary .service-card-badge {
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black-soft);
 }
 
@@ -13109,16 +13113,16 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .service-card:hover .service-card-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 /* --- Discover section: lean into light editorial (already light) --- */
 .customer-layout .discover-heading .eyebrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .discover-heading .hero-accent {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .discover-card {
@@ -13134,7 +13138,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .discover-kicker {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .discover-card h3 {
@@ -13151,7 +13155,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .customer-layout .discover-cta-arrow,
 .customer-layout .discover-card:hover .discover-cta-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 /* --- Carousel dots: green active, gray idle --- */
@@ -13177,7 +13181,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 .customer-layout .carousel-dot.is-active,
 .customer-layout .carousel-dot.is-active:hover {
   width: 20px;
-  background: var(--color-green);
+  background: var(--color-orange);
 }
 
 /* =========================================================
@@ -13244,7 +13248,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .customer-layout .home-hero-accent {
   display: block;
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .home-hero-subtitle {
@@ -13299,7 +13303,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .ride-now-card:focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: 3px;
 }
 
@@ -13307,7 +13311,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   display: inline-block;
   padding: 6px 12px;
   border-radius: var(--radius-pill);
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black-soft);
   font-size: 0.62rem;
   font-weight: 800;
@@ -13343,7 +13347,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   width: 56px;
   height: 56px;
   border-radius: var(--radius-pill);
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black-soft);
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
   transition: transform var(--transition), background var(--transition);
@@ -13410,7 +13414,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .other-ways-row:focus-visible {
-  outline: 2px solid var(--color-green);
+  outline: 2px solid var(--color-orange);
   outline-offset: -2px;
 }
 
@@ -13460,7 +13464,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 
 .customer-layout .other-ways-row:hover .other-ways-arrow {
   transform: translateX(4px);
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .customer-layout .other-ways-row:hover .other-ways-copy strong {
@@ -13514,7 +13518,7 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .customer-layout .discover-card:hover .discover-cta-arrow {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 /* --- Header — clean premium surface --- */
@@ -13679,13 +13683,13 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
 }
 
 .language-option.is-active {
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black-soft);
   box-shadow: 0 1px 4px rgba(0, 232, 138, 0.35);
 }
 
 .language-option:focus-visible {
-  outline: 2px solid var(--color-green-deep);
+  outline: 2px solid var(--color-orange-deep);
   outline-offset: 2px;
 }
 
@@ -13757,7 +13761,7 @@ html, body {
 .input-field:focus-visible,
 button:focus-visible,
 a:focus-visible {
-  outline: 2px solid var(--color-green-deep);
+  outline: 2px solid var(--color-orange-deep);
   outline-offset: 2px;
 }
 
@@ -13784,7 +13788,7 @@ a:focus-visible {
 }
 
 .input-field:focus {
-  border-color: var(--color-green-deep);
+  border-color: var(--color-orange-deep);
   box-shadow: 0 0 0 3px rgba(5, 180, 114, 0.12);
 }
 
@@ -13871,7 +13875,7 @@ a:focus-visible {
 }
 
 .app-header .nav-link.is-active {
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 /* ---- Service/mode cards: one selected language ---- */
@@ -14020,7 +14024,7 @@ a:focus-visible {
   align-items: center;
   gap: 8px;
   background: var(--color-gray-100);
-  border-left: 3px solid var(--color-green-deep);
+  border-left: 3px solid var(--color-orange-deep);
   border-radius: 0 12px 12px 0;
   padding: 10px 12px;
 }
@@ -14045,13 +14049,13 @@ a:focus-visible {
 .mini-nav-item.is-active {
   background: var(--surface);
   border-color: var(--border);
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
   box-shadow: var(--shadow-xs);
 }
 
 /* ---- Desktop nav active becomes a pill ---- */
 .app-header .nav-link.is-active {
-  background: var(--color-green-soft);
+  background: var(--color-orange-soft);
   border-radius: 999px;
   padding: 8px 14px;
 }
@@ -14186,7 +14190,7 @@ a:focus-visible {
 }
 
 .service-dashboard .service-accordion-item.is-open .service-accordion-number {
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .service-dashboard .service-accordion-label {
@@ -14296,12 +14300,12 @@ a:focus-visible {
 
 .service-dashboard .service-accordion-action:hover .service-accordion-action-arrow {
   transform: translateX(3px);
-  color: var(--color-green-deep);
+  color: var(--color-orange-deep);
 }
 
 .service-dashboard .service-accordion-action-primary,
 .service-dashboard .service-accordion-action-primary:focus-visible {
-  background: var(--color-green);
+  background: var(--color-orange);
   border: none;
   color: var(--color-black);
   font-weight: 800;
@@ -14336,7 +14340,7 @@ a:focus-visible {
   top: 0;
   bottom: 0;
   width: 3px;
-  background: var(--color-green);
+  background: var(--color-orange);
   transform: scaleY(0);
   transform-origin: center;
   transition: transform 180ms ease-out;
@@ -14373,7 +14377,7 @@ a:focus-visible {
 }
 
 .service-dashboard .service-accordion-item.is-open .service-accordion-popular {
-  background: var(--color-green);
+  background: var(--color-orange);
   color: var(--color-black);
 }
 
@@ -14541,7 +14545,7 @@ a:focus-visible {
 }
 
 .driver-auth-card .auth-eyebrow {
-  color: var(--color-green);
+  color: var(--color-orange);
   font-size: 0.62rem;
   font-weight: 800;
   letter-spacing: 0.18em;
@@ -14588,7 +14592,7 @@ a:focus-visible {
 
 .auth-card.driver-auth-card .input-field:focus {
   background: rgba(255, 255, 255, 0.08);
-  border-color: var(--color-green);
+  border-color: var(--color-orange);
   box-shadow: 0 0 0 3px rgba(0, 232, 138, 0.18);
 }
 
@@ -14625,7 +14629,7 @@ a:focus-visible {
 
 .password-visibility-toggle:hover {
   background: rgba(255, 255, 255, 0.08);
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .password-visibility-toggle:active {
@@ -14635,14 +14639,14 @@ a:focus-visible {
 .password-visibility-toggle:focus-visible {
   outline: 2px solid rgba(0, 232, 138, 0.45);
   outline-offset: 1px;
-  color: var(--color-green);
+  color: var(--color-orange);
 }
 
 .auth-card.driver-auth-card .primary-action.request-ride-action {
   width: 100%;
   min-height: 48px;
   margin-top: 4px;
-  background: var(--color-green);
+  background: var(--color-orange);
   color: #071012;
   font-weight: 900;
   font-size: 0.92rem;
@@ -14685,7 +14689,7 @@ a:focus-visible {
 }
 
 .auth-card.driver-auth-card .link-button:hover {
-  color: var(--color-green);
+  color: var(--color-orange);
   text-decoration: underline;
 }
 
@@ -14713,4 +14717,357 @@ a:focus-visible {
     transition: none !important;
     transform: none !important;
   }
+}
+
+/* =========================================================
+   BISLIG HUB — CUSTOMER HOME SERVICE DASHBOARD
+   New editorial layout matching reference design
+   ========================================================= */
+
+/* --- Service Dashboard Container --- */
+.service-dashboard {
+  display: grid;
+  gap: 32px;
+  padding: 24px 20px 40px;
+  max-width: 100%;
+}
+
+@media (min-width: 768px) {
+  .service-dashboard {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 40px 24px 60px;
+  }
+}
+
+/* --- Hero Section --- */
+.home-hero {
+  display: grid;
+  gap: 16px;
+  text-align: left;
+}
+
+.home-hero-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.home-hero-eyebrow::after {
+  content: '';
+  width: 40px;
+  height: 1px;
+  background: var(--border);
+}
+
+.home-hero-title {
+  margin: 0;
+  font-size: clamp(1.8rem, 4.5vw, 2.4rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  color: var(--text-primary);
+}
+
+.home-hero-subtitle {
+  margin: 0;
+  max-width: 40ch;
+  font-size: 1rem;
+  line-height: 1.55;
+  color: var(--text-secondary);
+}
+
+/* --- Service Section --- */
+.service-section {
+  display: grid;
+  gap: 20px;
+}
+
+.service-section-header {
+  display: grid;
+  gap: 8px;
+}
+
+.service-section-label {
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.service-section-title {
+  margin: 0;
+  font-size: clamp(1.3rem, 2.8vw, 1.6rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text-primary);
+}
+
+.service-section-subtitle {
+  margin: 0;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* --- Service Grid --- */
+.service-grid {
+  display: grid;
+  gap: 12px;
+}
+
+@media (min-width: 480px) {
+  .service-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 768px) {
+  .service-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+/* --- Service Card --- */
+.service-card {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 18px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
+  background: var(--surface);
+  color: var(--text-primary);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: border-color var(--transition), box-shadow var(--transition), transform var(--transition), background var(--transition);
+}
+
+.service-card:hover {
+  border-color: var(--color-gray-300);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-2px);
+}
+
+.service-card:focus-visible {
+  outline: 2px solid var(--brand-orange);
+  outline-offset: 2px;
+}
+
+.service-card:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.service-card-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--surface-soft);
+  color: var(--text-secondary);
+  transition: background var(--transition), color var(--transition);
+}
+
+.service-card:hover .service-card-icon {
+  background: var(--brand-orange-soft);
+  color: var(--brand-orange);
+}
+
+.service-card-copy {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+}
+
+.service-card-copy strong {
+  font-size: 0.92rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+  line-height: 1.3;
+}
+
+.service-card-copy small {
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: var(--text-secondary);
+}
+
+.service-card-arrow {
+  flex-shrink: 0;
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  font-size: 1.1rem;
+  font-weight: 600;
+  transition: background var(--transition), color var(--transition), transform var(--transition);
+}
+
+.service-card:hover .service-card-arrow {
+  background: var(--brand-orange);
+  color: var(--color-white);
+  transform: translateX(3px);
+}
+
+.service-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 3px 8px;
+  border-radius: var(--radius-pill);
+  background: var(--brand-orange);
+  color: var(--color-white);
+  font-size: 0.56rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* --- Primary Service Card (Ride Now) --- */
+.service-card--primary {
+  border-color: var(--brand-orange);
+  background: linear-gradient(135deg, var(--surface) 0%, var(--surface-soft) 100%);
+  box-shadow: 0 0 0 1px var(--brand-orange-soft), var(--shadow-soft);
+}
+
+.service-card--primary:hover {
+  border-color: var(--brand-orange-dark);
+  box-shadow: 0 0 0 1px var(--brand-orange), var(--shadow-elevated);
+}
+
+.service-card--primary .service-card-icon {
+  background: var(--brand-orange-soft);
+  color: var(--brand-orange);
+}
+
+.service-card--primary:hover .service-card-icon {
+  background: var(--brand-orange);
+  color: var(--color-white);
+}
+
+.service-card--primary .service-card-copy strong {
+  color: var(--text-primary);
+}
+
+.service-card--primary .service-card-copy small {
+  color: var(--text-secondary);
+}
+
+.service-card--primary .service-card-arrow {
+  background: var(--brand-orange);
+  color: var(--color-white);
+}
+
+.service-card--primary:hover .service-card-arrow {
+  background: var(--brand-orange-dark);
+  transform: translateX(3px);
+}
+
+/* --- Driver Section --- */
+.driver-section {
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* --- Simplified Header --- */
+.app-header--simplified {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--color-white);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow-xs);
+}
+
+.app-header--simplified .header-inner {
+  height: 56px;
+  padding: 0 20px;
+}
+
+.app-header--simplified .brand-logo {
+  height: 36px;
+}
+
+@media (max-width: 420px) {
+  .app-header--simplified .header-inner {
+    height: 52px;
+    padding: 0 16px;
+  }
+
+  .app-header--simplified .brand-logo {
+    height: 32px;
+  }
+}
+
+.header-divider {
+  height: 1px;
+  background: var(--border);
+  width: 100%;
+}
+
+/* --- Mobile Bottom Nav Updates --- */
+@media (max-width: 767px) {
+  .mobile-bottom-nav {
+    background: var(--color-white);
+    border-top: 1px solid var(--border);
+    box-shadow: 0 -4px 20px rgba(7,16,18,0.08);
+    padding: 8px 8px calc(8px + env(safe-area-inset-bottom));
+  }
+
+  .bottom-nav-item {
+    color: var(--text-muted);
+  }
+
+  .bottom-nav-item.is-active {
+    color: var(--brand-orange);
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-icon {
+    filter: drop-shadow(0 0 8px var(--brand-orange-soft));
+  }
+
+  .bottom-nav-item.is-active .bottom-nav-indicator {
+    background: var(--brand-orange);
+  }
+
+  .customer-layout {
+    padding-bottom: calc(120px + env(safe-area-inset-bottom));
+  }
+}
+
+/* --- Customer Layout for Launcher --- */
+.customer-layout.service-launcher-layout {
+  display: block;
+  width: min(100%, 1280px);
+  margin: 0 auto;
+  padding: 0;
+  background: var(--background);
+}
+
+.customer-layout.service-launcher-layout .service-dashboard {
+  padding: 0;
+}
+
+.customer-layout.service-launcher-layout .service-section:last-child {
+  padding-bottom: 40px;
 }

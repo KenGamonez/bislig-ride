@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useAppInstall } from '../lib/appInstall'
 import { useLanguage } from '../lib/i18n'
 
-export type MobileBottomNavTab = 'home' | 'rides' | 'profile'
+export type MobileBottomNavTab = 'home' | 'rides' | 'install'
 
 type MobileBottomNavProps = {
   activeTab: MobileBottomNavTab

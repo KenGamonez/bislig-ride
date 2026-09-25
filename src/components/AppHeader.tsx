@@ -18,9 +18,10 @@ type AppHeaderProps = {
   primaryBrief?: string
   onPrimaryAction: () => void
   desktopNavItems?: AppHeaderDesktopNavItem[]
+  simplified?: boolean
 }
 
-export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPrimaryAction, desktopNavItems }: AppHeaderProps) {
+export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPrimaryAction, desktopNavItems, simplified = false }: AppHeaderProps) {
   const [isMobileNavOpen, setIsMobileNavOpen] = useState(false)
   const { t } = useLanguage()
 
@@ -68,6 +69,25 @@ export function AppHeader({ view, onViewChange, primaryLabel, primaryBrief, onPr
   const openDriverLogin = () => {
     onViewChange?.('driver')
     setIsMobileNavOpen(false)
+  }
+
+  if (simplified) {
+    return (
+      <header className="app-header app-header--simplified">
+        <div className="header-inner">
+          <div className="brand-block">
+            <a href="/" className="brand-link">
+              <img src={bisligLogo} alt="Bislig Hub logo" className="brand-logo" />
+            </a>
+          </div>
+
+          <div className="header-right-controls">
+            <LanguageToggle />
+          </div>
+        </div>
+        <div className="header-divider" aria-hidden="true"></div>
+      </header>
+    )
   }
 
   return (
