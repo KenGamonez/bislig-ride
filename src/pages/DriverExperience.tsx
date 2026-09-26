@@ -17,6 +17,7 @@ import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
 import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, formatDeliveryTiming, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
+import { selectCurrentPakyawanTrip } from '../lib/pakyawanWorkflow'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   ensureDriverPushSubscription,
@@ -284,6 +285,7 @@ export function DriverExperience({
   const [pakyawanRequestsError, setPakyawanRequestsError] = useState('')
   const [pakyawanOffersError, setPakyawanOffersError] = useState('')
   const [pakyawanRequestsRetry, setPakyawanRequestsRetry] = useState(0)
+  const [showPakyawanHistory, setShowPakyawanHistory] = useState(false)
   const [pakyawanOffers, setPakyawanOffers] = useState<PakyawanOfferWithBooking[]>([])
   const [pakyawanConfirmedPopup, setPakyawanConfirmedPopup] = useState<PakyawanBooking | null>(null)
   const [pakyawanChatBookingId, setPakyawanChatBookingId] = useState<string | null>(null)
@@ -2468,8 +2470,10 @@ const displayedDriver = driverProfile ?? demoDriver
     (offer) => new Date(offer.expires_at).getTime() > pakyawanNow,
   )
 
-  const activePakyawanTrips = acceptedPakyawan.filter((booking) => booking.status !== 'completed')
-  const pakyawanTripHistory = acceptedPakyawan.filter((booking) => booking.status === 'completed')
+  const currentPakyawanTrip = selectCurrentPakyawanTrip(acceptedPakyawan)
+  const otherPakyawanTrips = acceptedPakyawan.filter(
+    (booking) => currentPakyawanTrip === null || booking.id !== currentPakyawanTrip.id,
+  )
   const hasIncomingPakyawan = pakyawanRequests.length > 0 || activePakyawanOffers.length > 0
 
   const renderNotificationBell = () => (
@@ -3646,6 +3650,175 @@ const displayedDriver = driverProfile ?? demoDriver
     )
   }
 
+  const pakyawanStageHint = (status: string): string | null => {
+    if (status === 'scheduled') {
+      return 'Trip confirmed and scheduled. Head to the pickup when it\u2019s time.'
+    }
+
+    if (status === 'driver_on_way') {
+      return 'You\u2019re on the way to the pickup location.'
+    }
+
+    if (status === 'driver_arrived') {
+      return 'You\u2019ve arrived. Meet your passenger to start the trip.'
+    }
+
+    if (status === 'in_progress') {
+      return 'Trip in progress. Complete the trip at the destination.'
+    }
+
+    return null
+  }
+
+  const renderActivePakyawanCard = (booking: PakyawanBooking) => {
+    const stageHint = pakyawanStageHint(booking.status)
+
+    return (
+      <div className="pakyawan-active-item">
+        <div className="pakyawan-active-route">
+          <div>
+            <span className="pak-req-label">Pickup</span>
+            <strong>{booking.pickup_location}</strong>
+          </div>
+          <span className="pakyawan-active-arrow" aria-hidden="true">→</span>
+          <div>
+            <span className="pak-req-label">Destination</span>
+            <strong>{booking.destination}</strong>
+          </div>
+        </div>
+        <div className="pakyawan-active-meta">
+          <span>{booking.booking_date || 'ASAP'} · {booking.pickup_time || 'Now'}</span>
+          <span>
+            {booking.passengers} passenger{booking.passengers === 1 ? '' : 's'} · {booking.customer_name}
+          </span>
+        </div>
+        {booking.status === 'assigned' ? (
+          <>
+            <span>You&apos;re assigned to this trip. Next: wait for the passenger&apos;s booking confirmation.</span>
+            <span className="pakyawan-status">Status: ASSIGNED</span>
+          </>
+        ) : (
+          <span className="pakyawan-status">Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+        )}
+        {stageHint ? <p className="pakyawan-stage-hint">{stageHint}</p> : null}
+        {booking.status === 'assigned' && booking.driver_id === driverId ? (
+          <div className="pakyawan-price-box">
+            <span className="field-label">Next step: send your final trip price.</span>
+            <div className="pakyawan-price-row">
+              <span aria-hidden="true">₱</span>
+              <input
+                className="input-field slim-input"
+                type="text"
+                inputMode="decimal"
+                placeholder="0.00"
+                aria-label="Trip price in pesos"
+                value={pakyawanPriceInputs[booking.id] ?? ''}
+                disabled={pakyawanPriceSubmittingId === booking.id}
+                onChange={(event) => {
+                  setPakyawanPriceInputs((current) => ({ ...current, [booking.id]: event.target.value }))
+                  setPakyawanPriceError((current) =>
+                    current && current.bookingId === booking.id ? null : current,
+                  )
+                }}
+              />
+              <button
+                type="button"
+                className="secondary-action compact-button"
+                disabled={pakyawanPriceSubmittingId === booking.id}
+                onClick={() => void handleSendPakyawanPrice(booking.id)}
+              >
+                {pakyawanPriceSubmittingId === booking.id ? 'Sending...' : 'Send Price'}
+              </button>
+            </div>
+            {pakyawanPriceError && pakyawanPriceError.bookingId === booking.id ? (
+              <span className="field-error">{pakyawanPriceError.message}</span>
+            ) : null}
+          </div>
+        ) : booking.status === 'quoted' &&
+          typeof booking.price_cents === 'number' &&
+          Number.isFinite(booking.price_cents) ? (
+          <div className="pakyawan-price-box">
+            <span className="field-label">Your trip price: ₱{formatCentavos(booking.price_cents)}</span>
+            <span>Waiting for passenger confirmation.</span>
+          </div>
+        ) : null}
+        {booking.driver_id === driverId && booking.status === 'scheduled' ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="primary-action"
+              disabled={pakyawanLifecycleSubmittingId === booking.id}
+              onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_on_way')}
+            >
+              {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'On My Way'}
+            </button>
+          </div>
+        ) : null}
+        {booking.driver_id === driverId && booking.status === 'driver_on_way' ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="primary-action"
+              disabled={pakyawanLifecycleSubmittingId === booking.id}
+              onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_arrived')}
+            >
+              {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : "I've Arrived"}
+            </button>
+          </div>
+        ) : null}
+        {booking.driver_id === driverId && booking.status === 'driver_arrived' ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="primary-action"
+              disabled={pakyawanLifecycleSubmittingId === booking.id}
+              onClick={() => void handleAdvancePakyawanTrip(booking.id, 'in_progress')}
+            >
+              {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Start Trip'}
+            </button>
+          </div>
+        ) : null}
+        {booking.driver_id === driverId && booking.status === 'in_progress' ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="primary-action"
+              disabled={pakyawanLifecycleSubmittingId === booking.id}
+              onClick={() => void handleAdvancePakyawanTrip(booking.id, 'completed')}
+            >
+              {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Complete Trip'}
+            </button>
+          </div>
+        ) : null}
+        {pakyawanLifecycleError && pakyawanLifecycleError.bookingId === booking.id ? (
+          <span className="field-error">{pakyawanLifecycleError.message}</span>
+        ) : null}
+        {booking.driver_id === driverId ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="secondary-action compact-button"
+              onClick={() =>
+                setPakyawanChatBookingId((current) => (current === booking.id ? null : booking.id))
+              }
+            >
+              {pakyawanChatBookingId === booking.id ? 'Close Chat' : 'Chat with Passenger'}
+            </button>
+          </div>
+        ) : null}
+        {pakyawanChatBookingId === booking.id && booking.driver_id === driverId ? (
+          <PakyawanChat
+            bookingId={booking.id}
+            senderRole="driver"
+            otherPartyName={booking.customer_name}
+            enableRealtime
+            onClose={() => setPakyawanChatBookingId(null)}
+          />
+        ) : null}
+      </div>
+    )
+  }
+
   const renderPakyawanSection = () => {
     if (!canAcceptPakyawan) {
       return (
@@ -3665,16 +3838,12 @@ const displayedDriver = driverProfile ?? demoDriver
     }
 
     return (
-      <section className="driver-card pakyawan-card">
+      <section className="driver-card pakyawan-card pakyawan-workspace">
         <div className="state-heading">
           <div>
             <p className="section-label">PAKYAWAN REQUESTS</p>
             <h3>Pakyawan / scheduled trips</h3>
-            {hasIncomingPakyawan ? (
-              <p>Customers are requesting private or scheduled handling. Accept a request to take it.</p>
-            ) : activePakyawanTrips.length > 0 ? (
-              <p>Your active trip is below. New requests will appear here.</p>
-            ) : null}
+            <p>Your current trip appears here. Previous trips are available in Pakyawan History.</p>
           </div>
           <span className="state-badge pakyawan-badge">{pakyawanRequests.length}</span>
           {hasIncomingPakyawan ? <span className="has-new-dot" aria-hidden="true"></span> : null}
@@ -3701,143 +3870,10 @@ const displayedDriver = driverProfile ?? demoDriver
           <p className="pak-req-note">{pakyawanOffersError}</p>
         ) : null}
 
-        {activePakyawanTrips.length > 0 ? (
+        {currentPakyawanTrip ? (
           <div className="pakyawan-active">
-            <p className="section-label">{activePakyawanTrips.length > 1 ? 'ACTIVE PAKYAWAN TRIPS' : 'ACTIVE PAKYAWAN TRIP'}</p>
-            <ul className="pakyawan-active-list">
-              {activePakyawanTrips.map((booking) => (
-                <li key={booking.id} className="pakyawan-active-item">
-                  <strong>
-                    {booking.pickup_location} → {booking.destination}
-                  </strong>
-                  <span>
-                    {booking.booking_date} · {booking.pickup_time}
-                  </span>
-                  {booking.status === 'assigned' ? (
-                    <>
-                      <span>You&apos;re assigned to this trip. Next: wait for the passenger&apos;s booking confirmation.</span>
-                      <span className="pakyawan-status">Status: ASSIGNED</span>
-                    </>
-                  ) : (
-                    <span className="pakyawan-status">Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
-                  )}
-                  {booking.status === 'assigned' && booking.driver_id === driverId ? (
-                    <div className="pakyawan-price-box">
-                      <span className="field-label">Next step: send your final trip price.</span>
-                      <div className="pakyawan-price-row">
-                        <span aria-hidden="true">₱</span>
-                        <input
-                          className="input-field slim-input"
-                          type="text"
-                          inputMode="decimal"
-                          placeholder="0.00"
-                          aria-label="Trip price in pesos"
-                          value={pakyawanPriceInputs[booking.id] ?? ''}
-                          disabled={pakyawanPriceSubmittingId === booking.id}
-                          onChange={(event) => {
-                            setPakyawanPriceInputs((current) => ({ ...current, [booking.id]: event.target.value }))
-                            setPakyawanPriceError((current) =>
-                              current && current.bookingId === booking.id ? null : current,
-                            )
-                          }}
-                        />
-                        <button
-                          type="button"
-                          className="secondary-action compact-button"
-                          disabled={pakyawanPriceSubmittingId === booking.id}
-                          onClick={() => void handleSendPakyawanPrice(booking.id)}
-                        >
-                          {pakyawanPriceSubmittingId === booking.id ? 'Sending...' : 'Send Price'}
-                        </button>
-                      </div>
-                      {pakyawanPriceError && pakyawanPriceError.bookingId === booking.id ? (
-                        <span className="field-error">{pakyawanPriceError.message}</span>
-                      ) : null}
-                    </div>
-                  ) : booking.status === 'quoted' &&
-                    typeof booking.price_cents === 'number' &&
-                    Number.isFinite(booking.price_cents) ? (
-                    <div className="pakyawan-price-box">
-                      <span className="field-label">Your trip price: ₱{formatCentavos(booking.price_cents)}</span>
-                      <span>Waiting for passenger confirmation.</span>
-                    </div>
-                  ) : null}
-                  {booking.driver_id === driverId && booking.status === 'scheduled' ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="primary-action compact-button"
-                        disabled={pakyawanLifecycleSubmittingId === booking.id}
-                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_on_way')}
-                      >
-                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'On My Way'}
-                      </button>
-                    </div>
-                  ) : null}
-                  {booking.driver_id === driverId && booking.status === 'driver_on_way' ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="primary-action compact-button"
-                        disabled={pakyawanLifecycleSubmittingId === booking.id}
-                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'driver_arrived')}
-                      >
-                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : "I've Arrived"}
-                      </button>
-                    </div>
-                  ) : null}
-                  {booking.driver_id === driverId && booking.status === 'driver_arrived' ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="primary-action compact-button"
-                        disabled={pakyawanLifecycleSubmittingId === booking.id}
-                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'in_progress')}
-                      >
-                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Start Trip'}
-                      </button>
-                    </div>
-                  ) : null}
-                  {booking.driver_id === driverId && booking.status === 'in_progress' ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="primary-action compact-button"
-                        disabled={pakyawanLifecycleSubmittingId === booking.id}
-                        onClick={() => void handleAdvancePakyawanTrip(booking.id, 'completed')}
-                      >
-                        {pakyawanLifecycleSubmittingId === booking.id ? 'Updating...' : 'Complete Trip'}
-                      </button>
-                    </div>
-                  ) : null}
-                  {pakyawanLifecycleError && pakyawanLifecycleError.bookingId === booking.id ? (
-                    <span className="field-error">{pakyawanLifecycleError.message}</span>
-                  ) : null}
-                  {booking.driver_id === driverId ? (
-                    <div className="pakyawan-actions">
-                      <button
-                        type="button"
-                        className="secondary-action compact-button"
-                        onClick={() =>
-                          setPakyawanChatBookingId((current) => (current === booking.id ? null : booking.id))
-                        }
-                      >
-                        {pakyawanChatBookingId === booking.id ? 'Close Chat' : 'Chat with Passenger'}
-                      </button>
-                    </div>
-                  ) : null}
-                  {pakyawanChatBookingId === booking.id && booking.driver_id === driverId ? (
-                    <PakyawanChat
-                      bookingId={booking.id}
-                      senderRole="driver"
-                      otherPartyName={booking.customer_name}
-                      enableRealtime
-                      onClose={() => setPakyawanChatBookingId(null)}
-                    />
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+            <p className="section-label">ACTIVE PAKYAWAN TRIP</p>
+            {renderActivePakyawanCard(currentPakyawanTrip)}
           </div>
         ) : null}
 
@@ -3892,7 +3928,7 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {!hasIncomingPakyawan && activePakyawanTrips.length === 0 && !pakyawanRequestsError && driverOnline ? (
+        {!hasIncomingPakyawan && !currentPakyawanTrip && !pakyawanRequestsError ? (
           <div className="pak-empty">
             <span className="pak-empty-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -3900,8 +3936,15 @@ const displayedDriver = driverProfile ?? demoDriver
                 <circle cx="12" cy="10" r="2.5" />
               </svg>
             </span>
-            <p className="pak-empty-title">No new Pakyawan requests right now.</p>
-            <p className="muted-copy">Stay online — new requests will appear here automatically.</p>
+            <p className="pak-empty-title">No active Pakyawan trip right now.</p>
+            <p className="muted-copy">Your next request will appear here.</p>
+            {!driverOnline ? (
+              <div className="work-cta">
+                <button type="button" className="primary-action" onClick={handleToggleOnline} disabled={transitioning}>
+                  {transitioning ? 'Going Online...' : 'Go Online'}
+                </button>
+              </div>
+            ) : null}
           </div>
         ) : null}
       </section>
@@ -4497,7 +4540,7 @@ const renderOnlineState = () => (
   }
 
   const renderPakyawanHistory = () => {
-    if (pakyawanTripHistory.length === 0) {
+    if (otherPakyawanTrips.length === 0) {
       return null
     }
 
@@ -4506,36 +4549,49 @@ const renderOnlineState = () => (
         <div className="section-heading">
           <div>
             <p className="section-label">PAKYAWAN HISTORY</p>
-            <h3>Past Pakyawan trips</h3>
+            <h3>Previous Pakyawan trips</h3>
           </div>
-          <span className="history-count">{`${pakyawanTripHistory.length} total`}</span>
+          <span className="history-count">{`${otherPakyawanTrips.length} total`}</span>
         </div>
 
-        <ul className="history-list">
-          {pakyawanTripHistory.map((booking) => (
-            <li key={booking.id} className="history-item">
-              <div className="history-main">
-                <div className="history-passenger">
-                  <span>{booking.booking_date || '—'} · {booking.pickup_time || '—'}</span>
+        <div className="pakyawan-actions">
+          <button
+            type="button"
+            className="secondary-action compact-button"
+            aria-expanded={showPakyawanHistory}
+            onClick={() => setShowPakyawanHistory((current) => !current)}
+          >
+            {showPakyawanHistory ? 'Hide History' : 'View History'}
+          </button>
+        </div>
+
+        {showPakyawanHistory ? (
+          <ul className="history-list">
+            {otherPakyawanTrips.map((booking) => (
+              <li key={booking.id} className="history-item">
+                <div className="history-main">
+                  <div className="history-passenger">
+                    <span>{booking.booking_date || '—'} · {booking.pickup_time || '—'}</span>
+                  </div>
+                  <span className="completed-badge">{pakyawanCardStatusLabel(booking.status)}</span>
                 </div>
-                <span className="completed-badge">Completed</span>
-              </div>
-              <div className="history-route">
-                <span>{booking.pickup_location}</span>
-                <strong>→</strong>
-                <span>{booking.destination}</span>
-              </div>
-              <div className="history-footer">
-                <span>{booking.customer_name}</span>
-                <strong>
-                  {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents)
-                    ? `₱${formatCentavos(booking.price_cents)}`
-                    : '—'}
-                </strong>
-              </div>
-            </li>
-          ))}
-        </ul>
+                <div className="history-route">
+                  <span>{booking.pickup_location}</span>
+                  <strong>→</strong>
+                  <span>{booking.destination}</span>
+                </div>
+                <div className="history-footer">
+                  <span>{booking.customer_name}</span>
+                  <strong>
+                    {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents)
+                      ? `₱${formatCentavos(booking.price_cents)}`
+                      : '—'}
+                  </strong>
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : null}
       </section>
     )
   }
