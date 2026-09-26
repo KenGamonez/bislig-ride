@@ -133,12 +133,6 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
 
       {/* Transport Services Section */}
       <div className="service-section">
-        <div className="service-section-header">
-          <p className="service-section-label">{t('dash.transportLabel')}</p>
-          <h2 className="service-section-title">{t('dash.transportTitle')}</h2>
-          <p className="service-section-subtitle">{t('dash.transportSubtitle')}</p>
-        </div>
-
         <div className="service-grid">
           {transportServices.map((service) => (
             <article
