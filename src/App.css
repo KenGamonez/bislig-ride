@@ -191,17 +191,20 @@ h4 {
   display: flex;
   align-items: center;
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .brand-link {
   display: flex;
   align-items: center;
+  min-width: 0;
 }
 
 .brand-logo {
   display: block;
-  height: 45.6px;
+  height: 55px;
   width: auto;
+  max-width: 100%;
   object-fit: contain;
 }
 
@@ -4771,7 +4774,7 @@ a.secondary-action {
   }
 
   .brand-logo {
-    height: 38.4px;
+    height: 46px;
   }
 
   .desktop-nav {
@@ -13549,7 +13552,7 @@ a:focus-visible {
   }
 
   .brand-logo {
-    height: 38px;
+    height: 46px;
   }
 
   .section-header {
@@ -14673,11 +14676,13 @@ a:focus-visible {
 }
 
 .service-card-copy .service-card-title-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
   min-width: 0;
+  max-width: 100%;
   flex-wrap: wrap;
+  margin-right: auto;
 }
 
 .service-card--primary .service-card-badge,
@@ -14750,7 +14755,7 @@ a:focus-visible {
 }
 
 .app-header--simplified .brand-logo {
-  height: 36px;
+  height: 43px;
 }
 
 @media (max-width: 420px) {
@@ -14760,7 +14765,7 @@ a:focus-visible {
   }
 
   .app-header--simplified .brand-logo {
-    height: 32px;
+    height: 38px;
   }
 }
 

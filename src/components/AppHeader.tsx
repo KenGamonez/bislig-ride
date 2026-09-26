@@ -1,4 +1,4 @@
-import bisligLogo from '../assets/Bislig Hub logo.png'
+import bisligLogo from '../assets/Bislig Hub logo Transparent.png'
 import { HeaderWeather } from './HeaderWeather'
 import { LanguageToggle } from './LanguageToggle'
 import { useLanguage } from '../lib/i18n'
