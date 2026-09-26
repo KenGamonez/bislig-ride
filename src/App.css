@@ -176,7 +176,7 @@ h4 {
   height: 64px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-start;
   gap: 24px;
 }
 
@@ -192,12 +192,17 @@ h4 {
   align-items: center;
   flex-shrink: 0;
   min-width: 0;
+  margin-right: auto;
 }
 
 .brand-link {
   display: flex;
   align-items: center;
   min-width: 0;
+}
+
+.header-right-controls {
+  margin-left: auto;
 }
 
 .brand-logo {
