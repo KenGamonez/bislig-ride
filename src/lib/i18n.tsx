@@ -468,6 +468,11 @@ const en = {
   'pak.viewBooking': 'View Booking',
   'pak.waitingDriver': 'Waiting for driver',
   'pak.driverAssigned': 'Driver assigned',
+  'pak.nextTitle': 'What happens next',
+  'pak.nextFinding': 'Next: We\u2019re finding a driver for your trip.',
+  'pak.nextPrice': 'Next: Your driver will send the trip price.',
+  'pak.nextConfirm': 'Next: Review the price and confirm your booking.',
+  'pak.nextScheduled': 'Next: Your driver will head to the pickup location.',
   'pak.newMessage': 'New message',
   'pak.openChat': 'Open Chat',
 
@@ -1144,6 +1149,11 @@ const bi: Record<TranslationKey, string> = {
   'pak.viewBooking': 'Tan-awa ang Booking',
   'pak.waitingDriver': 'Naghulat sa driver',
   'pak.driverAssigned': 'Naka-assign ang driver',
+  'pak.nextTitle': 'Unsa ang sunod mahitabo',
+  'pak.nextFinding': 'Sunod: Nangita kami og driver para sa imong byahe.',
+  'pak.nextPrice': 'Sunod: Magpadala ang driver og presyo sa byahe.',
+  'pak.nextConfirm': 'Sunod: Ribyuha ang presyo ug kumpirmahi ang imong booking.',
+  'pak.nextScheduled': 'Sunod: Moadto na ang imong driver sa pickup location.',
   'pak.newMessage': 'Bag-ong mensahe',
   'pak.openChat': 'Ablihi ang Chat',
 

@@ -1119,6 +1119,36 @@ setRatingSubmitted(true)
   const showDemoRideState = phase !== 'request' && !showProfile
   const showRideLauncher = showCustomerForm && launcherView
 
+  const tripProgressLabels = [
+    t('status.searchBadge'),
+    t('status.acceptedBadge'),
+    t('status.arrivedBadge'),
+    t('status.inProgressBadge'),
+  ]
+
+  const renderTripProgress = (activeStep: number) => (
+    <ol className="trip-progress">
+      {tripProgressLabels.map((label, index) => (
+        <li
+          key={label}
+          className={
+            index < activeStep
+              ? 'trip-step is-done'
+              : index === activeStep
+                ? 'trip-step is-current'
+                : 'trip-step'
+          }
+          aria-current={index === activeStep ? 'step' : undefined}
+        >
+          <span className="trip-step-dot" aria-hidden="true">
+            {index < activeStep ? '✓' : null}
+          </span>
+          <span className="trip-step-label">{label}</span>
+        </li>
+      ))}
+    </ol>
+  )
+
   const renderRequestScreen = () => (
     <form className="ride-form" id="ride-booking-form" onSubmit={handleSubmit} noValidate>
       <div className="desktop-booking-flow">
@@ -1492,6 +1522,8 @@ setRatingSubmitted(true)
         <div className="search-loader" aria-label={t('status.findingDriverAria')} />
       </div>
 
+      {renderTripProgress(0)}
+
       <h2>{t('status.searching')}</h2>
       <p>{t('book.lookingDriver')}</p>
 
@@ -1598,6 +1630,8 @@ setRatingSubmitted(true)
         <span className="demo-status-badge accent">{t('status.acceptedBadge')}</span>
       </div>
 
+      {renderTripProgress(1)}
+
       <div className="driver-identity-row">
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
@@ -1689,6 +1723,22 @@ setRatingSubmitted(true)
         <span className="demo-status-badge warning">{t('status.arrivedBadge')}</span>
       </div>
 
+      {renderTripProgress(2)}
+
+      <div className="arrived-attention" role="status">
+        <span className="arrived-bell" aria-hidden="true">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9" />
+            <path d="M10.3 21a1.94 1.94 0 0 0 3.4 0" />
+          </svg>
+          <span className="arrived-bell-dot" aria-hidden="true"></span>
+        </span>
+        <div className="arrived-attention-copy">
+          <strong>{t('status.arrived')}</strong>
+          <span>{t('book.arrivedLead')}</span>
+        </div>
+      </div>
+
       <div className="driver-identity-row">
         <img src={assignedDriver?.profile_photo_url || bisligLogo} alt={assignedDriver?.full_name ?? 'John Doe'} className="driver-photo" />
         <div>
@@ -1698,9 +1748,7 @@ setRatingSubmitted(true)
         </div>
       </div>
 
-      <p className="lead-paragraph">{t('status.arrived')}</p>
-
-<div className="ride-summary compact">
+      <div className="ride-summary compact">
         <div>
           <dt>{t('summary.pickup')}</dt>
           <dd>{ride.pickup_address}</dd>
@@ -1753,15 +1801,7 @@ setRatingSubmitted(true)
         <span className="demo-status-badge success">{t('status.inProgressBadge')}</span>
       </div>
 
-      <div className="progress-steps">
-        <span className="progress-step complete">{t('status.driverAcceptedStep')}</span>
-        <span className="progress-arrow">?</span>
-        <span className="progress-step complete">{t('status.arrivedStep')}</span>
-        <span className="progress-arrow">?</span>
-        <span className="progress-step active">{t('status.inProgressStep')}</span>
-        <span className="progress-arrow">?</span>
-        <span className="progress-step">{t('status.destinationStep')}</span>
-      </div>
+      {renderTripProgress(3)}
 
       <div className="ride-summary compact">
         <div>
@@ -1861,6 +1901,8 @@ setRatingSubmitted(true)
       <div className="status-stack">
         <span className="demo-status-badge success">{t('status.completedBadge')}</span>
       </div>
+
+      {renderTripProgress(4)}
 
       <h2>{t('status.completed')}</h2>
       <p>{t('book.thanks')}</p>

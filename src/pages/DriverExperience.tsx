@@ -2468,6 +2468,10 @@ const displayedDriver = driverProfile ?? demoDriver
     (offer) => new Date(offer.expires_at).getTime() > pakyawanNow,
   )
 
+  const activePakyawanTrips = acceptedPakyawan.filter((booking) => booking.status !== 'completed')
+  const pakyawanTripHistory = acceptedPakyawan.filter((booking) => booking.status === 'completed')
+  const hasIncomingPakyawan = pakyawanRequests.length > 0 || activePakyawanOffers.length > 0
+
   const renderNotificationBell = () => (
     <div className="notification-wrap">
       <button
@@ -3666,13 +3670,14 @@ const displayedDriver = driverProfile ?? demoDriver
           <div>
             <p className="section-label">PAKYAWAN REQUESTS</p>
             <h3>Pakyawan / scheduled trips</h3>
-            <p>
-              {pakyawanRequests.length > 0
-                ? 'Customers are requesting private or scheduled handling. Accept a request to take it.'
-                : 'No new Pakyawan requests right now.'}
-            </p>
+            {hasIncomingPakyawan ? (
+              <p>Customers are requesting private or scheduled handling. Accept a request to take it.</p>
+            ) : activePakyawanTrips.length > 0 ? (
+              <p>Your active trip is below. New requests will appear here.</p>
+            ) : null}
           </div>
           <span className="state-badge pakyawan-badge">{pakyawanRequests.length}</span>
+          {hasIncomingPakyawan ? <span className="has-new-dot" aria-hidden="true"></span> : null}
         </div>
 
         {pakyawanRequestsError ? (
@@ -3696,63 +3701,12 @@ const displayedDriver = driverProfile ?? demoDriver
           <p className="pak-req-note">{pakyawanOffersError}</p>
         ) : null}
 
-        {pakyawanOffersError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
-          <ul className="pakyawan-list">
-            {activePakyawanOffers.map((offer) => (
-              <li key={offer.id} className="pakyawan-item pakyawan-offer">
-                <div className="pakyawan-route">
-                  <span>{offer.booking.pickup_location}</span>
-                  <strong>→</strong>
-                  <span>{offer.booking.destination}</span>
-                </div>
-                <div className="pakyawan-meta">
-                  <span>
-                    {offer.booking.booking_date} · {offer.booking.pickup_time}
-                  </span>
-                  <span>
-                    {offer.booking.passengers} passenger{offer.booking.passengers === 1 ? '' : 's'} · {offer.booking.trip_type}
-                  </span>
-                  <span>This request expires in: {formatPakyawanOfferCountdown(offer.expires_at)}</span>
-                </div>
-                <div className="pakyawan-customer">
-                  <span>{offer.booking.customer_name}</span>
-                  <span>{offer.booking.customer_phone}</span>
-                </div>
-                <div className="pakyawan-actions">
-                  <button
-                    type="button"
-                    className="primary-action compact-button"
-                    onClick={() => void handleAcceptPakyawanOffer(offer.id)}
-                    disabled={pakyawanSubmittingId === offer.id}
-                  >
-                    {pakyawanSubmittingId === offer.id ? 'Accepting...' : 'Accept Request'}
-                  </button>
-                  <button
-                    type="button"
-                    className="secondary-action compact-button"
-                    onClick={() => void handleDeclinePakyawanOffer(offer.id)}
-                    disabled={pakyawanSubmittingId !== null}
-                  >
-                    Decline
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-
-        {pakyawanRequestsError || !driverOnline || pakyawanRequests.length === 0 ? null : (
-          <ul className="pak-req-list">
-            {pakyawanRequests.map((booking) => renderPakyawanRequestCard(booking, { eyebrow: 'New request', acceptLabel: 'Accept Request' }))}
-          </ul>
-        )}
-
-        {acceptedPakyawan.length > 0 ? (
-          <div className="pakyawan-accepted">
-            <p className="section-label">ACCEPTED BY YOU</p>
-            <ul className="pakyawan-accepted-list">
-              {acceptedPakyawan.map((booking) => (
-                <li key={booking.id}>
+        {activePakyawanTrips.length > 0 ? (
+          <div className="pakyawan-active">
+            <p className="section-label">{activePakyawanTrips.length > 1 ? 'ACTIVE PAKYAWAN TRIPS' : 'ACTIVE PAKYAWAN TRIP'}</p>
+            <ul className="pakyawan-active-list">
+              {activePakyawanTrips.map((booking) => (
+                <li key={booking.id} className="pakyawan-active-item">
                   <strong>
                     {booking.pickup_location} → {booking.destination}
                   </strong>
@@ -3762,10 +3716,10 @@ const displayedDriver = driverProfile ?? demoDriver
                   {booking.status === 'assigned' ? (
                     <>
                       <span>You&apos;re assigned to this trip. Next: wait for the passenger&apos;s booking confirmation.</span>
-                      <span>Status: ASSIGNED</span>
+                      <span className="pakyawan-status">Status: ASSIGNED</span>
                     </>
                   ) : (
-                    <span>Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+                    <span className="pakyawan-status">Status: {booking.status.toUpperCase().replace(/_/g, ' ')}</span>
                   )}
                   {booking.status === 'assigned' && booking.driver_id === driverId ? (
                     <div className="pakyawan-price-box">
@@ -3856,7 +3810,6 @@ const displayedDriver = driverProfile ?? demoDriver
                       </button>
                     </div>
                   ) : null}
-                  {booking.status === 'completed' ? <span>Trip completed.</span> : null}
                   {pakyawanLifecycleError && pakyawanLifecycleError.bookingId === booking.id ? (
                     <span className="field-error">{pakyawanLifecycleError.message}</span>
                   ) : null}
@@ -3885,6 +3838,70 @@ const displayedDriver = driverProfile ?? demoDriver
                 </li>
               ))}
             </ul>
+          </div>
+        ) : null}
+
+        {pakyawanOffersError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
+          <ul className="pakyawan-list">
+            {activePakyawanOffers.map((offer) => (
+              <li key={offer.id} className="pakyawan-item pakyawan-offer">
+                <div className="pakyawan-route">
+                  <span>{offer.booking.pickup_location}</span>
+                  <strong>→</strong>
+                  <span>{offer.booking.destination}</span>
+                </div>
+                <div className="pakyawan-meta">
+                  <span>
+                    {offer.booking.booking_date} · {offer.booking.pickup_time}
+                  </span>
+                  <span>
+                    {offer.booking.passengers} passenger{offer.booking.passengers === 1 ? '' : 's'} · {offer.booking.trip_type}
+                  </span>
+                  <span>This request expires in: {formatPakyawanOfferCountdown(offer.expires_at)}</span>
+                </div>
+                <div className="pakyawan-customer">
+                  <span>{offer.booking.customer_name}</span>
+                  <span>{offer.booking.customer_phone}</span>
+                </div>
+                <div className="pakyawan-actions">
+                  <button
+                    type="button"
+                    className="primary-action compact-button"
+                    onClick={() => void handleAcceptPakyawanOffer(offer.id)}
+                    disabled={pakyawanSubmittingId === offer.id}
+                  >
+                    {pakyawanSubmittingId === offer.id ? 'Accepting...' : 'Accept Request'}
+                  </button>
+                  <button
+                    type="button"
+                    className="secondary-action compact-button"
+                    onClick={() => void handleDeclinePakyawanOffer(offer.id)}
+                    disabled={pakyawanSubmittingId !== null}
+                  >
+                    Decline
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {pakyawanRequestsError || !driverOnline || pakyawanRequests.length === 0 ? null : (
+          <ul className="pak-req-list">
+            {pakyawanRequests.map((booking) => renderPakyawanRequestCard(booking, { eyebrow: 'New request', acceptLabel: 'Accept Request' }))}
+          </ul>
+        )}
+
+        {!hasIncomingPakyawan && activePakyawanTrips.length === 0 && !pakyawanRequestsError && driverOnline ? (
+          <div className="pak-empty">
+            <span className="pak-empty-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z" />
+                <circle cx="12" cy="10" r="2.5" />
+              </svg>
+            </span>
+            <p className="pak-empty-title">No new Pakyawan requests right now.</p>
+            <p className="muted-copy">Stay online — new requests will appear here automatically.</p>
           </div>
         ) : null}
       </section>
@@ -4479,6 +4496,50 @@ const renderOnlineState = () => (
     }
   }
 
+  const renderPakyawanHistory = () => {
+    if (pakyawanTripHistory.length === 0) {
+      return null
+    }
+
+    return (
+      <section className="driver-card history-card pak-history">
+        <div className="section-heading">
+          <div>
+            <p className="section-label">PAKYAWAN HISTORY</p>
+            <h3>Past Pakyawan trips</h3>
+          </div>
+          <span className="history-count">{`${pakyawanTripHistory.length} total`}</span>
+        </div>
+
+        <ul className="history-list">
+          {pakyawanTripHistory.map((booking) => (
+            <li key={booking.id} className="history-item">
+              <div className="history-main">
+                <div className="history-passenger">
+                  <span>{booking.booking_date || '—'} · {booking.pickup_time || '—'}</span>
+                </div>
+                <span className="completed-badge">Completed</span>
+              </div>
+              <div className="history-route">
+                <span>{booking.pickup_location}</span>
+                <strong>→</strong>
+                <span>{booking.destination}</span>
+              </div>
+              <div className="history-footer">
+                <span>{booking.customer_name}</span>
+                <strong>
+                  {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents)
+                    ? `₱${formatCentavos(booking.price_cents)}`
+                    : '—'}
+                </strong>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+    )
+  }
+
   const renderRecentRides = () => {
     const historyRides = driverHistoryRides.map(mapDriverHistoryRide)
 
@@ -4726,6 +4787,7 @@ const renderOnlineState = () => (
           ) : null}
 
           {renderRecentRides()}
+          {renderPakyawanHistory()}
         </>
       ) : null}
 

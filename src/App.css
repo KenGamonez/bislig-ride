@@ -15027,3 +15027,300 @@ a:focus-visible {
     padding: 12px;
   }
 }
+
+/* === Workflow clarity: Pakyawan NOW / SCHEDULED selection === */
+.flow-date-row .timing-option {
+  flex: 1;
+  font-weight: 700;
+  border-color: var(--border);
+  background: var(--surface);
+  color: var(--text-secondary);
+}
+.flow-date-row .timing-option.is-selected {
+  background: var(--color-black-soft);
+  border-color: var(--color-black-soft);
+  color: var(--color-white);
+  box-shadow: var(--shadow-soft);
+}
+
+/* === Workflow clarity: Pakyawan next steps === */
+.flow-next {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+.flow-next-title {
+  margin: 0;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.flow-next-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+.flow-next-step {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.84rem;
+  color: var(--text-muted);
+}
+.flow-next-dot {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-size: 0.7rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+.flow-next-step.is-done {
+  color: var(--text-secondary);
+}
+.flow-next-step.is-done .flow-next-dot {
+  background: var(--color-black-soft);
+  border-color: var(--color-black-soft);
+  color: var(--color-white);
+}
+.flow-next-step.is-current {
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.flow-next-step.is-current .flow-next-dot {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px var(--brand-orange-soft);
+}
+.flow-next-detail {
+  margin: 0;
+  font-size: 0.84rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+/* === Workflow clarity: passenger trip progress === */
+.trip-progress {
+  list-style: none;
+  margin: 4px 0 0;
+  padding: 0;
+  display: flex;
+  gap: 4px;
+}
+.trip-step {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  justify-items: center;
+  gap: 5px;
+  text-align: center;
+}
+.trip-step-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface-soft);
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+.trip-step-label {
+  font-size: 0.58rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.25;
+  color: var(--text-muted);
+}
+.trip-step.is-done .trip-step-dot {
+  background: var(--color-black-soft);
+  border-color: var(--color-black-soft);
+  color: var(--color-white);
+}
+.trip-step.is-current .trip-step-dot {
+  background: var(--brand-orange);
+  border-color: var(--brand-orange);
+  box-shadow: 0 0 0 3px var(--brand-orange-soft);
+}
+.trip-step.is-current .trip-step-label {
+  color: var(--text-primary);
+}
+
+/* === Workflow clarity: arrived attention === */
+.arrived-attention {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid rgba(255, 107, 26, 0.35);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 0 0 3px var(--brand-orange-soft), var(--shadow-soft);
+  padding: 14px;
+}
+.arrived-bell {
+  position: relative;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--color-black-soft);
+  color: var(--color-white);
+}
+.arrived-bell-dot {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--brand-orange);
+  border: 2px solid var(--color-black-soft);
+  animation: arrived-bell-pulse 1.8s ease-in-out infinite;
+}
+.arrived-attention-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.arrived-attention-copy strong {
+  font-size: 0.95rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--text-primary);
+}
+.arrived-attention-copy span {
+  font-size: 0.80rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}
+@keyframes arrived-bell-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.35);
+    opacity: 0.75;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .arrived-bell-dot,
+  .has-new-dot {
+    animation: none !important;
+  }
+}
+
+/* === Workflow clarity: driver Pakyawan workspace === */
+.driver-card.pakyawan-card.pakyawan-workspace {
+  display: grid;
+  gap: 18px;
+  padding: 20px 16px;
+}
+.pakyawan-active {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 107, 26, 0.30);
+  border-radius: 18px;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(7, 16, 18, 0.04), 0 8px 20px rgba(255, 107, 26, 0.08);
+  padding: 16px 14px;
+}
+.pakyawan-active-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 14px;
+}
+.pakyawan-active-item {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.pakyawan-active-item > strong {
+  font-size: 1.02rem;
+  letter-spacing: -0.01em;
+  color: var(--text-primary);
+}
+.pakyawan-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--brand-orange-dark);
+}
+.has-new-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex-shrink: 0;
+  border-radius: 999px;
+  background: var(--brand-orange);
+  animation: arrived-bell-pulse 1.8s ease-in-out infinite;
+}
+.pak-empty {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 36px 20px;
+}
+.pak-empty-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 18px;
+  background: var(--surface-soft);
+  color: var(--text-muted);
+  margin-bottom: 4px;
+}
+.pak-empty-title {
+  margin: 0;
+  font-size: 0.98rem;
+  font-weight: 750;
+  color: var(--text-primary);
+}
+.pak-empty .muted-copy {
+  max-width: 30ch;
+}
+.driver-card.history-card.pak-history {
+  margin-top: 4px;
+}
+@media (max-width: 380px) {
+  .driver-card.pakyawan-card.pakyawan-workspace {
+    padding: 16px 12px;
+    gap: 14px;
+  }
+  .pakyawan-active {
+    padding: 14px 12px;
+  }
+  .trip-step-label {
+    font-size: 0.52rem;
+  }
+}

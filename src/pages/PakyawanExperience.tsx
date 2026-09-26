@@ -574,14 +574,16 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
           <div className="flow-date-row" role="group" aria-label={t('pak.step1.hint')}>
             <button
               type="button"
-              className={pakyawanTiming === 'now' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+              className={pakyawanTiming === 'now' ? 'secondary-action compact-button timing-option is-selected' : 'secondary-action compact-button timing-option'}
+              aria-pressed={pakyawanTiming === 'now'}
               onClick={() => setPakyawanTiming('now')}
             >
               {t('pak.timingNow')}
             </button>
             <button
               type="button"
-              className={pakyawanTiming === 'scheduled' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+              className={pakyawanTiming === 'scheduled' ? 'secondary-action compact-button timing-option is-selected' : 'secondary-action compact-button timing-option'}
+              aria-pressed={pakyawanTiming === 'scheduled'}
               onClick={() => setPakyawanTiming('scheduled')}
             >
               {t('pak.timingScheduled')}
@@ -604,6 +606,16 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     const quotedCents = trackedBooking && typeof trackedBooking.price_cents === 'number' && Number.isFinite(trackedBooking.price_cents)
       ? trackedBooking.price_cents
       : null
+    const nextStage =
+      status === 'assigned' ? 1 : status === 'quoted' ? 2 : status === 'confirmed' || status === 'scheduled' ? 3 : 0
+    const nextDetail =
+      status === 'assigned'
+        ? t('pak.nextPrice')
+        : status === 'quoted'
+          ? t('pak.nextConfirm')
+          : status === 'confirmed' || status === 'scheduled'
+            ? t('pak.nextScheduled')
+            : t('pak.nextFinding')
 
     return (
       <>
@@ -640,6 +652,35 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                 <div className="field-block"><span className="field-label">{t('pak.destination')}</span><strong>{form.destination || '—'}</strong></div>
               </div>
             </div>
+            {(status === 'pending' || status === 'assigned' || status === 'quoted' || status === 'confirmed' || status === 'scheduled') ? (
+              <div className="flow-next" role="status">
+                <p className="flow-next-title">{t('pak.nextTitle')}</p>
+                <ol className="flow-next-steps">
+                  {[
+                    { label: t('pak.waitingDriver') },
+                    { label: t('pak.newQuote') },
+                    { label: t('pak.confirmBooking') },
+                  ].map((step, index) => (
+                    <li
+                      key={step.label}
+                      className={
+                        index < nextStage
+                          ? 'flow-next-step is-done'
+                          : index === nextStage
+                            ? 'flow-next-step is-current'
+                            : 'flow-next-step'
+                      }
+                    >
+                      <span className="flow-next-dot" aria-hidden="true">
+                        {index < nextStage ? '✓' : null}
+                      </span>
+                      <span>{step.label}</span>
+                    </li>
+                  ))}
+                </ol>
+                <p className="flow-next-detail">{nextDetail}</p>
+              </div>
+            ) : null}
             {quotedCents !== null ? (
               <div className="fare-box" id="pak-quote-box">
                 <span className="field-label">{t('pak.quotedPrice')}</span>
