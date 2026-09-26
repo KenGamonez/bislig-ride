@@ -15121,9 +15121,10 @@ a:focus-visible {
 }
 
 /* =========================================================
-   LIVING GRID — ambient geometric art layer (launcher only)
-   Architectural / transit-map linework behind the content.
-   Decorative only: aria-hidden, pointer-events none, clipped.
+   LIVING GRID — ambient hairline art layer (launcher only)
+   Architectural / transit-map linework, stroke only (never
+   filled), confined to unused negative space.
+   Decorative: aria-hidden, pointer-events none, clipped.
    ========================================================= */
 .lg-art {
   display: block;
@@ -15132,79 +15133,85 @@ a:focus-visible {
   overflow: hidden;
   pointer-events: none;
   user-select: none;
+  --lg-k: 1;
 }
 .lg-art svg {
   display: block;
   width: 100%;
   height: 100%;
 }
-.lg-art path,
+/* Hairline vocabulary — every element is stroke-only */
+.lg-art path {
+  fill: none;
+  stroke-width: 0.9;
+}
 .lg-art circle {
-  stroke-width: 1.25;
+  fill: none;
+  stroke: none;
+  stroke-width: 0.9;
 }
 .lg-art .lg-line {
   stroke: #0A1418;
+  opacity: calc(var(--lg-k) * 0.12);
 }
 .lg-art .lg-line-soft {
   stroke: #9AAFB8;
-}
-.lg-art .lg-line-accent,
-.lg-art .lg-arrow {
-  stroke: #FF6B1A;
+  opacity: calc(var(--lg-k) * 0.07);
 }
 .lg-art .lg-arc,
 .lg-art .lg-road {
   stroke: #0A1418;
+  stroke-width: 0.75;
+  opacity: calc(var(--lg-k) * 0.08);
 }
 .lg-art .lg-dash {
   stroke: #0A1418;
-  stroke-dasharray: 1 7;
-  stroke-linecap: round;
-}
-.lg-art circle {
-  fill: none;
+  stroke-dasharray: 1 6;
+  opacity: calc(var(--lg-k) * 0.12);
 }
 .lg-art .lg-node {
   fill: #0A1418;
+  opacity: calc(var(--lg-k) * 0.16);
 }
 .lg-art .lg-node-hollow {
-  fill: none;
   stroke: #0A1418;
-  stroke-width: 1.2;
+  stroke-width: 0.75;
+  opacity: calc(var(--lg-k) * 0.15);
 }
 .lg-art .lg-node-accent {
   fill: #FF6B1A;
+  opacity: calc(var(--lg-k) * 0.3);
 }
 .lg-art .lg-tick,
 .lg-art .lg-grid {
   stroke: #0A1418;
-  stroke-width: 1;
+  stroke-width: 0.6;
+  opacity: calc(var(--lg-k) * 0.06);
 }
 
-/* Placement — hero, cards, driver header */
+/* Placement — geometry sits in negative space only */
 .customer-layout .home-hero {
   position: relative;
   overflow: hidden;
 }
 .home-hero-art {
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  opacity: 0.5;
+  right: 0;
+  top: 0;
+  width: 30%;
+  height: 72%;
 }
 .card-art {
-  right: -6px;
-  top: -22px;
-  bottom: -22px;
-  width: 58%;
-  opacity: 0.45;
+  right: 16px;
+  bottom: 3px;
+  width: 30%;
+  height: 13px;
 }
 .driver-art {
   right: 0;
   top: 0;
-  bottom: 0;
-  width: 60%;
-  opacity: 0.55;
+  width: 42%;
+  height: 74%;
+  --lg-k: 0.85;
 }
 .customer-layout .driver-section .service-section-header {
   position: relative;
@@ -15225,114 +15232,69 @@ a:focus-visible {
   z-index: 1;
 }
 
-/* Ambient motion — slow, low amplitude */
+/* Ambient motion — barely perceptible */
 @keyframes lg-flow {
   to {
-    stroke-dashoffset: -120;
+    stroke-dashoffset: -84;
   }
 }
 @keyframes lg-breathe {
   0%,
   100% {
-    opacity: 0.3;
+    opacity: 0.22;
   }
   50% {
-    opacity: 0.8;
-  }
-}
-@keyframes lg-travel {
-  0%,
-  12% {
-    transform: translate(0, 0);
-    opacity: 0;
-  }
-  18% {
-    opacity: 0.9;
-  }
-  82% {
-    opacity: 0.9;
-  }
-  92%,
-  100% {
-    transform: translate(-236px, 34px);
-    opacity: 0;
+    opacity: 0.3;
   }
 }
 .lg-art .lg-flow {
-  animation: lg-flow 18s linear infinite;
+  animation: lg-flow 24s linear infinite;
 }
 .lg-art .lg-node-accent {
-  animation: lg-breathe 10s ease-in-out infinite;
+  animation: lg-breathe 18s ease-in-out infinite;
+}
+.card-art .lg-node-accent {
+  transition: transform 1200ms ease;
 }
 
-/* Desktop — richer composition, subtle hover response */
-@media (min-width: 768px) {
-  .home-hero-art {
-    opacity: 0.75;
-  }
-  .card-art {
-    opacity: 0.55;
-  }
-  .driver-art {
-    opacity: 0.7;
-  }
-  .home-hero-art .lg-traveller {
-    animation: lg-travel 18s ease-in-out infinite;
-  }
-  .card-art .lg-node-accent {
-    animation: lg-breathe 12s ease-in-out infinite;
-    transition: transform 900ms ease;
-  }
-}
+/* Desktop hover — artwork responds by a hair, nothing shifts */
 @media (min-width: 768px) and (hover: hover) {
   .service-card:hover .card-art {
-    opacity: 0.9;
-  }
-  .service-card:hover .card-art .lg-line,
-  .service-card:hover .card-art .lg-line-soft,
-  .service-card:hover .card-art .lg-arc,
-  .service-card:hover .card-art .lg-road,
-  .service-card:hover .card-art .lg-dash {
-    stroke-width: 1.6;
+    --lg-k: 1.35;
   }
   .service-card--primary:hover .card-art .lg-node-accent {
-    transform: scale(1.35);
+    transform: scale(1.25);
     transform-origin: center;
   }
 }
 
-/* Mobile — art adapts: fewer marks, dimmer, calmer cycles */
+/* Mobile — quieter still: dimmer, secondary detail removed */
 @media (max-width: 767px) {
+  .lg-art {
+    --lg-k: 0.6;
+  }
   .home-hero-art {
-    opacity: 0.28;
+    width: 28%;
+    height: 58%;
   }
   .card-art {
-    opacity: 0.16;
+    height: 11px;
   }
-  .driver-art {
-    opacity: 0.22;
-  }
-  .lg-art .lg-node-hollow,
   .lg-art .lg-arc,
   .lg-art .lg-tick,
   .lg-art .lg-grid,
-  .lg-art .lg-arrow,
-  .lg-art .lg-traveller {
+  .lg-art .lg-node-hollow {
     display: none;
   }
   .lg-art .lg-node-accent {
     animation: none;
-  }
-  .lg-art .lg-flow {
-    animation-duration: 26s;
   }
 }
 
 /* Reduced motion — everything static */
 @media (prefers-reduced-motion: reduce) {
   .lg-art .lg-flow,
-  .lg-art .lg-node-accent,
-  .home-hero-art .lg-traveller {
+  .lg-art .lg-node-accent {
     animation: none !important;
   }
   .card-art .lg-node-accent {
