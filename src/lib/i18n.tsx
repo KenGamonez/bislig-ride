@@ -566,6 +566,7 @@ const en = {
   'pad.nextInTransit': 'Next: We\u2019ll let you know when the delivery is completed.',
   'pad.nextDelivered': 'Next: View your delivery details.',
   'pad.nextNoDriver': 'Next: You can try submitting the delivery again.',
+  'pad.newDelivery': 'Start a new delivery',
   'car.title': 'Car Rentals',
   'car.titleAccent': '/ Pa-arkila',
   'car.eyebrow': 'Self-drive and chauffeur rentals',
@@ -1246,6 +1247,7 @@ const bi: Record<TranslationKey, string> = {
   'pad.nextInTransit': 'Sunod: Pahibaw-on ka namo kung mahuman na ang delivery.',
   'pad.nextDelivered': 'Sunod: Tan-awa ang detalye sa imong delivery.',
   'pad.nextNoDriver': 'Sunod: Mahimo nimong sulayan pag-submit og balik.',
+  'pad.newDelivery': 'Paghimo og bag-ong delivery',
 
   /* Car rentals */
   'car.title': 'Pag-arkila og Sakyanan',

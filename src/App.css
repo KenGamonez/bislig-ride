@@ -8137,6 +8137,46 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   border: 1px solid var(--border);
 }
 
+/* Passenger timing selector: unmistakable selected state (scoped so the
+   admin filter variant is untouched). */
+.flow-date-group .flow-date-row .secondary-action {
+  flex: 1;
+  min-width: 0;
+}
+
+.flow-date-group .flow-date-row .secondary-action.active-filter {
+  background: var(--color-green-soft);
+  box-shadow: inset 0 0 0 2px var(--color-green-deep);
+  color: var(--text-primary);
+  font-weight: 800;
+}
+
+/* Next-step callout: the answer to "what happens next". */
+.pad-nextstep {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: var(--color-gray-50);
+  border-left: 3px solid var(--color-green-deep);
+  color: var(--text-primary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+/* Terminal + arrived emphasis bands on the tracking card. */
+.pad-terminal {
+  border-top: 3px solid var(--color-gray-300);
+}
+
+.pad-status-driver_arrived {
+  border-top: 3px solid var(--color-green);
+}
+
+.pad-status-driver_arrived .booking-status {
+  background: var(--color-green-soft);
+  font-size: 0.86rem;
+}
+
 .pad-rating-box .rating-stars {
   display: flex;
   gap: 6px;

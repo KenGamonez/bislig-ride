@@ -593,6 +593,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <button
                 type="button"
                 className={deliveryTiming === 'now' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+                aria-pressed={deliveryTiming === 'now'}
                 onClick={() => setDeliveryTiming('now')}
               >
                 {t('pad.timingNow')}
@@ -600,6 +601,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <button
                 type="button"
                 className={deliveryTiming === 'scheduled' ? 'secondary-action compact-button active-filter' : 'secondary-action compact-button'}
+                aria-pressed={deliveryTiming === 'scheduled'}
                 onClick={() => setDeliveryTiming('scheduled')}
               >
                 {t('pad.timingScheduled')}
@@ -688,8 +690,37 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     )
   }
 
+  const handleStartNewDelivery = () => {
+    if (createdDeliveryId) {
+      try {
+        window.localStorage.removeItem(`bislig-ride-padeliver-${createdDeliveryId}`)
+      } catch {
+        // Private browsing or disabled storage — nothing to clean up.
+      }
+    }
+
+    setCreatedDeliveryId(null)
+    setCreatedAccessToken(null)
+    setTrackedDelivery(null)
+    setTrackingError('')
+    setConfirmError('')
+    setDeliveryAlert(null)
+    setDeliveryUnread(false)
+    setDeliveryBellOpen(false)
+    setDeliveryChatOpen(false)
+    setDeliveryChatAlert(null)
+    setProofUrl(null)
+    setProofViewerOpen(false)
+    setProofLoading(false)
+    setProofError('')
+    prevDeliverySigRef.current = null
+    setStep(1)
+    setSubmitted(false)
+  }
+
   if (submitted) {
     const status = trackedDelivery?.status
+    const isTerminalDelivery = status === 'delivered' || status === 'cancelled' || status === 'failed'
     const quotedCents = trackedDelivery && typeof trackedDelivery.price_cents === 'number' && Number.isFinite(trackedDelivery.price_cents)
       ? trackedDelivery.price_cents
       : null
@@ -711,7 +742,10 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
-          <section className="scheduled-card scheduled-success" id="pad-delivery-box">
+          <section
+            className={`scheduled-card scheduled-success${isTerminalDelivery ? ' pad-terminal' : ''}${status === 'driver_arrived' ? ' pad-status-driver_arrived' : ''}`}
+            id="pad-delivery-box"
+          >
             <p className="eyebrow">{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedEyebrow')}</p>
             <h1>{status === 'quoted' ? t('pad.quoteReady') : status === 'confirmed' ? t('pad.trackConfirmed') : status === 'assigned' ? t('pad.trackAssigned') : status === 'driver_on_way' ? t('pad.trackOnWay') : status === 'driver_arrived' ? t('pad.trackArrived') : status === 'picked_up' ? t('pad.trackPickedUp') : status === 'in_transit' ? t('pad.trackInTransit') : status === 'delivered' ? t('pad.trackDelivered') : status === 'cancelled' ? t('pad.trackCancelled') : status === 'failed' ? t('pad.trackFailedStatus') : status === 'no_driver' ? t('pad.trackNoDriver') : status === 'pending' || status === 'dispatching' ? t('pad.trackFinding') : t('pad.receivedTitle')}</h1>
             {status === 'quoted' ? (
@@ -744,7 +778,14 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             ) : (
               <p>{t('pad.receivedBody')}</p>
             )}
-            {nextCopy ? <p>{nextCopy}</p> : null}
+            {nextCopy ? <p className="pad-nextstep">{nextCopy}</p> : null}
+            {status === 'no_driver' ? (
+              <div className="pakyawan-actions">
+                <button type="button" className="secondary-action compact-button" onClick={handleStartNewDelivery}>
+                  {t('pad.newDelivery')}
+                </button>
+              </div>
+            ) : null}
             {status === 'delivered' && quotedCents !== null ? (
               <p className="booking-fee">{t('pad.trackDelivered')}: ₱{formatCentavos(quotedCents)}</p>
             ) : null}
