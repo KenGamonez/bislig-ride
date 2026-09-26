@@ -1,5 +1,5 @@
 import { useLanguage } from '../lib/i18n'
-import { GridArtwork, type GridArtworkVariant } from './GridArtwork'
+import { AtmosphereField } from './AtmosphereField'
 
 type ServiceDashboardProps = {
   onSelectRideNow: () => void
@@ -125,9 +125,9 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
 
   return (
     <section className="service-dashboard" aria-label={t('dash.eyebrow')}>
+      <AtmosphereField />
       {/* Hero Section */}
       <header className="home-hero">
-        <GridArtwork variant="hero" className="home-hero-art" />
         <p className="home-hero-eyebrow">YOUR CITY. CONNECTED.</p>
         <h1 className="home-hero-title">{t('dash.title1')}</h1>
         <p className="home-hero-subtitle">{t('dash.subtitle')}</p>
@@ -156,7 +156,6 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
                 }
               }}
             >
-              <GridArtwork variant={service.id as GridArtworkVariant} className="card-art" />
               <div className="service-card-icon" aria-hidden="true">
                 {service.icon}
               </div>
@@ -183,7 +182,6 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
       {/* Driver Section */}
       <div className="service-section driver-section">
         <div className="service-section-header">
-          <GridArtwork variant="driver" className="driver-art" />
           <p className="service-section-label">{t('dash.driverLabel')}</p>
           <h2 className="service-section-title">{t('dash.driverTitle')}</h2>
           <p className="service-section-subtitle">{t('dash.driverSubtitle')}</p>

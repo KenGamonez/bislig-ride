@@ -15121,185 +15121,151 @@ a:focus-visible {
 }
 
 /* =========================================================
-   LIVING GRID — ambient hairline art layer (launcher only)
-   Architectural / transit-map linework, stroke only (never
-   filled), confined to unused negative space.
-   Decorative: aria-hidden, pointer-events none, clipped.
+   ATMOSPHERIC FIELD — Living Grid art direction V2
+   One large ambient geometric environment behind the dashboard.
+   Fine contour lines, converging routes, blurred atmosphere.
+   Stroke only, never filled. Decorative: aria-hidden,
+   pointer-events none, clipped to the page.
    ========================================================= */
-.lg-art {
-  display: block;
+.customer-layout.service-launcher-layout {
+  position: relative;
+  overflow: hidden;
+}
+.af-field {
+  --af-k: 1;
   position: absolute;
   z-index: 0;
+  top: -160px;
+  right: -6%;
+  width: 118%;
+  height: calc(100% + 520px);
+  display: block;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  --lg-k: 1;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.34) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 46%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.34) 100%);
 }
-.lg-art svg {
+.af-field svg {
   display: block;
   width: 100%;
   height: 100%;
 }
-/* Hairline vocabulary — every element is stroke-only */
-.lg-art path {
+.af-field path {
   fill: none;
-  stroke-width: 0.9;
 }
-.lg-art circle {
-  fill: none;
+.af-field circle {
   stroke: none;
+}
+/* Contours — the structural layer */
+.af-contours path {
   stroke-width: 0.9;
 }
-.lg-art .lg-line {
-  stroke: #0A1418;
-  opacity: calc(var(--lg-k) * 0.12);
+.af-contours {
+  opacity: calc(var(--af-k) * 0.13);
 }
-.lg-art .lg-line-soft {
+/* Soft layer — same geometry, blurred, very light */
+.af-soft path {
+  stroke-width: 1.1;
+}
+.af-soft {
+  opacity: calc(var(--af-k) * 0.04);
+  filter: blur(1.6px);
+}
+/* Routes — transit-style directional flow into the hub */
+.af-routes path {
+  stroke: #0A1418;
+  stroke-width: 0.75;
+}
+.af-routes .af-dash {
   stroke: #9AAFB8;
-  opacity: calc(var(--lg-k) * 0.07);
-}
-.lg-art .lg-arc,
-.lg-art .lg-road {
-  stroke: #0A1418;
-  stroke-width: 0.75;
-  opacity: calc(var(--lg-k) * 0.08);
-}
-.lg-art .lg-dash {
-  stroke: #0A1418;
   stroke-dasharray: 1 6;
-  opacity: calc(var(--lg-k) * 0.12);
 }
-.lg-art .lg-node {
-  fill: #0A1418;
-  opacity: calc(var(--lg-k) * 0.16);
+.af-routes {
+  opacity: calc(var(--af-k) * 0.08);
 }
-.lg-art .lg-node-hollow {
-  stroke: #0A1418;
-  stroke-width: 0.75;
-  opacity: calc(var(--lg-k) * 0.15);
-}
-.lg-art .lg-node-accent {
-  fill: #FF6B1A;
-  opacity: calc(var(--lg-k) * 0.3);
-}
-.lg-art .lg-tick,
-.lg-art .lg-grid {
+/* Small marks */
+.af-ticks path {
   stroke: #0A1418;
   stroke-width: 0.6;
-  opacity: calc(var(--lg-k) * 0.06);
+}
+.af-ticks {
+  opacity: calc(var(--af-k) * 0.05);
+}
+.af-nodes .af-node {
+  fill: #0A1418;
+}
+.af-nodes .af-node-accent {
+  fill: #FF6B1A;
+}
+.af-nodes {
+  opacity: calc(var(--af-k) * 0.15);
+}
+.af-accent path {
+  stroke: #FF6B1A;
+  stroke-width: 1;
+  stroke-linecap: round;
+}
+.af-accent {
+  opacity: calc(var(--af-k) * 0.28);
 }
 
-/* Placement — geometry sits in negative space only */
-.customer-layout .home-hero {
-  position: relative;
-  overflow: hidden;
-}
-.home-hero-art {
-  right: 0;
-  top: 0;
-  width: 30%;
-  height: 72%;
-}
-.card-art {
-  right: 16px;
-  bottom: 3px;
-  width: 30%;
-  height: 13px;
-}
-.driver-art {
-  right: 0;
-  top: 0;
-  width: 42%;
-  height: 74%;
-  --lg-k: 0.85;
-}
-.customer-layout .driver-section .service-section-header {
-  position: relative;
-  overflow: hidden;
-}
-
-/* Keep interactive/type layers above the artwork */
-.service-card-icon,
-.service-card-copy,
-.service-card-arrow,
-.home-hero-eyebrow,
-.home-hero-title,
-.home-hero-subtitle,
-.driver-section .service-section-label,
-.driver-section .service-section-title,
-.driver-section .service-section-subtitle {
-  position: relative;
-  z-index: 1;
-}
-
-/* Ambient motion — barely perceptible */
-@keyframes lg-flow {
-  to {
-    stroke-dashoffset: -84;
+/* Motion — barely-there drift, 30–36s cycles */
+@keyframes af-drift-a {
+  0% {
+    transform: translate3d(0, 0, 0);
   }
-}
-@keyframes lg-breathe {
-  0%,
   100% {
-    opacity: 0.22;
-  }
-  50% {
-    opacity: 0.3;
+    transform: translate3d(-26px, 10px, 0);
   }
 }
-.lg-art .lg-flow {
-  animation: lg-flow 24s linear infinite;
+@keyframes af-drift-b {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(22px, -9px, 0);
+  }
 }
-.lg-art .lg-node-accent {
-  animation: lg-breathe 18s ease-in-out infinite;
+@keyframes af-flow {
+  to {
+    stroke-dashoffset: -60;
+  }
 }
-.card-art .lg-node-accent {
-  transition: transform 1200ms ease;
+.af-drift {
+  animation: af-drift-a 36s ease-in-out infinite alternate;
+}
+.af-drift-soft {
+  animation: af-drift-b 30s ease-in-out infinite alternate;
+}
+.af-routes .af-dash {
+  animation: af-flow 32s linear infinite;
 }
 
-/* Desktop hover — artwork responds by a hair, nothing shifts */
-@media (min-width: 768px) and (hover: hover) {
-  .service-card:hover .card-art {
-    --lg-k: 1.35;
-  }
-  .service-card--primary:hover .card-art .lg-node-accent {
-    transform: scale(1.25);
-    transform-origin: center;
-  }
-}
-
-/* Mobile — quieter still: dimmer, secondary detail removed */
+/* Mobile — a simplified crop: dimmer, less detail, pushed off-canvas right */
 @media (max-width: 767px) {
-  .lg-art {
-    --lg-k: 0.6;
+  .af-field {
+    --af-k: 0.55;
+    top: -120px;
+    right: -58%;
+    width: 168%;
+    height: calc(100% + 320px);
   }
-  .home-hero-art {
-    width: 28%;
-    height: 58%;
-  }
-  .card-art {
-    height: 11px;
-  }
-  .lg-art .lg-arc,
-  .lg-art .lg-tick,
-  .lg-art .lg-grid,
-  .lg-art .lg-node-hollow {
+  .af-soft,
+  .af-detail {
     display: none;
   }
-  .lg-art .lg-node-accent {
-    animation: none;
+  .af-routes path {
+    stroke-width: 0.7;
   }
 }
 
-/* Reduced motion — everything static */
+/* Reduced motion — the field becomes static */
 @media (prefers-reduced-motion: reduce) {
-  .lg-art .lg-flow,
-  .lg-art .lg-node-accent {
+  .af-drift,
+  .af-drift-soft,
+  .af-routes .af-dash {
     animation: none !important;
-  }
-  .card-art .lg-node-accent {
-    transition: none !important;
-    transform: none !important;
   }
 }
 
