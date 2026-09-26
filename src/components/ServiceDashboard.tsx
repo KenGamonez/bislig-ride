@@ -1,5 +1,5 @@
 import { useLanguage } from '../lib/i18n'
-import { AtmosphereField } from './AtmosphereField'
+import { LiquidField } from './LiquidField'
 
 type ServiceDashboardProps = {
   onSelectRideNow: () => void
@@ -125,7 +125,7 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
 
   return (
     <section className="service-dashboard" aria-label={t('dash.eyebrow')}>
-      <AtmosphereField />
+      <LiquidField />
       {/* Hero Section */}
       <header className="home-hero">
         <p className="home-hero-eyebrow">YOUR CITY. CONNECTED.</p>

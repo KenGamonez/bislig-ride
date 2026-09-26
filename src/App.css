@@ -15121,150 +15121,111 @@ a:focus-visible {
 }
 
 /* =========================================================
-   ATMOSPHERIC FIELD — Living Grid art direction V2
-   One large ambient geometric environment behind the dashboard.
-   Fine contour lines, converging routes, blurred atmosphere.
-   Stroke only, never filled. Decorative: aria-hidden,
-   pointer-events none, clipped to the page.
+   LIQUID FIELD — Living Grid, generative art direction
+   One large ambient environment behind the dashboard: a single
+   sheet of fine parallel lines pushed through a smooth force
+   field. The "liquid" is never drawn, only inferred from the
+   deformation. Stroke only, never filled. Decorative:
+   aria-hidden, pointer-events none, clipped to the page.
    ========================================================= */
 .customer-layout.service-launcher-layout {
   position: relative;
   overflow: hidden;
 }
-.af-field {
-  --af-k: 1;
+.lf-field {
+  --lf-k: 1;
   position: absolute;
   z-index: 0;
-  top: -160px;
+  top: -170px;
   right: -6%;
   width: 118%;
-  height: calc(100% + 520px);
+  height: calc(100% + 540px);
   display: block;
   overflow: hidden;
   pointer-events: none;
   user-select: none;
-  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 46%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.34) 100%);
-  mask-image: linear-gradient(to bottom, #000 0%, #000 46%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.34) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 40%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.42) 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 40%, rgba(0, 0, 0, 0.72) 68%, rgba(0, 0, 0, 0.42) 100%);
 }
-.af-field svg {
+.lf-field svg {
   display: block;
   width: 100%;
   height: 100%;
 }
-.af-field path {
+.lf-field path {
   fill: none;
 }
-.af-field circle {
+.lf-field circle {
   stroke: none;
 }
-/* Contours — the structural layer */
-.af-contours path {
-  stroke-width: 0.9;
+/* Structure — crisp hairlines, the dominant layer */
+.lf-lines {
+  opacity: calc(var(--lf-k) * 0.14);
 }
-.af-contours {
-  opacity: calc(var(--af-k) * 0.13);
+/* Atmosphere — a sparse blurred copy of the same sheet */
+.lf-soft {
+  opacity: calc(var(--lf-k) * 0.035);
+  filter: blur(1.4px);
 }
-/* Soft layer — same geometry, blurred, very light */
-.af-soft path {
-  stroke-width: 1.1;
-}
-.af-soft {
-  opacity: calc(var(--af-k) * 0.04);
-  filter: blur(1.6px);
-}
-/* Routes — transit-style directional flow into the hub */
-.af-routes path {
-  stroke: #0A1418;
-  stroke-width: 0.75;
-}
-.af-routes .af-dash {
-  stroke: #9AAFB8;
-  stroke-dasharray: 1 6;
-}
-.af-routes {
-  opacity: calc(var(--af-k) * 0.08);
-}
-/* Small marks */
-.af-ticks path {
-  stroke: #0A1418;
-  stroke-width: 0.6;
-}
-.af-ticks {
-  opacity: calc(var(--af-k) * 0.05);
-}
-.af-nodes .af-node {
-  fill: #0A1418;
-}
-.af-nodes .af-node-accent {
+/* A small signal inside the field */
+.lf-signal circle {
   fill: #FF6B1A;
 }
-.af-nodes {
-  opacity: calc(var(--af-k) * 0.15);
-}
-.af-accent path {
+.lf-signal path {
   stroke: #FF6B1A;
-  stroke-width: 1;
+  stroke-width: 0.8;
   stroke-linecap: round;
 }
-.af-accent {
-  opacity: calc(var(--af-k) * 0.28);
+.lf-signal {
+  opacity: calc(var(--lf-k) * 0.3);
 }
 
-/* Motion — barely-there drift, 30–36s cycles */
-@keyframes af-drift-a {
+/* Motion — the whole field breathes; 40–55s cycles, 4–12px */
+@keyframes lf-drift-a {
   0% {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(-26px, 10px, 0);
+    transform: translate3d(-10px, 5px, 0);
   }
 }
-@keyframes af-drift-b {
+@keyframes lf-drift-b {
   0% {
     transform: translate3d(0, 0, 0);
   }
   100% {
-    transform: translate3d(22px, -9px, 0);
+    transform: translate3d(8px, -5px, 0);
   }
 }
-@keyframes af-flow {
-  to {
-    stroke-dashoffset: -60;
-  }
+.lf-drift-a {
+  animation: lf-drift-a 44s ease-in-out infinite alternate;
 }
-.af-drift {
-  animation: af-drift-a 36s ease-in-out infinite alternate;
-}
-.af-drift-soft {
-  animation: af-drift-b 30s ease-in-out infinite alternate;
-}
-.af-routes .af-dash {
-  animation: af-flow 32s linear infinite;
+.lf-drift-b {
+  animation: lf-drift-b 55s ease-in-out infinite alternate;
 }
 
-/* Mobile — a simplified crop: dimmer, less detail, pushed off-canvas right */
+/* Mobile — its own crop: the deformation is centred, the sheet is
+   half as dense and quieter, and the field runs off the right edge. */
 @media (max-width: 767px) {
-  .af-field {
-    --af-k: 0.55;
-    top: -120px;
-    right: -58%;
-    width: 168%;
-    height: calc(100% + 320px);
+  .lf-field {
+    --lf-k: 0.7;
+    top: -140px;
+    right: -60%;
+    width: 175%;
+    height: calc(100% + 360px);
   }
-  .af-soft,
-  .af-detail {
+  .lf-fine,
+  .lf-soft {
     display: none;
   }
-  .af-routes path {
-    stroke-width: 0.7;
-  }
 }
 
-/* Reduced motion — the field becomes static */
+/* Reduced motion — the entire field becomes static */
 @media (prefers-reduced-motion: reduce) {
-  .af-drift,
-  .af-drift-soft,
-  .af-routes .af-dash {
+  .lf-field,
+  .lf-lines,
+  .lf-soft,
+  .lf-signal {
     animation: none !important;
   }
 }
