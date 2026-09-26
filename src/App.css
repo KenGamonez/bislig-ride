@@ -201,13 +201,14 @@ h4 {
   min-width: 0;
 }
 
-/* Transparent-logo crop zoom: clips ONLY the measured transparent margins
-   (artwork bounds x146-2024 y142-566 of the 2172x724 canvas). The artwork
-   itself is untouched; the layout box never exceeds header height. */
+/* Transparent-logo crop zoom: envelope shows the FULL wordmark (artwork
+   bounds x146-2025 y142-566 of the 2172x724 canvas) with its transparent
+   margin feathers visible on both sides. Logo SCALE is unchanged; the layout
+   box only clips empty canvas edges and never exceeds header height. */
 .app-header .brand-link {
   display: block;
   height: 36px;
-  width: 160px;
+  width: 175px;
   overflow: hidden;
   flex-shrink: 0;
 }
@@ -216,7 +217,7 @@ h4 {
   height: 62px;
   width: auto;
   max-width: none;
-  margin: -12px 0 0 -16px;
+  margin: -12px 0 0 -6px;
 }
 
 .header-right-controls {
@@ -14699,12 +14700,11 @@ a:focus-visible {
 }
 
 .service-card-copy .service-card-title-row {
-  display: block;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   max-width: 100%;
-}
-
-.service-card-copy .service-card-title-row > strong {
-  margin-right: 8px;
+  min-width: 0;
 }
 
 .service-card--primary .service-card-badge,
@@ -15020,9 +15020,10 @@ a:focus-visible {
   border-color: #0B1518;
 }
 .customer-layout .service-card--primary .service-card-badge {
-  position: absolute;
-  top: 12px;
-  right: 12px;
+  position: static;
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 auto;
   background: #FFF1E6;
   color: #FF6B1A;
   border: 1px solid rgba(255,107,26,0.18);
@@ -15576,35 +15577,35 @@ a:focus-visible {
 @media (max-width: 767px) {
   .app-header .brand-link {
     height: 26px;
-    width: 115px;
+    width: 123px;
   }
 
   .app-header .brand-link .brand-logo {
     height: 44px;
-    margin: -9px 0 0 -9px;
+    margin: -9px 0 0 -5px;
   }
 }
 
 @media (max-width: 420px) {
   .app-header .brand-link {
     height: 24px;
-    width: 106px;
+    width: 115px;
   }
 
   .app-header .brand-link .brand-logo {
     height: 41px;
-    margin: -8px 0 0 -8px;
+    margin: -8px 0 0 -4px;
   }
 }
 
 @media (max-width: 360px) {
   .app-header .brand-link {
     height: 22px;
-    width: 96px;
+    width: 106px;
   }
 
   .app-header .brand-link .brand-logo {
     height: 38px;
-    margin: -7px 0 0 -8px;
+    margin: -7px 0 0 -4px;
   }
 }
