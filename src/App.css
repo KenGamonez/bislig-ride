@@ -14344,6 +14344,75 @@ a:focus-visible {
   line-height: 1.45;
 }
 
+/* Driver group selection (dark auth card). Single-select radio cards;
+   new groups are added via DRIVER_GROUPS, not new styles. */
+.driver-group-field {
+  border: 0;
+  margin: 0 0 14px;
+  padding: 0;
+  min-width: 0;
+}
+
+.driver-group-field .field-label {
+  display: block;
+  margin-bottom: 8px;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.driver-group-list {
+  display: grid;
+  gap: 8px;
+}
+
+.driver-group-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 52px;
+  padding: 10px 14px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+}
+
+.driver-group-card input[type='radio'] {
+  flex: 0 0 auto;
+  width: 18px;
+  height: 18px;
+  margin: 0;
+  accent-color: var(--color-green);
+  cursor: pointer;
+}
+
+.driver-group-copy {
+  display: grid;
+  gap: 1px;
+  min-width: 0;
+}
+
+.driver-group-copy strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+}
+
+.driver-group-copy small {
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.78rem;
+}
+
+.driver-group-card.is-selected {
+  border-color: var(--color-green);
+  background: rgba(0, 232, 138, 0.1);
+  box-shadow: inset 0 0 0 1px var(--color-green);
+}
+
+.driver-group-card.is-selected .driver-group-copy small {
+  color: rgba(255, 255, 255, 0.78);
+}
+
 @media (max-width: 380px) {
   .auth-card.driver-auth-card {
     padding: 22px 16px 20px;

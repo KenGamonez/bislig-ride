@@ -2,6 +2,7 @@
 import { AppHeader } from './AppHeader'
 import { supabase } from '../lib/supabase'
 import { sendDriverPasswordReset, signInDriverWithIdentifier } from '../lib/driverAuth'
+import { DRIVER_GROUPS } from '../lib/driverGroups'
 import { useLanguage } from '../lib/i18n'
 
 type DriverLoginProps = {
@@ -16,6 +17,7 @@ type DriverLoginMode = 'login' | 'forgot' | 'sent'
 export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLoginProps) {
   const { t } = useLanguage()
   const [mode, setMode] = useState<DriverLoginMode>('login')
+  const [groupId, setGroupId] = useState<string | null>(null)
   const [identifier, setIdentifier] = useState('')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
@@ -24,6 +26,13 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
+
+    // Group selection is UI-level only for now: it gates submission but the
+    // backend has no group field, so authentication below is unchanged.
+    if (!groupId) {
+      setError(t('auth.errMissingGroup'))
+      return
+    }
 
     if (!identifier.trim() || !password) {
       setError(t('auth.errMissingCredentials'))
@@ -127,6 +136,38 @@ export function DriverLogin({ onLogin, onBack, view, onViewChange }: DriverLogin
 
           {mode === 'login' ? (
             <form onSubmit={handleLogin}>
+              <fieldset className="driver-group-field">
+                <legend className="field-label">{t('auth.selectGroup')}</legend>
+                <div className="driver-group-list" role="radiogroup" aria-label={t('auth.selectGroup')}>
+                  {DRIVER_GROUPS.map((group) => {
+                    const selected = groupId === group.id
+
+                    return (
+                      <label
+                        key={group.id}
+                        className={selected ? 'driver-group-card is-selected' : 'driver-group-card'}
+                      >
+                        <input
+                          type="radio"
+                          name="driver-group"
+                          value={group.id}
+                          checked={selected}
+                          disabled={loading}
+                          onChange={() => {
+                            setGroupId(group.id)
+                            setError('')
+                          }}
+                        />
+                        <span className="driver-group-copy" aria-hidden="true">
+                          <strong>{t(group.labelKey)}</strong>
+                          <small>{t(group.descriptionKey)}</small>
+                        </span>
+                      </label>
+                    )
+                  })}
+                </div>
+              </fieldset>
+
               <label className="field-block">
                 <span className="field-label">{t('auth.usernameEmail')}</span>
                 <input

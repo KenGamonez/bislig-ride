@@ -629,6 +629,12 @@ const en = {
   'auth.errForgotMissing': 'Enter your username or email to find your account.',
   'auth.errResetFailed':
     "We couldn't send a reset link right now. Please try again.",
+  'auth.selectGroup': 'Select your driver group',
+  'auth.groupBtrp': 'BTRP TODA',
+  'auth.groupBtrpDesc': 'BTRP TODA members',
+  'auth.groupIndependent': 'Independent Driver',
+  'auth.groupIndependentDesc': 'Drivers operating independently',
+  'auth.errMissingGroup': 'Please select your driver group.',
 
   /* Driver blocked account (App) */
   'blocked.title': 'Account inactive',
@@ -1311,6 +1317,12 @@ const bi: Record<TranslationKey, string> = {
   'auth.errForgotMissing': 'Isulod ang imong username o email aron makit-an ang imong account.',
   'auth.errResetFailed':
     'Dili maipadala karon ang reset link. Palihog sulayi og balik.',
+  'auth.selectGroup': 'Pilia ang imong driver group',
+  'auth.groupBtrp': 'BTRP TODA',
+  'auth.groupBtrpDesc': 'Mga miyembro sa BTRP TODA',
+  'auth.groupIndependent': 'Independent Driver',
+  'auth.groupIndependentDesc': 'Mga driver nga nag-operate nga independente',
+  'auth.errMissingGroup': 'Palihog pilia ang imong driver group.',
 
   /* Driver blocked account (App) */
   'blocked.title': 'Inaktibo ang account',
