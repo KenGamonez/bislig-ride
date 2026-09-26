@@ -14890,6 +14890,16 @@ a:focus-visible {
   background: #0B1518;
   color: #FFFFFF;
 }
+/* Desktop launcher header — span the full header width (no centered 560px
+   container). Logo hard-left at ~20px, weather/EN-BI hard-right at ~20px. */
+@media (min-width: 768px) {
+  .app-header--simplified .header-inner {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 10px 20px;
+  }
+}
 /* Hero — target */
 .customer-layout .home-hero {
   gap: 10px;
