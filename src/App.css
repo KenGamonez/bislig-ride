@@ -15256,3 +15256,268 @@ a:focus-visible {
 .customer-layout.service-launcher-layout .service-section:last-child {
   padding-bottom: 40px;
 }
+
+/* === BISLIG HUB TARGET OVERRIDE — CUSTOMER HOME (single-column, premium, editorial) === */
+.customer-layout.service-launcher-layout {
+  background: #F7F9FA;
+  padding-bottom: 84px;
+}
+.customer-layout.service-launcher-layout .service-dashboard {
+  max-width: 560px;
+  margin: 0 auto;
+  padding: 0 20px;
+  gap: 24px;
+}
+/* Header — white, compact, divider */
+.app-header--simplified {
+  background: #FFFFFF;
+  border-bottom: 1px solid #E4EAED;
+}
+.app-header--simplified .header-inner {
+  padding: 10px 20px;
+  max-width: 560px;
+  margin: 0 auto;
+}
+.app-header--simplified .brand-logo {
+  height: 26px;
+}
+.app-header--simplified .header-divider {
+  height: 1px;
+  background: #E4EAED;
+}
+.app-header--simplified .language-toggle {
+  background: #F3F6F7;
+  border: 1px solid #E4EAED;
+  border-radius: 999px;
+  padding: 2px;
+  gap: 2px;
+}
+.app-header--simplified .language-option {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 4px 8px;
+  border-radius: 999px;
+  min-width: 32px;
+}
+.app-header--simplified .language-option.is-active {
+  background: #0B1518;
+  color: #FFFFFF;
+}
+/* Hero — target */
+.customer-layout .home-hero {
+  gap: 10px;
+  padding: 18px 0 6px;
+}
+.customer-layout .home-hero-eyebrow {
+  color: #FF6B1A;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  margin: 0;
+  display: block;
+}
+.customer-layout .home-hero-eyebrow::after {
+  display: none;
+}
+.customer-layout .home-hero-title {
+  margin: 0;
+  font-size: clamp(1.95rem, 7.2vw, 2.45rem);
+  line-height: 0.98;
+  letter-spacing: -0.04em;
+  font-weight: 800;
+  color: #0A1418;
+  text-transform: none;
+  max-width: 12ch;
+}
+.customer-layout .home-hero-subtitle {
+  margin: 2px 0 0;
+  max-width: 30ch;
+  font-size: 0.88rem;
+  line-height: 1.5;
+  color: #75868E;
+}
+/* Sections */
+.customer-layout .service-section {
+  gap: 14px;
+}
+.customer-layout .service-section-header {
+  gap: 4px;
+}
+.customer-layout .service-section-label {
+  font-size: 0.60rem;
+  letter-spacing: 0.16em;
+}
+.customer-layout .service-section-title {
+  font-size: 1.15rem;
+}
+.customer-layout .service-section-subtitle {
+  font-size: 0.82rem;
+  color: #75868E;
+}
+/* SINGLE-COLUMN on mobile — override all previous grid cols */
+.customer-layout .service-grid,
+.customer-layout .service-grid.driver-grid {
+  display: grid !important;
+  grid-template-columns: 1fr !important;
+  gap: 12px !important;
+  margin: 0 !important;
+}
+@media (min-width: 768px) {
+  .customer-layout .service-grid,
+  .customer-layout .service-grid.driver-grid {
+    grid-template-columns: 1fr !important;
+    max-width: 560px;
+  }
+}
+/* Cards — 18px radius, subtle, premium */
+.customer-layout .service-card {
+  background: #FFFFFF;
+  border: 1px solid #E4EAED;
+  border-radius: 18px;
+  padding: 16px 14px;
+  gap: 14px;
+  align-items: center;
+  box-shadow: 0 1px 2px rgba(7,16,18,0.04), 0 4px 12px rgba(7,16,18,0.04);
+  overflow: hidden;
+}
+.customer-layout .service-card-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: #0B1518;
+  color: #FFFFFF;
+  flex-shrink: 0;
+}
+.customer-layout .service-card-copy {
+  gap: 3px;
+  min-width: 0;
+}
+.customer-layout .service-card-copy strong {
+  font-size: 0.96rem;
+  font-weight: 750;
+  color: #0A1418;
+}
+.customer-layout .service-card-copy small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #75868E;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.customer-layout .service-card-arrow {
+  width: 32px;
+  height: 32px;
+  border-radius: 999px;
+  background: #F3F6F7;
+  color: #75868E;
+  border: 1px solid #E4EAED;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+/* Primary Ride Now — orange accent */
+.customer-layout .service-card--primary {
+  border-color: rgba(255,107,26,0.28);
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(7,16,18,0.04), 0 8px 20px rgba(255,107,26,0.08);
+}
+.customer-layout .service-card--primary .service-card-icon {
+  background: #FF6B1A;
+  color: #FFFFFF;
+}
+.customer-layout .service-card--primary .service-card-arrow {
+  background: #0B1518;
+  color: #FFFFFF;
+  border-color: #0B1518;
+}
+.customer-layout .service-card--primary .service-card-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: #FFF1E6;
+  color: #FF6B1A;
+  border: 1px solid rgba(255,107,26,0.18);
+  font-size: 0.58rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  padding: 3px 7px;
+  border-radius: 999px;
+}
+/* Hide onboarding banner on customer home launcher */
+.customer-layout.service-launcher-layout ~ .announcement-ticker,
+.customer-layout.service-launcher-layout .announcement-ticker,
+.app-stage:has(.customer-layout.service-launcher-layout) + .app-footer .announcement-ticker,
+.app-stage:has(.service-dashboard) + .app-footer .announcement-ticker {
+  display: none !important;
+}
+.announcement-ticker.is-fixed {
+  display: none !important;
+}
+.customer-layout.service-launcher-layout + .app-footer .announcement-ticker {
+  display: none !important;
+}
+/* Bottom nav — target */
+.mobile-bottom-nav {
+  background: #FFFFFF;
+  border-top: 1px solid #E4EAED;
+  padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
+  height: auto;
+  gap: 4px;
+}
+.mobile-bottom-nav .bottom-nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 6px 4px;
+  border-radius: 12px;
+  background: transparent;
+  border: none;
+  color: #75868E;
+}
+.mobile-bottom-nav .bottom-nav-item.is-active {
+  background: #F3F6F7;
+  color: #0A1418;
+}
+.mobile-bottom-nav .bottom-nav-item.is-active .bottom-nav-icon {
+  color: #FF6B1A;
+}
+.mobile-bottom-nav .bottom-nav-icon {
+  width: 22px;
+  height: 22px;
+  color: currentColor;
+}
+.mobile-bottom-nav .bottom-nav-label {
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1.1;
+  color: currentColor;
+  text-align: center;
+  white-space: nowrap;
+}
+.mobile-bottom-nav .bottom-nav-indicator,
+.mobile-bottom-nav .bottom-nav-item.is-active .bottom-nav-indicator {
+  display: none;
+}
+/* Ensure no horizontal overflow at 320 */
+.customer-layout.service-launcher-layout .service-dashboard,
+.customer-layout .service-grid {
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 380px) {
+  .customer-layout.service-launcher-layout .service-dashboard {
+    padding: 0 16px;
+  }
+  .customer-layout .service-card {
+    padding: 14px 12px;
+    gap: 10px;
+  }
+  .customer-layout .service-card-copy strong {
+    font-size: 0.90rem;
+  }
+}

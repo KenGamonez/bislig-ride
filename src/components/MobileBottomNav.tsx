@@ -61,7 +61,7 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
             <path d="M9 11h6" />
           </svg>
         </span>
-        <span className="bottom-nav-label">{t('nav.myRides')}</span>
+        <span className="bottom-nav-label">Rides</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
 
@@ -73,12 +73,13 @@ export function MobileBottomNav({ activeTab, onTabChange }: MobileBottomNavProps
       >
         <span className="bottom-nav-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M12 3v11" />
-            <path d="m7 10 5 5 5-5" />
-            <path d="M5 21h14" />
+            <path d="M5 8l-2 2 2 2" />
+            <path d="M9 10V8a3 3 0 0 1 3-3h3v4" />
+            <path d="M14 12a2 2 0 0 1 2 2v4H8v-4a2 2 0 0 1 2-2h4z" />
+            <path d="M12 18v2" />
           </svg>
         </span>
-        <span className="bottom-nav-label">{t('nav.install')}</span>
+        <span className="bottom-nav-label">Add Home Screen</span>
         <span className="bottom-nav-indicator" aria-hidden="true"></span>
       </button>
     </nav>
