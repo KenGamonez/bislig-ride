@@ -201,6 +201,24 @@ h4 {
   min-width: 0;
 }
 
+/* Transparent-logo crop zoom: clips ONLY the measured transparent margins
+   (artwork bounds x146-2024 y142-566 of the 2172x724 canvas). The artwork
+   itself is untouched; the layout box never exceeds header height. */
+.brand-link {
+  display: block;
+  height: 46px;
+  width: 203px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.brand-link .brand-logo {
+  height: 78px;
+  width: auto;
+  max-width: none;
+  margin: -15px 0 0 -16px;
+}
+
 .header-right-controls {
   margin-left: auto;
 }
@@ -14682,10 +14700,13 @@ a:focus-visible {
 
 .service-card-copy .service-card-title-row {
   display: inline-flex;
+  width: -moz-fit-content;
+  width: fit-content;
+  max-width: 100%;
   align-items: center;
+  justify-content: flex-start;
   gap: 8px;
   min-width: 0;
-  max-width: 100%;
   flex-wrap: wrap;
   margin-right: auto;
 }
@@ -15552,5 +15573,52 @@ a:focus-visible {
   }
   .pakyawan-active-route strong {
     font-size: 0.95rem;
+  }
+}
+
+/* Logo crop-zoom responsive steps (wrapper = visible artwork only). */
+.app-header--simplified .brand-link {
+  height: 46px;
+  width: 203px;
+}
+
+.app-header--simplified .brand-link .brand-logo {
+  height: 78px;
+  margin: -15px 0 0 -16px;
+}
+
+@media (max-width: 767px) {
+  .brand-link {
+    height: 42px;
+    width: 186px;
+  }
+
+  .brand-link .brand-logo {
+    height: 72px;
+    margin: -14px 0 0 -14px;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-header--simplified .brand-link {
+    height: 38px;
+    width: 168px;
+  }
+
+  .app-header--simplified .brand-link .brand-logo {
+    height: 65px;
+    margin: -13px 0 0 -13px;
+  }
+}
+
+@media (max-width: 360px) {
+  .brand-link {
+    height: 27px;
+    width: 119px;
+  }
+
+  .brand-link .brand-logo {
+    height: 46px;
+    margin: -9px 0 0 -9px;
   }
 }
