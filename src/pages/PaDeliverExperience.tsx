@@ -3,7 +3,7 @@ import { AppHeader, type AppViewMode } from '../components/AppHeader'
 import { PakyawanChatAlertPopup } from '../components/PakyawanChat'
 import { DeliveryChatSection } from '../components/DeliveryChatSection'
 import { DeliveryRating } from '../components/DeliveryRating'
-import { confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
+import { cancelDeliveryBooking, confirmDeliveryQuote, createDeliveryBooking, getDeliveryBooking } from '../lib/deliveries'
 import { fetchDeliveryProofUrl } from '../lib/deliveryProof'
 import { playChatNotification, showBrowserNotification, unlockNotificationAudio } from '../lib/notifications'
 import { formatCentavos } from '../lib/fare'
@@ -70,6 +70,9 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [submitError, setSubmitError] = useState('')
   const [isConfirming, setIsConfirming] = useState(false)
   const [confirmError, setConfirmError] = useState('')
+  const [confirmingCancel, setConfirmingCancel] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
+  const [cancelError, setCancelError] = useState('')
   const [deliveryAlert, setDeliveryAlert] = useState<{ status: string } | null>(null)
   const [deliveryUnread, setDeliveryUnread] = useState(false)
   const [deliveryBellOpen, setDeliveryBellOpen] = useState(false)
@@ -296,6 +299,32 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       setConfirmError(error instanceof Error && error.message ? error.message : t('pad.confirmFailed'))
     } finally {
       setIsConfirming(false)
+    }
+  }
+
+  const handleCancelDelivery = async () => {
+    if (cancelling || !createdDeliveryId || !createdAccessToken) {
+      return
+    }
+
+    setCancelling(true)
+    setCancelError('')
+
+    try {
+      const cancelled = await cancelDeliveryBooking(createdDeliveryId, createdAccessToken)
+      setTrackedDelivery(cancelled)
+      setConfirmingCancel(false)
+
+      try {
+        window.localStorage.removeItem(`bislig-ride-padeliver-${createdDeliveryId}`)
+      } catch {
+        // Private browsing or disabled storage — nothing to clean up.
+      }
+    } catch (error) {
+      console.error('Unable to cancel delivery:', error)
+      setCancelError(error instanceof Error && error.message ? error.message : t('pad.cancelFailed'))
+    } finally {
+      setCancelling(false)
     }
   }
 
@@ -886,9 +915,49 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
                 {isRefreshing ? t('pad.checkingStatus') : t('pad.refreshStatus')}
               </button>
             </div>
-            <button type="button" className="primary-action" onClick={onBack}>
-              {t('form.backHome')}
-            </button>
+              {(status === 'pending' || status === 'dispatching') && createdDeliveryId && createdAccessToken ? (
+                confirmingCancel ? (
+                  <div className="pad-cancel-confirm">
+                    <p>{t('pad.cancelConfirmPrompt')}</p>
+                    <div className="pakyawan-actions">
+                      <button
+                        type="button"
+                        className="secondary-action compact-button"
+                        disabled={cancelling}
+                        onClick={() => void handleCancelDelivery()}
+                      >
+                        {cancelling ? t('pad.cancelling') : t('pad.confirmCancelYes')}
+                      </button>
+                      <button
+                        type="button"
+                        className="secondary-action compact-button"
+                        disabled={cancelling}
+                        onClick={() => {
+                          setConfirmingCancel(false)
+                          setCancelError('')
+                        }}
+                      >
+                        {t('pad.keepBooking')}
+                      </button>
+                    </div>
+                    {cancelError ? <span className="field-error" role="alert">{cancelError}</span> : null}
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    className="link-button"
+                    onClick={() => {
+                      setConfirmingCancel(true)
+                      setCancelError('')
+                    }}
+                  >
+                    {t('pad.cancelDelivery')}
+                  </button>
+                )
+              ) : null}
+              <button type="button" className="primary-action" onClick={onBack}>
+                {t('form.backHome')}
+              </button>
           </section>
           {deliveryAlert && trackedDelivery ? (
             <PakyawanChatAlertPopup

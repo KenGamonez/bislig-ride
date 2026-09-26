@@ -31,7 +31,7 @@ const transportServices: ServiceItem[] = [
     ),
     onClick: () => {},
     isPrimary: true,
-    badge: 'FASTEST'
+    badge: 'POPULAR'
   },
   {
     id: 'pakyawan',
@@ -158,7 +158,12 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
                 {service.icon}
               </div>
               <div className="service-card-copy">
-                <strong>{service.label}</strong>
+                <span className="service-card-title-row">
+                  <strong>{service.label}</strong>
+                  {service.isPrimary && service.badge && (
+                    <span className="service-card-badge">{service.badge}</span>
+                  )}
+                </span>
                 <small>{service.description}</small>
               </div>
               <span className="service-card-arrow" aria-hidden="true">
@@ -167,9 +172,6 @@ export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: Servi
                   <path d="m12 5 7 7-7 7" />
                 </svg>
               </span>
-              {service.isPrimary && service.badge && (
-                <span className="service-card-badge">{service.badge}</span>
-              )}
             </article>
           ))}
         </div>

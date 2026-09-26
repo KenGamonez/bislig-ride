@@ -218,6 +218,18 @@ export async function createDeliveryBooking(booking: DeliveryBookingInsert) {
   return data
 }
 
+export async function cancelDeliveryBooking(deliveryId: string, accessToken: string): Promise<DeliveryBooking> {
+  const { data, error } = await supabase
+    .rpc('cancel_delivery_booking', { p_delivery_id: deliveryId, p_access_token: accessToken })
+    .single()
+
+  if (error) throw error
+
+  const row = data as DeliveryBooking & { access_token?: string }
+  delete row.access_token
+  return row
+}
+
 export async function getDeliveryBooking(deliveryId: string, accessToken: string): Promise<DeliveryBooking> {
   const { data, error } = await supabase
     .rpc('get_delivery_booking', { p_delivery_id: deliveryId, p_access_token: accessToken })

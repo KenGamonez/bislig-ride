@@ -15,6 +15,7 @@
     "test:vehicle": "node scripts/vehicle-dispatch-check.ts",
     "test:delivery-quote": "node scripts/delivery-quote-check.ts",
     "test:delivery-trip": "node scripts/delivery-trip-check.ts",
+    "test:delivery-cancel": "node scripts/delivery-cancel-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

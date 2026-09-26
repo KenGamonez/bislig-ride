@@ -8137,6 +8137,20 @@ a[href]:not(.nav-link):not(.brand-link):not(.secondary-action):not(.primary-acti
   border: 1px solid var(--border);
 }
 
+.pad-cancel-confirm {
+  display: grid;
+  gap: 8px;
+  justify-items: center;
+  text-align: center;
+}
+
+.pad-cancel-confirm p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
 /* Passenger timing selector: unmistakable selected state (scoped so the
    admin filter variant is untouched). */
 .flow-date-group .flow-date-row .secondary-action {
@@ -14656,6 +14670,22 @@ a:focus-visible {
   font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
+}
+
+.service-card-copy .service-card-title-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.service-card--primary .service-card-badge,
+.customer-layout .service-card--primary .service-card-badge {
+  position: static;
+  flex: 0 0 auto;
+  background: var(--color-orange);
+  color: var(--color-white);
 }
 
 /* --- Primary Service Card (Ride Now) --- */
