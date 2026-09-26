@@ -204,19 +204,19 @@ h4 {
 /* Transparent-logo crop zoom: clips ONLY the measured transparent margins
    (artwork bounds x146-2024 y142-566 of the 2172x724 canvas). The artwork
    itself is untouched; the layout box never exceeds header height. */
-.brand-link {
+.app-header .brand-link {
   display: block;
-  height: 46px;
-  width: 203px;
+  height: 36px;
+  width: 160px;
   overflow: hidden;
   flex-shrink: 0;
 }
 
-.brand-link .brand-logo {
-  height: 78px;
+.app-header .brand-link .brand-logo {
+  height: 62px;
   width: auto;
   max-width: none;
-  margin: -15px 0 0 -16px;
+  margin: -12px 0 0 -16px;
 }
 
 .header-right-controls {
@@ -14699,16 +14699,12 @@ a:focus-visible {
 }
 
 .service-card-copy .service-card-title-row {
-  display: inline-flex;
-  width: -moz-fit-content;
-  width: fit-content;
+  display: block;
   max-width: 100%;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 8px;
-  min-width: 0;
-  flex-wrap: wrap;
-  margin-right: auto;
+}
+
+.service-card-copy .service-card-title-row > strong {
+  margin-right: 8px;
 }
 
 .service-card--primary .service-card-badge,
@@ -15577,48 +15573,38 @@ a:focus-visible {
 }
 
 /* Logo crop-zoom responsive steps (wrapper = visible artwork only). */
-.app-header--simplified .brand-link {
-  height: 46px;
-  width: 203px;
-}
-
-.app-header--simplified .brand-link .brand-logo {
-  height: 78px;
-  margin: -15px 0 0 -16px;
-}
-
 @media (max-width: 767px) {
-  .brand-link {
-    height: 42px;
-    width: 186px;
+  .app-header .brand-link {
+    height: 26px;
+    width: 115px;
   }
 
-  .brand-link .brand-logo {
-    height: 72px;
-    margin: -14px 0 0 -14px;
+  .app-header .brand-link .brand-logo {
+    height: 44px;
+    margin: -9px 0 0 -9px;
   }
 }
 
 @media (max-width: 420px) {
-  .app-header--simplified .brand-link {
-    height: 38px;
-    width: 168px;
+  .app-header .brand-link {
+    height: 24px;
+    width: 106px;
   }
 
-  .app-header--simplified .brand-link .brand-logo {
-    height: 65px;
-    margin: -13px 0 0 -13px;
+  .app-header .brand-link .brand-logo {
+    height: 41px;
+    margin: -8px 0 0 -8px;
   }
 }
 
 @media (max-width: 360px) {
-  .brand-link {
-    height: 27px;
-    width: 119px;
+  .app-header .brand-link {
+    height: 22px;
+    width: 96px;
   }
 
-  .brand-link .brand-logo {
-    height: 46px;
-    margin: -9px 0 0 -9px;
+  .app-header .brand-link .brand-logo {
+    height: 38px;
+    margin: -7px 0 0 -8px;
   }
 }
