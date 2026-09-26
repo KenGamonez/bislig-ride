@@ -406,6 +406,9 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       'picked_up',
       'in_transit',
       'delivered',
+      'cancelled',
+      'failed',
+      'no_driver',
     ]
 
     const sig = `${trackedDelivery.id}:${trackedDelivery.status}`

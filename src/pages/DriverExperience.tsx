@@ -1362,6 +1362,8 @@ return unsubscribe
             playRequestChime()
             showBrowserNotification('Delivery confirmed', subtitle)
           }
+
+          return
         },
       )
       .subscribe()
@@ -1369,6 +1371,68 @@ return unsubscribe
     return () => {
       mounted = false
       void supabase.removeChannel(channel)
+    }
+  }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline])
+
+  useEffect(() => {
+    if (!driverId || !driverAuthId || !canAcceptDeliveries) {
+      return
+    }
+
+    // Terminal transitions (cancelled / failed / no_driver) surface a bell
+    // notification; the D1 attention banner + history handle the visual
+    // treatment. Delivered has its own completion path above.
+    const terminalChannel = supabase
+      .channel(`driver-deliveries-terminal-${driverId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'deliveries',
+          filter: `driver_id=eq.${driverId}`,
+        },
+        (payload) => {
+          const incoming = (payload.new ?? {}) as Partial<DeliveryBooking>
+
+          if (
+            !incoming.id ||
+            incoming.driver_id !== driverId ||
+            (incoming.status !== 'cancelled' && incoming.status !== 'failed' && incoming.status !== 'no_driver')
+          ) {
+            return
+          }
+
+          const subtitle = `${incoming.pickup_address ?? 'Pickup'} → ${incoming.delivery_address ?? 'Destination'} · ${incoming.status.toUpperCase().replace(/_/g, ' ')}`
+          const noticeId = `delivery-terminal-${incoming.id}-${incoming.status}`
+
+          setNotifications((current) =>
+            current.some((item) => item.id === noticeId)
+              ? current
+              : [
+                  {
+                    id: noticeId,
+                    kind: 'pakyawan',
+                    rideId: null,
+                    title: 'Delivery no longer active',
+                    subtitle,
+                    seen: false,
+                    createdAt: Date.now(),
+                  },
+                  ...current,
+                ],
+          )
+
+          if (driverOnline) {
+            playRequestChime()
+            showBrowserNotification('Delivery no longer active', subtitle)
+          }
+        },
+      )
+      .subscribe()
+
+    return () => {
+      void supabase.removeChannel(terminalChannel)
     }
   }, [driverId, driverAuthId, canAcceptDeliveries, driverOnline])
 
