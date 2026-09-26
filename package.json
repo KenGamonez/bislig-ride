@@ -14,6 +14,7 @@
     "test:gps": "node scripts/gps-flow-check.ts",
     "test:vehicle": "node scripts/vehicle-dispatch-check.ts",
     "test:delivery-quote": "node scripts/delivery-quote-check.ts",
+    "test:delivery-trip": "node scripts/delivery-trip-check.ts",
     "preview": "vite preview"
   },
   "dependencies": {

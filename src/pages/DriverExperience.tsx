@@ -17,6 +17,7 @@ import { fetchDriverReputation, fetchReputationFor, formatCancellationRate, type
 import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, declinePakyawanOffer, fetchAvailablePakyawanBookings, fetchDriverPakyawanBookings, fetchDriverPakyawanOffers, setPakyawanDriverPrice, type PakyawanTripLifecycleStatus } from '../lib/scheduledBookings'
 import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, formatDeliveryTiming, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
+import { isCurrentDeliveryStatus, selectCurrentDeliveryTrip } from '../lib/deliveryTrip'
 import { selectCurrentPakyawanTrip } from '../lib/pakyawanWorkflow'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
@@ -274,6 +275,8 @@ export function DriverExperience({
   const [deliveredDeliveries, setDeliveredDeliveries] = useState<DeliveryBooking[]>([])
   const [deliveryChatBookingId, setDeliveryChatBookingId] = useState<string | null>(null)
   const [deliveryRatingBookingId, setDeliveryRatingBookingId] = useState<string | null>(null)
+  const [showDeliveryHistory, setShowDeliveryHistory] = useState(false)
+  const [dismissedDeliveryIds, setDismissedDeliveryIds] = useState<string[]>([])
   const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ bookingId: string; route: string; preview: string } | null>(null)
   const deliveryChatSeenIdsRef = useRef<Set<string>>(new Set())
   const [deliveryProofView, setDeliveryProofView] = useState<{ bookingId: string; url: string } | null>(null)
@@ -2672,6 +2675,10 @@ const displayedDriver = driverProfile ?? demoDriver
     setNotifications((current) => current.filter((item) => item.id !== `delivery-${bookingId}`))
   }
 
+  const dismissDeliveryNotice = (bookingId: string) => {
+    setDismissedDeliveryIds((current) => (current.includes(bookingId) ? current : [...current, bookingId]))
+  }
+
   const resolveDeliveryPriceError = (error: unknown): string => {
     const message = error instanceof Error ? error.message : ''
 
@@ -2813,6 +2820,13 @@ const displayedDriver = driverProfile ?? demoDriver
           setAcceptedDeliveries(items.slice(0, 10))
         } catch {
           setAcceptedDeliveries((current) => current.filter((booking) => booking.id !== bookingId).slice(0, 10))
+        }
+
+        try {
+          const deliveredItems = await fetchDriverDeliveredDeliveries(driverId)
+          setDeliveredDeliveries(deliveredItems)
+        } catch (historyError) {
+          console.error('Unable to refresh delivered deliveries:', historyError)
         }
 
         setCompletedDeliveryNotice(updated)
@@ -3238,6 +3252,13 @@ const displayedDriver = driverProfile ?? demoDriver
       )
     }
 
+    const currentDelivery = selectCurrentDeliveryTrip(acceptedDeliveries)
+    const otherHeldDeliveries = acceptedDeliveries.filter((booking) => booking.id !== currentDelivery?.id)
+    const attentionDeliveries = otherHeldDeliveries.filter(
+      (booking) => !isCurrentDeliveryStatus(booking.status) && !dismissedDeliveryIds.includes(booking.id),
+    )
+    const historyCount = otherHeldDeliveries.length + deliveredDeliveries.length
+
     return (
       <section className="driver-card pakyawan-card">
         <div className="state-heading">
@@ -3343,11 +3364,11 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {acceptedDeliveries.length > 0 ? (
-          <div className="pakyawan-accepted">
-            <p className="section-label">ACCEPTED BY YOU</p>
+        {currentDelivery ? (
+          <div className="delv-current">
+            <p className="section-label">CURRENT DELIVERY</p>
             <ul className="pakyawan-accepted-list">
-              {acceptedDeliveries.map((booking) => (
+              {[currentDelivery].map((booking) => (
                 <li key={booking.id}>
                   <strong>
                     {booking.pickup_address} → {booking.delivery_address}
@@ -3568,6 +3589,82 @@ const displayedDriver = driverProfile ?? demoDriver
           </div>
         ) : null}
 
+        {attentionDeliveries.map((booking) => (
+          <section key={booking.id} className="ride-cancelled-notice" role="alert">
+            <div>
+              <strong>Delivery no longer active</strong>
+              <span>
+                {booking.pickup_address} → {booking.delivery_address} · Status:{' '}
+                {booking.status.toUpperCase().replace(/_/g, ' ')}. This delivery was cancelled or could not
+                be completed.
+              </span>
+            </div>
+            <button type="button" onClick={() => dismissDeliveryNotice(booking.id)}>
+              Dismiss
+            </button>
+          </section>
+        ))}
+
+        {historyCount > 0 && !showDeliveryHistory ? (
+          <div className="pakyawan-actions">
+            <button
+              type="button"
+              className="secondary-action compact-button"
+              onClick={() => setShowDeliveryHistory(true)}
+            >
+              View History ({historyCount})
+            </button>
+          </div>
+        ) : null}
+
+        {showDeliveryHistory ? (
+          <div className="delv-history">
+            <div className="state-heading">
+              <div>
+                <p className="section-label">DELIVERY HISTORY</p>
+                <h3>Past deliveries</h3>
+              </div>
+              <button
+                type="button"
+                className="secondary-action compact-button"
+                onClick={() => setShowDeliveryHistory(false)}
+              >
+                Hide History
+              </button>
+            </div>
+            <ul className="pakyawan-accepted-list">
+              {otherHeldDeliveries.map((booking) => (
+                <li key={booking.id} className="delv-row">
+                  <div className="delv-top">
+                    <div className="delv-main">
+                      <strong className="delv-route">
+                        {booking.pickup_address} → {booking.delivery_address}
+                      </strong>
+                      <span className="delv-meta">
+                        {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
+                      </span>
+                    </div>
+                    <div className="delv-side">
+                      <span className="pak-req-status">{booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+                      {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
+                        <strong className="delv-fee">₱{formatCentavos(booking.price_cents)}</strong>
+                      ) : null}
+                    </div>
+                  </div>
+                  {isCurrentDeliveryStatus(booking.status) && booking.driver_id === driverId ? (
+                    <DeliveryChatSection
+                      deliveryId={booking.id}
+                      role="driver"
+                      otherPartyName={booking.sender_name}
+                      toggleLabel="Chat with Customer"
+                      enableRealtime
+                      forceOpen={deliveryChatBookingId === booking.id}
+                      onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
+                    />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
         {deliveredDeliveries.length > 0 ? (
           <div className="pakyawan-accepted">
             <p className="section-label">DELIVERED</p>
@@ -3645,6 +3742,16 @@ const displayedDriver = driverProfile ?? demoDriver
               ))}
             </ul>
           </div>
+        ) : null}
+          </div>
+        ) : null}
+
+        {!currentDelivery &&
+        deliveryRequests.length === 0 &&
+        activeDeliveryOffers.length === 0 &&
+        !deliveryError &&
+        driverOnline ? (
+          <p className="muted-copy">No active delivery right now. New requests will appear here.</p>
         ) : null}
       </section>
     )
