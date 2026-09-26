@@ -2112,7 +2112,7 @@ onClick={() => setRating(star)}
 
       <main className={showRideLauncher ? 'customer-layout service-launcher-layout' : openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
         {showRideLauncher ? (
-          <ServiceDashboard onSelectRideNow={handleRideNowCtaClick} />
+          <ServiceDashboard onSelectRideNow={handleRideNowCtaClick} onSelectDriverLogin={() => onSwitchView?.('driver')} />
         ) : (
         <>
         <section className="primary-panel">

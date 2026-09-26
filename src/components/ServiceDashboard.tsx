@@ -2,6 +2,7 @@ import { useLanguage } from '../lib/i18n'
 
 type ServiceDashboardProps = {
   onSelectRideNow: () => void
+  onSelectDriverLogin?: () => void
 }
 
 interface ServiceItem {
@@ -104,15 +105,20 @@ const driverServices: ServiceItem[] = [
   }
 ]
 
-export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
+export function ServiceDashboard({ onSelectRideNow, onSelectDriverLogin }: ServiceDashboardProps) {
   const { t } = useLanguage()
 
-  const handlePrimaryClick = (id: string) => {
-    if (id === 'ride-now') {
+  const handleServiceActivate = (service: ServiceItem) => {
+    if (service.id === 'ride-now') {
       onSelectRideNow()
-    } else if (id === 'driver-login') {
-      // The parent component handles view switching
-      window.dispatchEvent(new CustomEvent('switch-to-driver-login'))
+      return
+    }
+    if (service.id === 'driver-login') {
+      onSelectDriverLogin?.()
+      return
+    }
+    if (service.href) {
+      window.location.href = service.href
     }
   }
 
@@ -142,7 +148,7 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 if (service.onClick) {
                   service.onClick()
                 }
-                handlePrimaryClick(service.id)
+                handleServiceActivate(service)
               }}
               role="button"
               tabIndex={0}
@@ -150,7 +156,7 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   if (service.onClick) service.onClick()
-                  handlePrimaryClick(service.id)
+                  handleServiceActivate(service)
                 }
               }}
             >
@@ -192,7 +198,7 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 if (service.onClick) {
                   service.onClick()
                 }
-                handlePrimaryClick(service.id)
+                handleServiceActivate(service)
               }}
               role="button"
               tabIndex={0}
@@ -200,7 +206,7 @@ export function ServiceDashboard({ onSelectRideNow }: ServiceDashboardProps) {
                 if (e.key === 'Enter' || e.key === ' ') {
                   e.preventDefault()
                   if (service.onClick) service.onClick()
-                  handlePrimaryClick(service.id)
+                  handleServiceActivate(service)
                 }
               }}
             >
