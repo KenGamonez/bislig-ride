@@ -82,6 +82,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
   const [proofError, setProofError] = useState('')
   const [deliveryChatOpen, setDeliveryChatOpen] = useState(false)
   const [deliveryChatAlert, setDeliveryChatAlert] = useState<{ preview: string } | null>(null)
+  const [requestedDeliveryError, setRequestedDeliveryError] = useState<string | null>(null)
 
   const handleDeliveryChatMessage = useCallback(
     (preview: string) => {
@@ -505,6 +506,16 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       const prefix = 'bislig-ride-padeliver-'
       const candidates: Array<{ id: string; token: string }> = []
 
+      // PassengerUpcoming links open a specific delivery: /pa-deliver?delivery=<id>.
+      // That exact booking always wins so a customer returning to a booking sees
+      // that booking — not whichever other token happens to be in storage.
+      let requestedId: string | null = null
+      try {
+        requestedId = new URLSearchParams(window.location.search).get('delivery')
+      } catch {
+        requestedId = null
+      }
+
       try {
         for (let i = 0; i < window.localStorage.length; i += 1) {
           const key = window.localStorage.key(i)
@@ -517,14 +528,24 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
         return
       }
 
+      if (requestedId) {
+        candidates.sort((a, b) => (a.id === requestedId ? -1 : b.id === requestedId ? 1 : 0))
+      }
+
+      // Terminal bookings are only restored when explicitly requested. They
+      // keep their token so a refreshed link can still explain the outcome,
+      // but they never hijack a normal return to the form.
+
       for (const candidate of candidates) {
+        const isRequested = candidate.id === requestedId
+
         try {
           const booking = await getDeliveryBooking(candidate.id, candidate.token)
           if (cancelled) {
             return
           }
 
-          if (
+          const live =
             booking.status === 'pending' ||
             booking.status === 'dispatching' ||
             booking.status === 'quoted' ||
@@ -534,7 +555,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             booking.status === 'driver_arrived' ||
             booking.status === 'picked_up' ||
             booking.status === 'in_transit'
-          ) {
+
+          if (live || isRequested) {
             setCreatedDeliveryId(candidate.id)
             setCreatedAccessToken(candidate.token)
             setTrackedDelivery(booking)
@@ -554,6 +576,13 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
             // Private browsing or disabled storage — nothing to clean up.
           }
         } catch {
+          if (isRequested) {
+            // The requested booking is the one the customer asked for: never
+            // silently fall back to a different delivery or drop the link.
+            setRequestedDeliveryError(candidate.id)
+            return
+          }
+
           try {
             window.localStorage.removeItem(`${prefix}${candidate.id}`)
           } catch {
@@ -731,6 +760,7 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       }
     }
 
+    setRequestedDeliveryError(null)
     setCreatedDeliveryId(null)
     setCreatedAccessToken(null)
     setTrackedDelivery(null)
@@ -750,6 +780,34 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
     setSubmitted(false)
   }
 
+  if (requestedDeliveryError) {
+    return (
+      <>
+        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
+        <main className="scheduled-shell flow-shell">
+          <section className="scheduled-card scheduled-success pad-terminal" id="pad-delivery-box">
+            <p className="eyebrow">{t('pad.supportTitle')}</p>
+            <h1>{t('pad.requestedNotFound')}</h1>
+            <p>{t('pad.requestedNotFoundBody')}</p>
+            <p className="booking-ref">{t('pad.bookingRef')}: {requestedDeliveryError.slice(0, 8)}…</p>
+            <div className="pakyawan-actions">
+              <button
+                type="button"
+                className="primary-action compact-button"
+                onClick={() => {
+                  setRequestedDeliveryError(null)
+                  handleStartNewDelivery()
+                }}
+              >
+                {t('pad.newDelivery')}
+              </button>
+            </div>
+          </section>
+        </main>
+      </>
+    )
+  }
+
   if (submitted) {
     const status = trackedDelivery?.status
     const isTerminalDelivery = status === 'delivered' || status === 'cancelled' || status === 'failed'
@@ -767,6 +825,8 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
       : status === 'picked_up' ? t('pad.nextPickedUp')
       : status === 'in_transit' ? t('pad.nextInTransit')
       : status === 'delivered' ? t('pad.nextDelivered')
+      : status === 'cancelled' ? t('pad.nextCancelled')
+      : status === 'failed' ? t('pad.nextFailed')
       : status === 'no_driver' ? t('pad.nextNoDriver')
       : null
 
@@ -811,18 +871,30 @@ export function PaDeliverExperience({ onBack }: { onBack: () => void }) {
               <p>{t('pad.receivedBody')}</p>
             )}
             {nextCopy ? <p className="pad-nextstep">{nextCopy}</p> : null}
-            {status === 'no_driver' ? (
+            {status === 'no_driver' || status === 'cancelled' || status === 'failed' ? (
               <div className="pakyawan-actions">
                 <button type="button" className="secondary-action compact-button" onClick={handleStartNewDelivery}>
                   {t('pad.newDelivery')}
                 </button>
               </div>
             ) : null}
+            {status === 'failed' ? (
+              <div className="pad-proof-box">
+                <span className="field-label">{t('pad.supportTitle')}</span>
+                <p>{t('pad.supportCta')}</p>
+              </div>
+            ) : null}
             {status === 'delivered' && quotedCents !== null ? (
-              <p className="booking-fee">{t('pad.trackDelivered')}: ₱{formatCentavos(quotedCents)}</p>
+              <>
+                <p className="booking-fee">{t('pad.deliveryFee')}: ₱{formatCentavos(quotedCents)}</p>
+                <p className="muted-copy">{t('pad.deliveredSummary')}</p>
+              </>
             ) : null}
             {createdDeliveryId ? (
               <p className="booking-ref">{t('pad.bookingRef')}: {createdDeliveryId.slice(0, 8)}…</p>
+            ) : null}
+            {status === 'in_transit' ? (
+              <p className="muted-copy">{t('pad.proofOnDelivery')}</p>
             ) : null}
             {status === 'delivered' && trackedDelivery?.proof_available ? (
               <div className="pad-proof-box">

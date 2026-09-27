@@ -72,6 +72,8 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
   const [quoteAlert, setQuoteAlert] = useState<{ amount: number } | null>(null)
   const [quoteUnread, setQuoteUnread] = useState(false)
   const [quoteBellOpen, setQuoteBellOpen] = useState(false)
+  const [chatUnread, setChatUnread] = useState(false)
+  const [requestedBookingError, setRequestedBookingError] = useState<string | null>(null)
   const prevQuoteSigRef = useRef<string | null>(null)
 
   const quoteViewedKey = (bookingId: string) => `bislig-ride-pakyawan-quoteviewed-${bookingId}`
@@ -115,6 +117,26 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     enabled: chatAvailable,
     notificationTitle: t('pak.newMessage'),
   })
+
+  // The alert popup is dismissible, so the unread state has to survive it:
+  // the indicator stays on the chat button until the chat is actually opened.
+  useEffect(() => {
+    if (pakyawanMessageAlert) {
+      setChatUnread(true)
+    }
+  }, [pakyawanMessageAlert])
+
+  const handleTogglePakyawanChat = () => {
+    unlockNotificationAudio()
+    setPakyawanChatOpen((current) => {
+      if (!current) {
+        setChatUnread(false)
+        void markChatSeen()
+      }
+
+      return !current
+    })
+  }
 
   const updateField = (field: keyof PakyawanBookingForm, value: string) => {
     setForm((current) => ({ ...current, [field]: value }))
@@ -245,16 +267,50 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     }
   }
 
+  const handleStartNewTrip = () => {
+    if (createdBooking) {
+      try {
+        window.localStorage.removeItem(`bislig-ride-pakyawan-${createdBooking.id}`)
+      } catch {
+        // Private browsing or disabled storage.
+      }
+    }
+
+    setCreatedBooking(null)
+    setTrackedBooking(null)
+    setTrackingError('')
+    setConfirmError('')
+    setQuoteAlert(null)
+    setQuoteUnread(false)
+    setQuoteBellOpen(false)
+    setPakyawanChatOpen(false)
+    setRequestedBookingError(null)
+    prevQuoteSigRef.current = null
+    setForm(initialForm)
+    setErrors({})
+    setStep(1)
+    setSubmitted(false)
+  }
+
   useEffect(() => {
     if (submitted) {
       return
     }
-
     let cancelled = false
 
     const restoreTrackedBooking = async () => {
       const prefix = 'bislig-ride-pakyawan-'
       const candidates: Array<{ id: string; token: string }> = []
+
+      // My Rides links open one specific booking: /pakyawan?booking=<id>.
+      // That booking always wins so re-entry shows the booking the customer
+      // asked for, not whichever other token happens to be in storage.
+      let requestedId: string | null = null
+      try {
+        requestedId = new URLSearchParams(window.location.search).get('booking')
+      } catch {
+        requestedId = null
+      }
 
       try {
         for (let i = 0; i < window.localStorage.length; i += 1) {
@@ -268,14 +324,20 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
         return
       }
 
+      if (requestedId) {
+        candidates.sort((a, b) => (a.id === requestedId ? -1 : b.id === requestedId ? 1 : 0))
+      }
+
       for (const candidate of candidates) {
+        const isRequested = candidate.id === requestedId
+
         try {
           const booking = await getPakyawanBooking(candidate.id, candidate.token)
           if (cancelled) {
             return
           }
 
-          if (
+          const live =
             booking.status === 'pending' ||
             booking.status === 'assigned' ||
             booking.status === 'quoted' ||
@@ -284,7 +346,11 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             booking.status === 'driver_on_way' ||
             booking.status === 'driver_arrived' ||
             booking.status === 'in_progress'
-          ) {
+
+          // Terminal bookings are only restored when explicitly requested, so a
+          // refreshed link can still explain the outcome without hijacking a
+          // normal return to the form.
+          if (live || isRequested) {
             setCreatedBooking({ id: candidate.id, accessToken: candidate.token })
             setTrackedBooking(booking)
             setQuoteAlert(null)
@@ -301,6 +367,11 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             // Private browsing or disabled storage — nothing to clean up.
           }
         } catch {
+          if (isRequested) {
+            setRequestedBookingError(candidate.id)
+            return
+          }
+
           try {
             window.localStorage.removeItem(`${prefix}${candidate.id}`)
           } catch {
@@ -601,15 +672,73 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
     )
   }
 
+  if (requestedBookingError) {
+    return (
+      <>
+        <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
+        <main className="scheduled-shell flow-shell">
+          <section className="scheduled-card scheduled-success">
+            <p className="eyebrow">{t('pak.supportTitle')}</p>
+            <h1>{t('pak.requestedNotFound')}</h1>
+            <p>{t('pak.requestedNotFoundBody')}</p>
+            <p className="booking-ref">{t('pak.bookingRef')}: {requestedBookingError.slice(0, 8)}…</p>
+            <div className="pakyawan-actions">
+              <button type="button" className="primary-action compact-button" onClick={handleStartNewTrip}>
+                {t('pak.newTrip')}
+              </button>
+            </div>
+          </section>
+        </main>
+      </>
+    )
+  }
+
   if (submitted) {
     const status = trackedBooking?.status
     const quotedCents = trackedBooking && typeof trackedBooking.price_cents === 'number' && Number.isFinite(trackedBooking.price_cents)
       ? trackedBooking.price_cents
       : null
-    const nextStage =
-      status === 'assigned' ? 1 : status === 'quoted' ? 2 : status === 'confirmed' || status === 'scheduled' ? 3 : 0
-    const nextDetail =
-      status === 'assigned'
+    const isCancelled = status === 'cancelled'
+    const isTripStage =
+      status === 'driver_on_way' ||
+      status === 'driver_arrived' ||
+      status === 'in_progress' ||
+      status === 'completed'
+
+    const bookingSteps = [t('pak.waitingDriver'), t('pak.newQuote'), t('pak.confirmBooking')]
+    const tripSteps = [
+      t('pak.bookingConfirmed'),
+      t('pak.driverOnWay'),
+      t('pak.driverArrived'),
+      t('pak.tripInProgress'),
+      t('pak.tripCompleted'),
+    ]
+
+    const nextStage = isTripStage
+      ? status === 'completed'
+        ? 4
+        : status === 'in_progress'
+          ? 3
+          : status === 'driver_arrived'
+            ? 2
+            : 1
+      : status === 'assigned'
+        ? 1
+        : status === 'quoted'
+          ? 2
+          : status === 'confirmed' || status === 'scheduled'
+            ? 3
+            : 0
+
+    const nextDetail = isTripStage
+      ? status === 'driver_on_way'
+        ? t('pak.nextDriverOnWay')
+        : status === 'driver_arrived'
+          ? t('pak.nextDriverArrived')
+          : status === 'in_progress'
+            ? t('pak.nextInProgress')
+            : t('pak.nextCompleted')
+      : status === 'assigned'
         ? t('pak.nextPrice')
         : status === 'quoted'
           ? t('pak.nextConfirm')
@@ -617,14 +746,29 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
             ? t('pak.nextScheduled')
             : t('pak.nextFinding')
 
+    const nextSteps = isTripStage ? tripSteps : bookingSteps
+    const showNextSteps =
+      !isCancelled &&
+      (isTripStage ||
+        status === 'pending' ||
+        status === 'assigned' ||
+        status === 'quoted' ||
+        status === 'confirmed' ||
+        status === 'scheduled')
+
     return (
       <>
         <AppHeader view="Rider" onViewChange={routeToView} primaryLabel={t('nav.myRides')} onPrimaryAction={onBack} />
         <main className="scheduled-shell flow-shell">
           <section className="scheduled-card scheduled-success">
-            <p className="eyebrow">{status === 'quoted' ? t('pak.quoteReady') : status === 'assigned' ? t('pak.driverFound') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedEyebrow')}</p>
-            <h1>{status === 'quoted' ? t('pak.quoteReady') : status === 'assigned' ? t('pak.assignedTitle') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedTitle')}</h1>
-            {status === 'confirmed' || status === 'scheduled' ? (
+            <p className="eyebrow">{isCancelled ? t('pak.cancelledTitle') : status === 'quoted' ? t('pak.quoteReady') : status === 'assigned' ? t('pak.driverFound') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedEyebrow')}</p>
+            <h1>{isCancelled ? t('pak.cancelledTitle') : status === 'quoted' ? t('pak.quoteReady') : status === 'assigned' ? t('pak.assignedTitle') : status === 'driver_on_way' ? t('pak.driverOnWay') : status === 'driver_arrived' ? t('pak.driverArrived') : status === 'in_progress' ? t('pak.tripInProgress') : status === 'completed' ? t('pak.tripCompleted') : status === 'confirmed' || status === 'scheduled' ? t('pak.bookingConfirmed') : t('pak.receivedTitle')}</h1>
+            {isCancelled ? (
+              <>
+                <p>{t('pak.cancelledBody')}</p>
+                <p className="booking-status">{t('pak.statusLabel')}: {t('pak.cancelledTitle')}</p>
+              </>
+            ) : status === 'confirmed' || status === 'scheduled' ? (
               <>
                 <p>{t('pak.confirmedBody')}</p>
                 <p className="booking-status">{t('pak.statusLabel')}: {t('pak.statusScheduled')}</p>
@@ -652,17 +796,13 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                 <div className="field-block"><span className="field-label">{t('pak.destination')}</span><strong>{form.destination || '—'}</strong></div>
               </div>
             </div>
-            {(status === 'pending' || status === 'assigned' || status === 'quoted' || status === 'confirmed' || status === 'scheduled') ? (
+            {showNextSteps ? (
               <div className="flow-next" role="status">
                 <p className="flow-next-title">{t('pak.nextTitle')}</p>
                 <ol className="flow-next-steps">
-                  {[
-                    { label: t('pak.waitingDriver') },
-                    { label: t('pak.newQuote') },
-                    { label: t('pak.confirmBooking') },
-                  ].map((step, index) => (
+                  {nextSteps.map((step, index) => (
                     <li
-                      key={step.label}
+                      key={step}
                       className={
                         index < nextStage
                           ? 'flow-next-step is-done'
@@ -674,14 +814,32 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                       <span className="flow-next-dot" aria-hidden="true">
                         {index < nextStage ? '✓' : null}
                       </span>
-                      <span>{step.label}</span>
+                      <span>{step}</span>
                     </li>
                   ))}
                 </ol>
                 <p className="flow-next-detail">{nextDetail}</p>
               </div>
             ) : null}
-            {quotedCents !== null ? (
+            {isCancelled ? (
+              <div className="flow-next" role="status">
+                <p className="flow-next-detail">{t('pak.cancelledNext')}</p>
+                <div className="pakyawan-actions">
+                  <button type="button" className="primary-action compact-button" onClick={handleStartNewTrip}>
+                    {t('pak.newTrip')}
+                  </button>
+                </div>
+              </div>
+            ) : null}
+            {status === 'completed' ? (
+              <div className="fare-box">
+                <span className="field-label">{t('pak.tripSummaryTitle')}</span>
+                <div className="field-block">
+                  <span className="field-label">{t('pak.tripFareLabel')}</span>
+                  <strong>{quotedCents !== null ? `₱${formatCentavos(quotedCents)}` : '—'}</strong>
+                </div>
+              </div>
+            ) : quotedCents !== null ? (
               <div className="fare-box" id="pak-quote-box">
                 <span className="field-label">{t('pak.quotedPrice')}</span>
                 <strong>₱{formatCentavos(quotedCents)}</strong>
@@ -706,18 +864,19 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
                 <button
                   type="button"
                   className="secondary-action"
-                  onClick={() => {
-                    unlockNotificationAudio()
-                    setPakyawanChatOpen((current) => {
-                      if (!current) {
-                        void markChatSeen()
-                      }
-
-                      return !current
-                    })
-                  }}
+                  aria-label={
+                    pakyawanChatOpen
+                      ? t('chat.closeAria')
+                      : chatUnread
+                        ? t('pak.chatUnreadLabel')
+                        : t('chat.titleWith', { name: t('chat.roleDriver') })
+                  }
+                  onClick={handleTogglePakyawanChat}
                 >
                   {pakyawanChatOpen ? t('chat.closeAria') : t('chat.titleWith', { name: t('chat.roleDriver') })}
+                  {chatUnread && !pakyawanChatOpen ? (
+                    <span className="mini-nav-badge" aria-hidden="true">1</span>
+                  ) : null}
                 </button>
                 {pakyawanChatOpen ? (
                   <PakyawanChat
@@ -812,6 +971,7 @@ export function PakyawanExperience({ onBack }: { onBack: () => void }) {
               onOpen={() => {
                 unlockNotificationAudio()
                 setPakyawanChatOpen(true)
+                setChatUnread(false)
                 void markChatSeen()
                 dismissPakyawanMessageAlert()
               }}

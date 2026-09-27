@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DeliveryChatSection } from './DeliveryChatSection'
 import { PakyawanChat } from './PakyawanChat'
 import { getPakyawanBooking } from '../lib/scheduledBookings'
 import { getDeliveryBooking } from '../lib/deliveries'
@@ -161,7 +162,7 @@ export function PassengerUpcoming() {
                   {chatBookingId === booking.id ? t('chat.closeAria') : t('pak.chatWithDriver')}
                 </button>
               ) : null}
-              <a className="secondary-action" href="/pakyawan">
+              <a className="secondary-action" href={`/pakyawan?booking=${booking.id}`}>
                 {t('pak.viewBooking')}
               </a>
             </div>
@@ -176,7 +177,7 @@ export function PassengerUpcoming() {
             ) : null}
           </li>
         ))}
-        {deliveries.map(({ booking }) => (
+        {deliveries.map(({ booking, token }) => (
           <li key={booking.id} className="upcoming-card">
             <div className="upcoming-card-top">
               <span className="pak-req-eyebrow">{t('pad.upcomingLabel')}</span>
@@ -187,7 +188,16 @@ export function PassengerUpcoming() {
             </div>
             <div className="upcoming-card-meta">{booking.preferred_date}</div>
             <div className="upcoming-card-actions">
-              <a className="secondary-action" href="/pa-deliver">
+              {booking.driver_id ? (
+                <DeliveryChatSection
+                  deliveryId={booking.id}
+                  accessToken={token}
+                  role="passenger"
+                  otherPartyName={t('chat.roleDriver')}
+                  toggleLabel={t('pad.chatWithDriver')}
+                />
+              ) : null}
+              <a className="secondary-action" href={`/pa-deliver?delivery=${booking.id}`}>
                 {t('pad.viewBooking')}
               </a>
             </div>

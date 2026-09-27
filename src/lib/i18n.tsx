@@ -202,6 +202,13 @@ const en = {
   'book.nPassengers': '{count} passengers',
   'book.fivePlusPassengers': '5+ passengers',
   'book.yourDriver': 'Your driver',
+  'book.searchingNext':
+    'Next: We are asking nearby drivers now. Drivers can decline or let an offer expire, so we keep looking until one accepts. Nothing else is needed from you.',
+  'book.noDriverNext':
+    'Next: No driver has taken this trip yet. Try again to start a fresh match, or cancel the request.',
+  'book.activeRideTitle': 'Active ride',
+  'book.activeRideHint': 'Your ride is still active. Resume to see the latest status.',
+  'book.resumeRide': 'Resume ride',
 
   /* Ride summary labels */
   'summary.pickup': 'Pickup',
@@ -469,12 +476,31 @@ const en = {
   'pak.waitingDriver': 'Waiting for driver',
   'pak.driverAssigned': 'Driver assigned',
   'pak.nextTitle': 'What happens next',
-  'pak.nextFinding': 'Next: We\u2019re finding a driver for your trip.',
+  'pak.nextFinding':
+    'Next: We are asking nearby drivers now. Matching can take a few minutes, and drivers may decline or let an offer expire \u2014 we keep looking until one accepts.',
   'pak.nextPrice': 'Next: Your driver will send the trip price.',
   'pak.nextConfirm': 'Next: Review the price and confirm your booking.',
   'pak.nextScheduled': 'Next: Your driver will head to the pickup location.',
+  'pak.nextDriverOnWay':
+    'Next: Your driver is on the way to the pickup location. Please be ready to board.',
+  'pak.nextDriverArrived': 'Next: Meet your driver at the pickup location to start the trip.',
+  'pak.nextInProgress':
+    'Next: Your driver will complete the trip when you reach your destination.',
+  'pak.nextCompleted': 'Completed. Thank you for riding with Bislig Hub.',
+  'pak.cancelledTitle': 'Booking cancelled',
+  'pak.cancelledBody': 'This Pakyawan booking was cancelled and is no longer active.',
+  'pak.cancelledNext':
+    'Next: Start a new Pakyawan booking whenever you are ready. Nothing else is required for this one.',
+  'pak.newTrip': 'Start a new Pakyawan trip',
+  'pak.supportTitle': 'Need help with this booking?',
+  'pak.requestedNotFound': 'We could not open that booking',
+  'pak.requestedNotFoundBody':
+    'This booking link cannot be opened on this device. It may belong to a different account, or the booking was removed. Check My Rides for your current Pakyawan trips, or start a new one.',
+  'pak.tripFareLabel': 'Trip fare',
+  'pak.tripSummaryTitle': 'Trip summary',
   'pak.newMessage': 'New message',
   'pak.openChat': 'Open Chat',
+  'pak.chatUnreadLabel': 'New message from your driver',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
@@ -563,8 +589,22 @@ const en = {
   'pad.nextOnWay': 'Next: Be ready to hand over the package when your driver arrives.',
   'pad.nextArrived': 'Next: Hand the package to your driver.',
   'pad.nextPickedUp': 'Next: Your driver will deliver it to the destination.',
-  'pad.nextInTransit': 'Next: We\u2019ll let you know when the delivery is completed.',
-  'pad.nextDelivered': 'Next: View your delivery details.',
+  'pad.nextInTransit':
+    'Next: Your driver will take a delivery photo on arrival. We\u2019ll let you know when the delivery is completed.',
+  'pad.nextDelivered': 'Delivered. Your delivery photo proof is available below.',
+  'pad.nextCancelled':
+    'Next: This delivery is cancelled. Start a new delivery whenever you are ready.',
+  'pad.nextFailed':
+    'Next: Send a new delivery request, or contact the Bislig Hub team if you need help with this package.',
+  'pad.supportTitle': 'Need help with this package?',
+  'pad.supportCta': 'Contact Bislig Hub',
+  'pad.deliveredSummary':
+    'This delivery is finished. The delivery fee and proof photo are saved below for your records.',
+  'pad.proofOnDelivery':
+    'Your driver takes one photo when the package is handed over. You can view it here as soon as the delivery is completed.',
+  'pad.requestedNotFound': 'We could not open that delivery',
+  'pad.requestedNotFoundBody':
+    'This delivery link cannot be opened on this device. It may belong to a different account, or the booking was removed. Check My Rides for your current deliveries, or start a new one.',
   'pad.nextNoDriver': 'Next: You can try submitting the delivery again.',
   'pad.newDelivery': 'Start a new delivery',
   'pad.cancelDelivery': 'Cancel delivery',
@@ -895,6 +935,13 @@ const bi: Record<TranslationKey, string> = {
   'book.nPassengers': '{count} ka mga pasahero',
   'book.fivePlusPassengers': '5+ ka mga pasahero',
   'book.yourDriver': 'Imong driver',
+  'book.searchingNext':
+    'Sunod: Ginasayag namo karon ang mga driver sa kasamtanan. Mahimong mos declined o pimali ug offer ang driver, so padulungan namo ang pagsearch hangtod moaccept ang usa. Wala nga kinahanglan nimo.',
+  'book.noDriverNext':
+    'Sunod: Wala pa nga niabot nga driver. Sulayi pag-usa aron mosugod og bag-ong match, o kansila ang request.',
+  'book.activeRideTitle': 'Aktibong byahe',
+  'book.activeRideHint': 'Aktibo pa ang imong byahe. Balika aron makita ang pinakabag-ong status.',
+  'book.resumeRide': 'Balika sa byahe',
 
   /* Ride summary labels */
   'summary.pickup': 'Pickup',
@@ -1163,12 +1210,32 @@ const bi: Record<TranslationKey, string> = {
   'pak.waitingDriver': 'Naghulat sa driver',
   'pak.driverAssigned': 'Naka-assign ang driver',
   'pak.nextTitle': 'Unsa ang sunod mahitabo',
-  'pak.nextFinding': 'Sunod: Nangita kami og driver para sa imong byahe.',
+  'pak.nextFinding':
+    'Sunod: Ginasayag namo karon ang mga driver sa kasamtanan. Mahimong mga minuto ang pagmatch, ug mahimong mos declined o pimali ug driver ang offer — padulungan namo ang pagsearch hangtod moaccept ang usa.',
   'pak.nextPrice': 'Sunod: Magpadala ang driver og presyo sa byahe.',
   'pak.nextConfirm': 'Sunod: Ribyuha ang presyo ug kumpirmahi ang imong booking.',
   'pak.nextScheduled': 'Sunod: Moadto na ang imong driver sa pickup location.',
+  'pak.nextDriverOnWay':
+    'Sunod: Padulong na ang imong driver sa pickup location. Palihog andam na mos boarding.',
+  'pak.nextDriverArrived':
+    'Sunod: Usabay sa imong driver sa pickup location para makisugod ang byahe.',
+  'pak.nextInProgress':
+    'Sunod: Hihumanon ang driver sa byahe sa diin nimo maabot ang imong destinasyon.',
+  'pak.nextCompleted': 'Nahuman na. Salamat sa imong pagpabili og Bislig Hub.',
+  'pak.cancelledTitle': 'Gikanap ang booking',
+  'pak.cancelledBody': 'Gikanap ang niining Pakyawan booking ug dili na siya active.',
+  'pak.cancelledNext':
+    'Sunod: Sugdi og bag-ong Pakyawan booking bisan kanus-a nimo andam. Wala nimo pang kinahanglan para niini.',
+  'pak.newTrip': 'Sugdi og bag-ong Pakyawan trip',
+  'pak.supportTitle': 'Ngano ka nga tabang niini nga booking?',
+  'pak.requestedNotFound': 'Dili kami makapag-abang sa booking nga kana',
+  'pak.requestedNotFoundBody':
+    'Dili makapag-abang niining booking link sa device nga niini. Mahimong uban niini nga account, o gikan na ang booking. Tan-awa ang My Rides alang sa imong kasalukuyang mga Pakyawan trip, o sugdi og bag-ong usa.',
+  'pak.tripFareLabel': 'Presyo sa byahe',
+  'pak.tripSummaryTitle': 'Summary sa byahe',
   'pak.newMessage': 'Bag-ong mensahe',
   'pak.openChat': 'Ablihi ang Chat',
+  'pak.chatUnreadLabel': 'Bag-ong mensahe gikan sa imong driver',
 
   /* Pa-deliver */
   'pad.eyebrow': 'Pa-deliver',
@@ -1256,8 +1323,22 @@ const bi: Record<TranslationKey, string> = {
   'pad.nextOnWay': 'Sunod: Pangandam sa pagtugyan sa package kung moabot na ang imong driver.',
   'pad.nextArrived': 'Sunod: Itugyan ang package sa imong driver.',
   'pad.nextPickedUp': 'Sunod: I-deliver na sa imong driver sa destinasyon.',
-  'pad.nextInTransit': 'Sunod: Pahibaw-on ka namo kung mahuman na ang delivery.',
-  'pad.nextDelivered': 'Sunod: Tan-awa ang detalye sa imong delivery.',
+  'pad.nextInTransit':
+    'Sunod: Mokuha og photo ang imong driver sa pag-abot. Pahibaw-on ka namo kung mahuman na ang delivery.',
+  'pad.nextDelivered': 'Nahatag na. Ani ang imong delivery photo proof sa ubos.',
+  'pad.nextCancelled':
+    'Sunod: Gikanap na niining delivery. Sugdi og bag-ong delivery bisan kanus-a nimo andam.',
+  'pad.nextFailed':
+    'Sunod: Magsumat og bag-ong delivery request, o kontakti ang Bislig Hub team kon ngano ikaw nga tabang mahimo niini.',
+  'pad.supportTitle': 'Ngano ka nga tabang niini nga package?',
+  'pad.supportCta': 'Kontakti ang Bislig Hub',
+  'pad.deliveredSummary':
+    'Tapos na niining delivery. Ang delivery fee ug proof photo naa sa ubos alang sa imong record.',
+  'pad.proofOnDelivery':
+    'Usa ra ka nga photo ang imong driver samtang ihatag ang package. Makita nimo siya diri sa dihang matapos na ang delivery.',
+  'pad.requestedNotFound': 'Dili kami makapag-abang sa delivery nga kana',
+  'pad.requestedNotFoundBody':
+    'Dili makapag-abang niining delivery link sa device nga niini. Mahimong uban niini nga account, o gikan na ang booking. Tan-awa ang My Rides alang sa imong kasalukuyang mga delivery, o sugdi og bag-ong usa.',
   'pad.nextNoDriver': 'Sunod: Mahimo nimong sulayan pag-submit og balik.',
   'pad.newDelivery': 'Paghimo og bag-ong delivery',
   'pad.cancelDelivery': 'I-cancel ang delivery',

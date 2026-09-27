@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import bisligLogo from '../assets/Bislig Hub logo.png'
 import { AppHeader } from '../components/AppHeader'
 import { CancelRideModal } from '../components/CancelRideModal'
@@ -49,7 +49,7 @@ type CustomerFormState = {
 
 type CustomerValidation = Partial<Record<keyof CustomerFormState, string>>
 
-type RidePhase = 'request' | 'searching' | 'no_driver' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled' | 'rating' | 'payment' | 'payment_confirmed'
+type RidePhase = 'request' | 'searching' | 'no_driver' | 'accepted' | 'arrived' | 'in_progress' | 'completed' | 'cancelled' | 'rating' | 'payment'
 
 type PaymentMethod = 'Cash' | 'GCash'
 
@@ -90,6 +90,10 @@ customer_auth_id: null,
 }
 
 const rideIdStorageKey = 'bislig-ride-last-ride-id'
+
+// Statuses where a ride is still running, so the launcher must keep offering
+// a resume instead of letting the passenger lose the trip.
+const LIVE_RIDE_STATUSES = ['requested', 'accepted', 'arrived', 'in_progress']
 
 const RIDE_REDISPATCH_POLL_INTERVAL_MS = 15000
 const MAX_REDISPATCH_GRACE_RETRIES = 15
@@ -189,6 +193,9 @@ const [rating, setRating] = useState(0)
   const [openMobileSection, setOpenMobileSection] = useState<string | null>(null)
   const [bottomNavTab, setBottomNavTab] = useState<MobileBottomNavTab>('home')
   const [launcherView, setLauncherView] = useState(true)
+  const [pausedRide, setPausedRide] = useState<{ id: string; pickup: string; destination: string; status: string } | null>(
+    null,
+  )
   const [passengerLiveLocation, setPassengerLiveLocation] = useState<{ latitude: number; longitude: number } | null>(null)
   const [passengerLocationError, setPassengerLocationError] = useState('')
   const [passengerLocationShared, setPassengerLocationShared] = useState(false)
@@ -256,64 +263,102 @@ const [rating, setRating] = useState(0)
     }
   }, [])
 
-useEffect(() => {
+  const restorePersistedRide = useCallback(async (options?: { keepOnLauncher?: boolean }) => {
     const persistedRideId = window.localStorage.getItem(rideIdStorageKey)
     if (!persistedRideId) {
       return
     }
 
-const restoreRide = async () => {
-      try {
-        const latestRide = await fetchRideById(persistedRideId)
-        if (!latestRide) {
-          return
-        }
+    try {
+      const latestRide = await fetchRideById(persistedRideId)
+      if (!latestRide) {
+        return
+      }
 
-        setRide(latestRide)
-        setPhase(mapRideStatusToPhase(latestRide.status))
+      const stillLive = LIVE_RIDE_STATUSES.includes(latestRide.status)
 
-        if (latestRide.status === 'requested' && !restoreTripDispatchInFlightRef.current) {
-          restoreTripDispatchInFlightRef.current = true
-
-          try {
-            const redispatchResult = await dispatchRide(latestRide.id)
-            if (redispatchResult.ride_status === 'no_driver') {
-              setPhase('no_driver')
-            } else {
-              setPhase(mapRideStatusToPhase(latestRide.status))
-            }
-          } catch (error) {
-            console.error('Unable to re-dispatch restored ride:', error)
-          } finally {
-            restoreTripDispatchInFlightRef.current = false
-          }
-        }
-
-        if (
-          latestRide.status === 'accepted' ||
-          latestRide.status === 'arrived' ||
-          latestRide.status === 'in_progress'
-        ) {
-          if (window.localStorage.getItem(passengerShareStorageKey(latestRide.id)) === '1') {
-            setPassengerLocationShared(true)
-          }
+      if (options?.keepOnLauncher) {
+        if (stillLive) {
+          setPausedRide({
+            id: latestRide.id,
+            pickup: latestRide.pickup_address,
+            destination: latestRide.destination_address,
+            status: latestRide.status,
+          })
         } else {
-          window.localStorage.removeItem(passengerShareStorageKey(latestRide.id))
+          setPausedRide(null)
         }
+        return
+      }
 
-        if (latestRide.status === 'cancelled') {
-          const latestCancellation = await fetchLatestRideCancellation(latestRide.id)
-          if (latestCancellation) {
-            setCancellation(latestCancellation)
+      setPausedRide(null)
+      setRide(latestRide)
+      setPhase(mapRideStatusToPhase(latestRide.status))
+
+      if (latestRide.status === 'requested' && !restoreTripDispatchInFlightRef.current) {
+        restoreTripDispatchInFlightRef.current = true
+
+        try {
+          const redispatchResult = await dispatchRide(latestRide.id)
+          if (redispatchResult.ride_status === 'no_driver') {
+            setPhase('no_driver')
+          } else {
+            setPhase(mapRideStatusToPhase(latestRide.status))
           }
+        } catch (error) {
+          console.error('Unable to re-dispatch restored ride:', error)
+        } finally {
+          restoreTripDispatchInFlightRef.current = false
         }
-      } catch (error) {
-        console.error('Unable to restore ride state:', error)
+      }
+
+      if (
+        latestRide.status === 'accepted' ||
+        latestRide.status === 'arrived' ||
+        latestRide.status === 'in_progress'
+      ) {
+        if (window.localStorage.getItem(passengerShareStorageKey(latestRide.id)) === '1') {
+          setPassengerLocationShared(true)
+        }
+      } else {
+        window.localStorage.removeItem(passengerShareStorageKey(latestRide.id))
+      }
+
+      if (latestRide.status === 'cancelled') {
+        const latestCancellation = await fetchLatestRideCancellation(latestRide.id)
+        if (latestCancellation) {
+          setCancellation(latestCancellation)
+        }
+      }
+    } catch (error) {
+      console.error('Unable to restore ride state:', error)
+    }
+  }, [])
+
+  const handleResumeRide = () => {
+    setLauncherView(false)
+    setPausedRide(null)
+    void restorePersistedRide()
+  }
+
+  useEffect(() => {
+    let cancelled = false
+
+    const runRestore = async () => {
+      // Async boundary: the first fetch must land before any state is written.
+      await Promise.resolve()
+
+      if (!cancelled) {
+        await restorePersistedRide()
       }
     }
 
-    void restoreRide()
-  }, [])
+    void runRestore()
+
+    return () => {
+      cancelled = true
+    }
+  }, [restorePersistedRide])
 
   useEffect(() => {
     if (
@@ -590,7 +635,7 @@ const handleUseCurrentLocation = () => {
   }
 
   useEffect(() => {
-    if (!ride.id || phase === 'rating' || phase === 'payment' || phase === 'payment_confirmed') {
+    if (!ride.id || phase === 'rating' || phase === 'payment') {
       return
     }
 
@@ -1068,7 +1113,25 @@ setRatingSubmitted(true)
   }
 
   const handleBackToHome = () => {
-    window.localStorage.removeItem(rideIdStorageKey)
+    // An in-progress ride keeps its resume token: going Home must not silently
+    // drop the passenger out of a trip that is still running. Terminal phases
+    // (completed / cancelled / rating / payment) do clear it.
+    const rideIsStillActive =
+      Boolean(ride.id) &&
+      phase !== 'completed' &&
+      phase !== 'cancelled' &&
+      phase !== 'rating' &&
+      phase !== 'payment' &&
+      phase !== 'request'
+
+    if (!rideIsStillActive) {
+      window.localStorage.removeItem(rideIdStorageKey)
+      setPausedRide(null)
+    } else {
+      // Keep the launcher able to offer a resume instead of losing the trip.
+      void restorePersistedRide({ keepOnLauncher: true })
+    }
+
     setPassengerLocationShared(false)
     setPassengerLiveLocation(null)
     setPassengerLocationError('')
@@ -1526,6 +1589,7 @@ setRatingSubmitted(true)
 
       <h2>{t('status.searching')}</h2>
       <p>{t('book.lookingDriver')}</p>
+      <p className="pad-nextstep">{t('book.searchingNext')}</p>
 
 <div className="ride-summary compact">
         <div>
@@ -1569,6 +1633,7 @@ setRatingSubmitted(true)
 
       <h2>{t('book.noDriverTitle')}</h2>
       <p>{t('book.noDriverText')}</p>
+      <p className="pad-nextstep">{t('book.noDriverNext')}</p>
 
       <div className="ride-summary compact">
         <div>
@@ -2108,35 +2173,6 @@ onClick={() => setRating(star)}
     </div>
   )
 
-  const renderPaymentConfirmedScreen = () => (
-    <div className="demo-state-card payment-card">
-      <div className="status-stack">
-        <span className="demo-status-badge success">{t('status.paymentRecordedBadge')}</span>
-      </div>
-
-      <h2>{t('payment.recorded')}</h2>
-
-      <div className="ride-summary compact">
-        <div>
-          <dt>{t('summary.paymentMethod')}</dt>
-          <dd>{paymentMethod === 'Cash' ? t('payment.methodCash') : t('payment.methodGcash')}</dd>
-        </div>
-        <div>
-          <dt>{t('summary.ride')}</dt>
-          <dd>{t('summary.completed')}</dd>
-        </div>
-        <div>
-          <dt>{t('summary.driver')}</dt>
-          <dd>{assignedDriver?.full_name ?? 'John Doe'}</dd>
-        </div>
-      </div>
-
-      <button type="button" className="primary-action" onClick={handleBackToHome}>
-        {t('form.backHome')}
-      </button>
-    </div>
-  )
-
   return (
     <div className="app-wrapper">
       <AppHeader
@@ -2154,7 +2190,23 @@ onClick={() => setRating(star)}
 
       <main className={showRideLauncher ? 'customer-layout service-launcher-layout' : openMobileSection === 'pickup' ? 'customer-layout pickup-open' : 'customer-layout'}>
         {showRideLauncher ? (
-          <ServiceDashboard onSelectRideNow={handleRideNowCtaClick} onSelectDriverLogin={() => onSwitchView?.('driver')} />
+          <>
+            {pausedRide ? (
+              <section className="driver-card" aria-label={t('book.activeRideTitle')}>
+                <p className="section-label">{t('book.activeRideTitle')}</p>
+                <h3>{t('book.activeRideHint')}</h3>
+                <p className="muted-copy">
+                  {pausedRide.pickup} → {pausedRide.destination}
+                </p>
+                <div className="pakyawan-actions">
+                  <button type="button" className="primary-action compact-button" onClick={handleResumeRide}>
+                    {t('book.resumeRide')}
+                  </button>
+                </div>
+              </section>
+            ) : null}
+            <ServiceDashboard onSelectRideNow={handleRideNowCtaClick} onSelectDriverLogin={() => onSwitchView?.('driver')} />
+          </>
         ) : (
         <>
         <section className="primary-panel">
@@ -2217,10 +2269,8 @@ onClick={() => setRating(star)}
               renderCancelledScreen()
             ) : phase === 'rating' ? (
               renderRatingScreen()
-            ) : phase === 'payment' ? (
-              renderPaymentScreen()
             ) : (
-              renderPaymentConfirmedScreen()
+              renderPaymentScreen()
             )
           ) : null}
 </section>        {showChat && ride.id && assignedDriver && (

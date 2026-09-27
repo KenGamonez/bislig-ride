@@ -39,6 +39,15 @@ function timeOf(value: string | null | undefined): number {
   return Number.isFinite(parsed) ? parsed : 0
 }
 
+/**
+ * True while a held booking is still live driver work (anything the driver
+ * could still have to act on). Completed / cancelled / pending are terminal
+ * for the driver's workspace and must never be counted as live.
+ */
+export function isLivePakyawanStatus(status: string): boolean {
+  return rankOf(status) >= 0
+}
+
 export function selectCurrentPakyawanTrip(
   bookings: PakyawanBooking[],
 ): PakyawanBooking | null {

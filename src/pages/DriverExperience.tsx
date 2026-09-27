@@ -18,7 +18,7 @@ import { acceptPakyawanBooking, acceptPakyawanOffer, advancePakyawanStatus, decl
 import { acceptDeliveryBooking, acceptDeliveryOffer, advanceDeliveryStatus, completeDeliveryWithProof, fetchAvailableDeliveries, fetchDeliveryProofPaths, fetchDriverDeliveries, fetchDriverDeliveredDeliveries, fetchDriverDeliveryOffers, formatDeliveryTiming, setDeliveryDriverPrice, type DeliveryLifecycleStatus } from '../lib/deliveries'
 import { fetchDriverRideHistory } from '../lib/rides'
 import { isCurrentDeliveryStatus, selectCurrentDeliveryTrip } from '../lib/deliveryTrip'
-import { selectCurrentPakyawanTrip } from '../lib/pakyawanWorkflow'
+import { isLivePakyawanStatus, selectCurrentPakyawanTrip } from '../lib/pakyawanWorkflow'
 import { buildDeliveryProofPath, getDeliveryProofSignedUrl, removeDeliveryProof, uploadDeliveryProof, validateDeliveryProofImage } from '../lib/deliveryProof'
 import {
   ensureDriverPushSubscription,
@@ -118,10 +118,18 @@ type DriverSummaryProfile = {
 
 type DriverNotificationItem = {
   id: string
-  kind: 'ride' | 'pakyawan'
+  kind: 'ride' | 'pakyawan' | 'delivery'
   title: string
   subtitle: string
   rideId: string | null
+  /**
+   * Booking / delivery this notification points at, so the bell can navigate
+   * to the right job instead of only offering "Dismiss". Null keeps the
+   * legacy read-only behaviour for notifications with no live target.
+   */
+  targetId?: string | null
+  /** 'chat' opens the conversation directly; 'view' switches to the job. */
+  targetAction?: 'view' | 'chat' | null
   seen: boolean
   createdAt: number
 }
@@ -263,6 +271,7 @@ export function DriverExperience({
   const [deliveryError, setDeliveryError] = useState('')
   const [acceptedDeliveries, setAcceptedDeliveries] = useState<DeliveryBooking[]>([])
   const [completedDeliveryNotice, setCompletedDeliveryNotice] = useState<DeliveryBooking | null>(null)
+  const [completedPakyawanNotice, setCompletedPakyawanNotice] = useState<PakyawanBooking | null>(null)
   const [deliverySubmittingId, setDeliverySubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleSubmittingId, setDeliveryLifecycleSubmittingId] = useState<string | null>(null)
   const [deliveryLifecycleError, setDeliveryLifecycleError] = useState<{ deliveryId: string; message: string } | null>(null)
@@ -886,6 +895,8 @@ return unsubscribe
               id: `pakyawan-${incoming.id}`,
               kind: 'pakyawan',
               rideId: null,
+              targetId: incoming.id,
+              targetAction: 'view',
               title: 'New Pakyawan request',
               subtitle,
               seen: false,
@@ -959,7 +970,10 @@ return unsubscribe
 
           refreshOffers()
 
-          const subtitle = 'A customer is requesting a Pakyawan trip.'
+          const offerBooking = incoming.booking
+          const subtitle = offerBooking
+            ? `${offerBooking.pickup_location ?? 'Pickup'} → ${offerBooking.destination ?? 'Destination'}`
+            : 'A customer is requesting a Pakyawan trip.'
 
           setNotifications((current) =>
             current.some((item) => item.id === `pakyawan-offer-${incoming.id}`)
@@ -969,6 +983,8 @@ return unsubscribe
                     id: `pakyawan-offer-${incoming.id}`,
                     kind: 'pakyawan',
                     rideId: null,
+                    targetId: incoming.booking_id ?? offerBooking?.id ?? null,
+                    targetAction: 'view',
                     title: 'New Pakyawan offer',
                     subtitle,
                     seen: false,
@@ -1053,6 +1069,8 @@ return unsubscribe
                     id: `pakyawan-confirmed-${incoming.id}`,
                     kind: 'pakyawan',
                     rideId: null,
+                    targetId: incoming.id,
+                    targetAction: 'view',
                     title: 'Pakyawan confirmed',
                     subtitle,
                     seen: false,
@@ -1150,8 +1168,10 @@ return unsubscribe
               : [
                   {
                     id: `delivery-${incoming.id}`,
-                    kind: 'pakyawan',
+                    kind: 'delivery',
                     rideId: null,
+                    targetId: incoming.id,
+                    targetAction: 'view',
                     title: 'New delivery request',
                     subtitle,
                     seen: false,
@@ -1227,7 +1247,10 @@ return unsubscribe
 
           refreshDeliveryOffers()
 
-          const subtitle = 'A customer is requesting a package delivery.'
+          const offerBooking = incoming.booking
+          const subtitle = offerBooking
+            ? `${offerBooking.pickup_address ?? 'Pickup'} → ${offerBooking.delivery_address ?? 'Destination'}`
+            : 'A customer is requesting a package delivery.'
 
           setNotifications((current) =>
             current.some((item) => item.id === `delivery-offer-${incoming.id}`)
@@ -1235,8 +1258,10 @@ return unsubscribe
               : [
                   {
                     id: `delivery-offer-${incoming.id}`,
-                    kind: 'pakyawan',
+                    kind: 'delivery',
                     rideId: null,
+                    targetId: offerBooking?.id ?? null,
+                    targetAction: 'view',
                     title: 'New delivery offer',
                     subtitle,
                     seen: false,
@@ -1343,8 +1368,10 @@ return unsubscribe
               : [
                   {
                     id: `delivery-confirmed-${incoming.id}`,
-                    kind: 'pakyawan',
+                    kind: 'delivery',
                     rideId: null,
+                    targetId: incoming.id,
+                    targetAction: 'view',
                     title: 'Delivery confirmed',
                     subtitle,
                     seen: false,
@@ -1412,8 +1439,10 @@ return unsubscribe
               : [
                   {
                     id: noticeId,
-                    kind: 'pakyawan',
+                    kind: 'delivery',
                     rideId: null,
+                    targetId: incoming.id,
+                    targetAction: 'view',
                     title: 'Delivery no longer active',
                     subtitle,
                     seen: false,
@@ -1529,8 +1558,10 @@ return unsubscribe
                 : [
                     {
                       id: `delivery-chatmsg-${incoming.id}`,
-                      kind: 'pakyawan',
+                      kind: 'delivery',
                       rideId: null,
+                      targetId: deliveredId,
+                      targetAction: 'chat',
                       title: 'New delivery message',
                       subtitle: preview,
                       seen: false,
@@ -1658,6 +1689,8 @@ return unsubscribe
                       id: `pakyawan-chatmsg-${incoming.id}`,
                       kind: 'pakyawan',
                       rideId: null,
+                      targetId: heldId,
+                      targetAction: 'chat',
                       title: 'New Pakyawan message',
                       subtitle: preview,
                       seen: false,
@@ -1708,6 +1741,12 @@ return unsubscribe
 
     try {
       const updated = await advancePakyawanStatus(bookingId, nextStatus)
+
+      if (nextStatus === 'completed') {
+        // One-shot completion summary: the trip leaves the active list as soon
+        // as it completes, so the driver needs a closing confirmation.
+        setCompletedPakyawanNotice(updated)
+      }
 
       try {
         const items = await fetchDriverPakyawanBookings(driverId)
@@ -2129,15 +2168,10 @@ const displayedDriver = driverProfile ?? demoDriver
   )
 
   const handleOpenNotifications = () => {
-    setShowNotifications((current) => {
-      const next = !current
-
-      if (next) {
-        setNotifications((items) => items.map((item) => ({ ...item, seen: true })))
-      }
-
-      return next
-    })
+    // Opening the panel deliberately does NOT mark anything as read. Actionable
+    // workflow notifications become seen when the driver opens the job (or the
+    // chat) from the item, and terminal/informational ones when dismissed.
+    setShowNotifications((current) => !current)
   }
 
   const [pushStatus, setPushStatus] = useState<'idle' | 'working' | 'ready' | 'unavailable'>('idle')
@@ -2172,6 +2206,53 @@ const displayedDriver = driverProfile ?? demoDriver
   const handleDismissNotification = (id: string) => {
     setNotifications((current) => current.filter((item) => item.id !== id))
   }
+
+  const markNotificationSeen = (id: string) => {
+    setNotifications((current) =>
+      current.map((item) => (item.id === id ? { ...item, seen: true } : item)),
+    )
+  }
+
+  const handleOpenNotificationTarget = (item: DriverNotificationItem) => {
+    if (item.kind === 'ride') {
+      void handleOpenRideRequest(item.rideId ?? item.id)
+      return
+    }
+
+    const targetId = item.targetId ?? null
+
+    if (!targetId) {
+      markNotificationSeen(item.id)
+      return
+    }
+
+    if (item.targetAction === 'chat') {
+      if (item.kind === 'delivery') {
+        setDeliveryChatBookingId(targetId)
+      } else {
+        setPakyawanChatBookingId(targetId)
+      }
+    }
+
+    setDriverView(item.kind === 'delivery' ? 'delivery' : 'pakyawan')
+    markNotificationSeen(item.id)
+    setShowNotifications(false)
+  }
+
+  const notificationActionLabel = (item: DriverNotificationItem): string => {
+    if (item.kind === 'ride') {
+      return 'View request'
+    }
+
+    if (item.targetAction === 'chat') {
+      return 'Open chat'
+    }
+
+    return item.kind === 'delivery' ? 'View delivery' : 'View trip'
+  }
+
+  const hasNotificationAction = (item: DriverNotificationItem): boolean =>
+    item.kind === 'ride' || Boolean(item.targetId)
 
   const handleOpenRideRequest = async (id: string) => {
     setNotifications((current) => current.filter((item) => item.id !== id))
@@ -2529,6 +2610,10 @@ const displayedDriver = driverProfile ?? demoDriver
             Not now
           </button>
         </div>
+        <p className="pak-req-note">
+          &ldquo;Not now&rdquo; only hides this request from your list. It stays open, so the same request can
+          appear again later.
+        </p>
       </li>
     )
   }
@@ -2538,9 +2623,15 @@ const displayedDriver = driverProfile ?? demoDriver
   )
 
   const currentPakyawanTrip = selectCurrentPakyawanTrip(acceptedPakyawan)
+  const livePakyawanTrips = acceptedPakyawan.filter((booking) => isLivePakyawanStatus(booking.status))
   const otherPakyawanTrips = acceptedPakyawan.filter(
     (booking) => currentPakyawanTrip === null || booking.id !== currentPakyawanTrip.id,
   )
+  const otherActivePakyawanTrips = otherPakyawanTrips.filter((booking) => isLivePakyawanStatus(booking.status))
+  const endedPakyawanTrips = otherPakyawanTrips.filter((booking) => !isLivePakyawanStatus(booking.status))
+  const currentDeliveryTrip = selectCurrentDeliveryTrip(acceptedDeliveries)
+  const liveDeliveryTrips = acceptedDeliveries.filter((booking) => isCurrentDeliveryStatus(booking.status))
+  const liveDeliveryCount = liveDeliveryTrips.length
   const hasIncomingPakyawan = pakyawanRequests.length > 0 || activePakyawanOffers.length > 0
 
   const renderNotificationBell = () => (
@@ -2583,13 +2674,13 @@ const displayedDriver = driverProfile ?? demoDriver
                     <span>{item.subtitle}</span>
                   </div>
                   <div className="notification-actions">
-                    {item.kind === 'ride' ? (
+                    {hasNotificationAction(item) ? (
                       <button
                         type="button"
                         className="compact-button notification-action"
-                        onClick={() => void handleOpenRideRequest(item.rideId ?? item.id)}
+                        onClick={() => handleOpenNotificationTarget(item)}
                       >
-                        View request
+                        {notificationActionLabel(item)}
                       </button>
                     ) : null}
                     <button
@@ -2824,6 +2915,11 @@ const displayedDriver = driverProfile ?? demoDriver
     try {
       const updated = await advanceDeliveryStatus(deliveryId, nextStatus)
 
+      // The confirmation sheet is a one-shot prompt: any successful advance
+      // (from the sheet or from the delivery card) retires it.
+      setDeliveryConfirmedPopup((current) => (current?.id === deliveryId ? null : current))
+      setNotifications((items) => items.filter((item) => item.id !== `delivery-confirmed-${deliveryId}`))
+
       try {
         const items = await fetchDriverDeliveries(driverId)
         setAcceptedDeliveries(items.slice(0, 10))
@@ -3051,6 +3147,70 @@ const displayedDriver = driverProfile ?? demoDriver
     }
   }
 
+  const renderPakyawanCompletedPopup = () => {
+    if (!completedPakyawanNotice) {
+      return null
+    }
+
+    const completedBooking = completedPakyawanNotice
+    const priceCents =
+      typeof completedBooking.price_cents === 'number' && Number.isFinite(completedBooking.price_cents)
+        ? completedBooking.price_cents
+        : null
+
+    return (
+      <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Pakyawan trip completed">
+        <div className="ride-request-sheet">
+          <section className="driver-card pakyawan-card">
+            <div className="state-heading">
+              <div>
+                <p className="section-label">PAKYAWAN COMPLETED ✓</p>
+                <h3>Trip completed with {completedBooking.customer_name}</h3>
+                <p>
+                  Next: nothing is required. This trip is now filed under Pakyawan History, and your next request
+                  will appear here automatically.
+                </p>
+              </div>
+            </div>
+            <ul className="pak-req-list">
+              <li className="pak-req">
+                <div className="pak-req-route">
+                  <div className="pak-req-stop">
+                    <span className="pak-req-dot is-pickup" aria-hidden="true" />
+                    <div className="pak-req-stop-copy">
+                      <span className="pak-req-label">Route</span>
+                      <strong>
+                        {completedBooking.pickup_location} → {completedBooking.destination}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                <div className="pak-req-meta">
+                  <span>
+                    {completedBooking.booking_date || '—'} · {completedBooking.pickup_time || '—'}
+                  </span>
+                  {priceCents !== null ? <span>Trip price: ₱{formatCentavos(priceCents)}</span> : null}
+                </div>
+              </li>
+            </ul>
+            <div className="pakyawan-actions">
+              <button
+                type="button"
+                className="primary-action compact-button"
+                onClick={() => {
+                  setCompletedPakyawanNotice(null)
+                  setDriverView('pakyawan')
+                }}
+              >
+                Back to Pakyawan
+              </button>
+            </div>
+          </section>
+        </div>
+      </div>
+    )
+  }
+
   const renderPakyawanConfirmedPopup = () => {
     if (!pakyawanConfirmedPopup) {
       return null
@@ -3167,40 +3327,62 @@ const displayedDriver = driverProfile ?? demoDriver
     }
   }
 
-  const renderDeliveryConfirmedPopup = () => {
-    if (!deliveryConfirmedPopup) {
-      return null
-    }
-
-    const confirmedBooking = deliveryConfirmedPopup
-
-    return (
-      <PakyawanChatAlertPopup
-        eyebrow="DELIVERY CONFIRMED"
-        title="Customer confirmed this delivery"
-        subtitle={`${confirmedBooking.pickup_address} → ${confirmedBooking.delivery_address}`}
-        preview={`${confirmedBooking.preferred_date} · ${confirmedBooking.preferred_time}`}
-        openLabel="View Delivery"
-        closeLabel="Close"
-        onOpen={() => {
-          setDriverView('delivery')
-          handleCloseDeliveryConfirmedPopup()
-        }}
-        onClose={handleCloseDeliveryConfirmedPopup}
-      />
-    )
-  }
-
   const renderDeliveryTripOverlay = () => {
     if (!canAcceptDeliveries) {
       return null
     }
 
-    const confirmedBooking = acceptedDeliveries.find(
-      (booking) => booking.status === 'confirmed' && booking.driver_id === driverId,
-    ) ?? null
+    // Completion notice first: a completed delivery must never be hidden
+    // behind another delivery's confirmation overlay.
+    if (completedDeliveryNotice) {
+      return (
+        <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Delivery completed">
+          <div className="ride-request-sheet">
+            <section className="driver-card pakyawan-card">
+              <div className="state-heading">
+                <div>
+                  <p className="section-label">DELIVERY COMPLETED ✓</p>
+                  <h3>Your Pa-Deliver was successfully completed.</h3>
+                  <p>Next: this delivery is now filed under Delivered below.</p>
+                </div>
+              </div>
+              <ul className="pakyawan-list">
+                <li className="pakyawan-item">
+                  <div className="pakyawan-route">
+                    <span>{completedDeliveryNotice.pickup_address}</span>
+                    <strong>→</strong>
+                    <span>{completedDeliveryNotice.delivery_address}</span>
+                  </div>
+                  <div className="pakyawan-meta">
+                    <span>Reference: {completedDeliveryNotice.id.slice(0, 8)}…</span>
+                    {typeof completedDeliveryNotice.price_cents === 'number' &&
+                    Number.isFinite(completedDeliveryNotice.price_cents) ? (
+                      <span>Delivery fee: ₱{formatCentavos(completedDeliveryNotice.price_cents)}</span>
+                    ) : null}
+                  </div>
+                  <div className="pakyawan-actions">
+                    <button
+                      type="button"
+                      className="primary-action compact-button"
+                      onClick={() => setCompletedDeliveryNotice(null)}
+                    >
+                      Back to dashboard
+                    </button>
+                  </div>
+                </li>
+              </ul>
+            </section>
+          </div>
+        </div>
+      )
+    }
 
-    if (confirmedBooking) {
+    // One-shot: driven by the realtime confirmation event, not by a scan of
+    // held rows, so it can no longer reappear on every render while the
+    // booking stays `confirmed`.
+    const confirmedBooking = deliveryConfirmedPopup
+
+    if (confirmedBooking && confirmedBooking.status === 'confirmed') {
       return (
         <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Delivery confirmed">
           <div className="ride-request-sheet">
@@ -3223,9 +3405,10 @@ const displayedDriver = driverProfile ?? demoDriver
                     <span>
                       {formatDeliveryTiming(confirmedBooking.preferred_date, confirmedBooking.preferred_time)}
                     </span>
+                    {confirmedBooking.sender_name ? <span>Sender: {confirmedBooking.sender_name}</span> : null}
                     {typeof confirmedBooking.price_cents === 'number' &&
                     Number.isFinite(confirmedBooking.price_cents) ? (
-                      <span>Fee: ₱{formatCentavos(confirmedBooking.price_cents)}</span>
+                      <span>Delivery fee: ₱{formatCentavos(confirmedBooking.price_cents)}</span>
                     ) : null}
                   </div>
                   {deliveryLifecycleError && deliveryLifecycleError.deliveryId === confirmedBooking.id ? (
@@ -3235,52 +3418,20 @@ const displayedDriver = driverProfile ?? demoDriver
                     <button
                       type="button"
                       className="primary-action compact-button"
+                      onClick={() => {
+                        handleCloseDeliveryConfirmedPopup()
+                        void handleAdvanceDeliveryTrip(confirmedBooking.id, 'driver_on_way')
+                      }}
                       disabled={deliveryLifecycleSubmittingId === confirmedBooking.id}
-                      onClick={() => void handleAdvanceDeliveryTrip(confirmedBooking.id, 'driver_on_way')}
                     >
                       {deliveryLifecycleSubmittingId === confirmedBooking.id ? 'Updating...' : 'Go On My Way'}
                     </button>
-                  </div>
-                </li>
-              </ul>
-            </section>
-          </div>
-        </div>
-      )
-    }
-
-    if (completedDeliveryNotice) {
-      return (
-        <div className="ride-request-overlay" role="dialog" aria-modal="true" aria-label="Delivery completed">
-          <div className="ride-request-sheet">
-            <section className="driver-card pakyawan-card">
-              <div className="state-heading">
-                <div>
-                  <p className="section-label">DELIVERY COMPLETED ✓</p>
-                  <h3>Your Pa-Deliver was successfully completed.</h3>
-                </div>
-              </div>
-              <ul className="pakyawan-list">
-                <li className="pakyawan-item">
-                  <div className="pakyawan-route">
-                    <span>{completedDeliveryNotice.pickup_address}</span>
-                    <strong>→</strong>
-                    <span>{completedDeliveryNotice.delivery_address}</span>
-                  </div>
-                  <div className="pakyawan-meta">
-                    <span>Reference: {completedDeliveryNotice.id.slice(0, 8)}…</span>
-                    {typeof completedDeliveryNotice.price_cents === 'number' &&
-                    Number.isFinite(completedDeliveryNotice.price_cents) ? (
-                      <span>Fee: ₱{formatCentavos(completedDeliveryNotice.price_cents)}</span>
-                    ) : null}
-                  </div>
-                  <div className="pakyawan-actions">
                     <button
                       type="button"
-                      className="primary-action compact-button"
-                      onClick={() => setCompletedDeliveryNotice(null)}
+                      className="secondary-action compact-button"
+                      onClick={handleCloseDeliveryConfirmedPopup}
                     >
-                      Back to dashboard
+                      Close
                     </button>
                   </div>
                 </li>
@@ -3316,12 +3467,14 @@ const displayedDriver = driverProfile ?? demoDriver
       )
     }
 
-    const currentDelivery = selectCurrentDeliveryTrip(acceptedDeliveries)
+    const currentDelivery = currentDeliveryTrip
     const otherHeldDeliveries = acceptedDeliveries.filter((booking) => booking.id !== currentDelivery?.id)
-    const attentionDeliveries = otherHeldDeliveries.filter(
-      (booking) => !isCurrentDeliveryStatus(booking.status) && !dismissedDeliveryIds.includes(booking.id),
+    const otherActiveDeliveries = otherHeldDeliveries.filter((booking) => isCurrentDeliveryStatus(booking.status))
+    const endedHeldDeliveries = otherHeldDeliveries.filter((booking) => !isCurrentDeliveryStatus(booking.status))
+    const attentionDeliveries = endedHeldDeliveries.filter(
+      (booking) => !dismissedDeliveryIds.includes(booking.id),
     )
-    const historyCount = otherHeldDeliveries.length + deliveredDeliveries.length
+    const historyCount = endedHeldDeliveries.length + deliveredDeliveries.length
 
     return (
       <section className="driver-card pakyawan-card">
@@ -3332,7 +3485,9 @@ const displayedDriver = driverProfile ?? demoDriver
             <p>
               {deliveryRequests.length > 0 || activeDeliveryOffers.length > 0
                 ? 'Customers are requesting package deliveries in your area. Accept a request to take it.'
-                : 'No new delivery requests right now.'}
+                : liveDeliveryCount > 0
+                  ? `You are working on ${liveDeliveryCount} deliver${liveDeliveryCount === 1 ? 'y' : 'ies'}. New requests will appear here.`
+                  : 'No new delivery requests right now.'}
             </p>
           </div>
           <span className="state-badge pakyawan-badge">{deliveryRequests.length + activeDeliveryOffers.length}</span>
@@ -3386,6 +3541,10 @@ const displayedDriver = driverProfile ?? demoDriver
                     Not now
                   </button>
                 </div>
+                <p className="pak-req-note">
+                  &ldquo;Not now&rdquo; only hides this request from your list. It stays open, so the same
+                  delivery request can appear again later.
+                </p>
               </li>
             ))}
           </ul>
@@ -3423,6 +3582,10 @@ const displayedDriver = driverProfile ?? demoDriver
                     {deliverySubmittingId === offer.id ? 'Accepting...' : 'Accept Request'}
                   </button>
                 </div>
+                <p className="pak-req-note">
+                  Targeted offers cannot be declined. If you do not accept before the timer ends, the offer
+                  expires and this delivery request stays open for other drivers.
+                </p>
               </li>
             ))}
           </ul>
@@ -3440,14 +3603,20 @@ const displayedDriver = driverProfile ?? demoDriver
                   <span>
                     {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
                   </span>
+                  {booking.driver_id === driverId ? (
+                    <div className="pakyawan-customer">
+                      <span>{booking.sender_name}</span>
+                      <span>{booking.sender_phone}</span>
+                    </div>
+                  ) : null}
                   {booking.status === 'assigned' ? (
                     <>
-                      <span>You&apos;re assigned to this delivery.</span>
+                      <span>You&apos;re assigned to this delivery. Next: send your delivery fee.</span>
                       <span>Status: ASSIGNED</span>
                     </>
                   ) : booking.status === 'quoted' ? (
                     <>
-                      <span>Delivery fee sent. Waiting for customer confirmation.</span>
+                      <span>Waiting for customer confirmation. Do not head to the pickup yet.</span>
                       <span>Status: QUOTED</span>
                     </>
                   ) : booking.status === 'confirmed' ? (
@@ -3474,7 +3643,7 @@ const displayedDriver = driverProfile ?? demoDriver
                   ) : null}
                   {booking.driver_id === driverId && booking.status === 'assigned' ? (
                     <div className="pakyawan-price-box">
-                      <span className="field-label">Next step: send your delivery fee.</span>
+                      <span className="field-label">Send your delivery fee</span>
                       <div className="pakyawan-price-row">
                         <span aria-hidden="true">₱</span>
                         <input
@@ -3509,8 +3678,9 @@ const displayedDriver = driverProfile ?? demoDriver
                     typeof booking.price_cents === 'number' &&
                     Number.isFinite(booking.price_cents) ? (
                     <div className="pakyawan-price-box">
-                      <span className="field-label">Your delivery fee: ₱{formatCentavos(booking.price_cents)}</span>
-                      <span>Waiting for customer confirmation.</span>
+                      <span className="field-label">Delivery fee: ₱{formatCentavos(booking.price_cents)}</span>
+                      <span className="pak-req-status">WAITING FOR CUSTOMER</span>
+                      <span>Nothing to do until the customer confirms. Do not head to the pickup yet.</span>
                     </div>
                   ) : null}
                   {booking.driver_id === driverId && booking.status === 'confirmed' ? (
@@ -3653,6 +3823,50 @@ const displayedDriver = driverProfile ?? demoDriver
           </div>
         ) : null}
 
+        {otherActiveDeliveries.length > 0 ? (
+          <div className="pakyawan-accepted">
+            <p className="section-label">
+              ALSO IN PROGRESS ({otherActiveDeliveries.length})
+            </p>
+            <ul className="pakyawan-accepted-list">
+              {otherActiveDeliveries.map((booking) => (
+                <li key={booking.id} className="delv-row">
+                  <div className="delv-top">
+                    <div className="delv-main">
+                      <strong className="delv-route">
+                        {booking.pickup_address} → {booking.delivery_address}
+                      </strong>
+                      <span className="delv-meta">
+                        {formatDeliveryTiming(booking.preferred_date, booking.preferred_time)}
+                      </span>
+                      {booking.sender_name ? (
+                        <span className="delv-meta">Sender: {booking.sender_name}</span>
+                      ) : null}
+                    </div>
+                    <div className="delv-side">
+                      <span className="pak-req-status">{booking.status.toUpperCase().replace(/_/g, ' ')}</span>
+                      {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
+                        <strong className="delv-fee">₱{formatCentavos(booking.price_cents)}</strong>
+                      ) : null}
+                    </div>
+                  </div>
+                  {booking.driver_id === driverId ? (
+                    <DeliveryChatSection
+                      deliveryId={booking.id}
+                      role="driver"
+                      otherPartyName={booking.sender_name}
+                      toggleLabel="Chat with Customer"
+                      enableRealtime
+                      forceOpen={deliveryChatBookingId === booking.id}
+                      onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
+                    />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+
         {attentionDeliveries.map((booking) => (
           <section key={booking.id} className="ride-cancelled-notice" role="alert">
             <div>
@@ -3697,7 +3911,7 @@ const displayedDriver = driverProfile ?? demoDriver
               </button>
             </div>
             <ul className="pakyawan-accepted-list">
-              {otherHeldDeliveries.map((booking) => (
+              {endedHeldDeliveries.map((booking) => (
                 <li key={booking.id} className="delv-row">
                   <div className="delv-top">
                     <div className="delv-main">
@@ -3715,17 +3929,6 @@ const displayedDriver = driverProfile ?? demoDriver
                       ) : null}
                     </div>
                   </div>
-                  {isCurrentDeliveryStatus(booking.status) && booking.driver_id === driverId ? (
-                    <DeliveryChatSection
-                      deliveryId={booking.id}
-                      role="driver"
-                      otherPartyName={booking.sender_name}
-                      toggleLabel="Chat with Customer"
-                      enableRealtime
-                      forceOpen={deliveryChatBookingId === booking.id}
-                      onOpenChange={(next) => setDeliveryChatBookingId(next ? booking.id : null)}
-                    />
-                  ) : null}
                 </li>
               ))}
             </ul>
@@ -3909,8 +4112,9 @@ const displayedDriver = driverProfile ?? demoDriver
           typeof booking.price_cents === 'number' &&
           Number.isFinite(booking.price_cents) ? (
           <div className="pakyawan-price-box">
-            <span className="field-label">Your trip price: ₱{formatCentavos(booking.price_cents)}</span>
-            <span>Waiting for passenger confirmation.</span>
+            <span className="field-label">Trip price: ₱{formatCentavos(booking.price_cents)}</span>
+            <span className="pak-req-status">WAITING FOR PASSENGER</span>
+            <span>Nothing to do until the passenger confirms. Do not head to the pickup yet.</span>
           </div>
         ) : null}
         {booking.driver_id === driverId && booking.status === 'scheduled' ? (
@@ -4046,6 +4250,67 @@ const displayedDriver = driverProfile ?? demoDriver
             <p className="section-label">ACTIVE PAKYAWAN TRIP</p>
             {renderActivePakyawanCard(currentPakyawanTrip)}
           </div>
+        ) : (
+          <p className="muted-copy">
+            {livePakyawanTrips.length > 0
+              ? 'Your active Pakyawan trip is listed below under Pakyawan in progress.'
+              : 'You have no active Pakyawan trip right now. Accept a request or an offer to start one.'}
+          </p>
+        )}
+
+        {otherActivePakyawanTrips.length > 0 ? (
+          <div className="pakyawan-accepted">
+            <p className="section-label">PAKYAWAN IN PROGRESS ({otherActivePakyawanTrips.length})</p>
+            <ul className="pakyawan-accepted-list">
+              {otherActivePakyawanTrips.map((booking) => (
+                <li key={booking.id} className="history-item">
+                  <div className="history-main">
+                    <div className="history-passenger">
+                      <span>
+                        {booking.booking_date || '—'} · {booking.pickup_time || '—'}
+                      </span>
+                    </div>
+                    <span className="completed-badge">{pakyawanCardStatusLabel(booking.status)}</span>
+                  </div>
+                  <div className="history-route">
+                    <span>{booking.pickup_location}</span>
+                    <strong>→</strong>
+                    <span>{booking.destination}</span>
+                  </div>
+                  <div className="history-footer">
+                    <span>{booking.customer_name}</span>
+                    {typeof booking.price_cents === 'number' && Number.isFinite(booking.price_cents) ? (
+                      <strong>₱{formatCentavos(booking.price_cents)}</strong>
+                    ) : null}
+                  </div>
+                  {booking.driver_id === driverId ? (
+                    <>
+                      <div className="pakyawan-actions">
+                        <button
+                          type="button"
+                          className="secondary-action compact-button"
+                          onClick={() =>
+                            setPakyawanChatBookingId((current) => (current === booking.id ? null : booking.id))
+                          }
+                        >
+                          {pakyawanChatBookingId === booking.id ? 'Close Chat' : 'Chat with Passenger'}
+                        </button>
+                      </div>
+                      {pakyawanChatBookingId === booking.id ? (
+                        <PakyawanChat
+                          bookingId={booking.id}
+                          senderRole="driver"
+                          otherPartyName={booking.customer_name}
+                          enableRealtime
+                          onClose={() => setPakyawanChatBookingId(null)}
+                        />
+                      ) : null}
+                    </>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </div>
         ) : null}
 
         {pakyawanOffersError || !driverOnline || activePakyawanOffers.length === 0 ? null : (
@@ -4088,6 +4353,10 @@ const displayedDriver = driverProfile ?? demoDriver
                     Decline
                   </button>
                 </div>
+                <p className="pak-req-note">
+                  Declining releases this offer so another driver can take it. If you do nothing, the offer expires
+                  on its own and the request stays open.
+                </p>
               </li>
             ))}
           </ul>
@@ -4099,7 +4368,7 @@ const displayedDriver = driverProfile ?? demoDriver
           </ul>
         )}
 
-        {!hasIncomingPakyawan && !currentPakyawanTrip && !pakyawanRequestsError ? (
+        {!hasIncomingPakyawan && livePakyawanTrips.length === 0 && !pakyawanRequestsError ? (
           <div className="pak-empty">
             <span className="pak-empty-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
@@ -4711,7 +4980,7 @@ const renderOnlineState = () => (
   }
 
   const renderPakyawanHistory = () => {
-    if (otherPakyawanTrips.length === 0) {
+    if (endedPakyawanTrips.length === 0) {
       return null
     }
 
@@ -4722,7 +4991,7 @@ const renderOnlineState = () => (
             <p className="section-label">PAKYAWAN HISTORY</p>
             <h3>Previous Pakyawan trips</h3>
           </div>
-          <span className="history-count">{`${otherPakyawanTrips.length} total`}</span>
+          <span className="history-count">{`${endedPakyawanTrips.length} total`}</span>
         </div>
 
         <div className="pakyawan-actions">
@@ -4738,7 +5007,7 @@ const renderOnlineState = () => (
 
         {showPakyawanHistory ? (
           <ul className="history-list">
-            {otherPakyawanTrips.map((booking) => (
+            {endedPakyawanTrips.map((booking) => (
               <li key={booking.id} className="history-item">
                 <div className="history-main">
                   <div className="history-passenger">
@@ -4919,21 +5188,46 @@ const renderOnlineState = () => (
       <nav className="driver-mini-nav" aria-label="Driver workspaces">
         {([
           { id: 'profile', label: 'Profile' },
-          { id: 'queue', label: 'Ride Queue' },
-          { id: 'pakyawan', label: 'Pakyawan', count: pakyawanRequests.length + activePakyawanOffers.length },
-          { id: 'delivery', label: 'Delivery', count: deliveryRequests.length + activeDeliveryOffers.length },
-        ] as const).map((item) => (
-          <button
-            key={item.id}
-            type="button"
-            className={driverView === item.id ? 'secondary-action compact-button mini-nav-item is-active' : 'secondary-action compact-button mini-nav-item'}
-            onClick={() => setDriverView(item.id)}
-            aria-current={driverView === item.id ? 'page' : undefined}
-          >
-            {item.label}
-            {'count' in item && item.count > 0 ? <span className="mini-nav-badge">{item.count}</span> : null}
-          </button>
-        ))}
+          { id: 'queue', label: 'Ride Queue', count: pendingOffer ? 1 : 0, live: activeRide ? 1 : 0 },
+          {
+            id: 'pakyawan',
+            label: 'Pakyawan',
+            count: pakyawanRequests.length + activePakyawanOffers.length,
+            live: livePakyawanTrips.length,
+          },
+          {
+            id: 'delivery',
+            label: 'Delivery',
+            count: deliveryRequests.length + activeDeliveryOffers.length,
+            live: liveDeliveryCount,
+          },
+        ] as const).map((item) => {
+          const live = 'live' in item ? item.live : 0
+          const incoming = 'count' in item ? item.count : 0
+          const navLabel = [
+            item.label,
+            incoming > 0 ? `${incoming} new` : null,
+            live > 0 ? `${live} active` : null,
+          ]
+            .filter(Boolean)
+            .join(', ')
+
+          return (
+            <button
+              key={item.id}
+              type="button"
+              className={driverView === item.id ? 'secondary-action compact-button mini-nav-item is-active' : 'secondary-action compact-button mini-nav-item'}
+              onClick={() => setDriverView(item.id)}
+              aria-current={driverView === item.id ? 'page' : undefined}
+              aria-label={navLabel}
+              title={navLabel}
+            >
+              {item.label}
+              {incoming > 0 ? <span className="mini-nav-badge">{incoming}</span> : null}
+              {live > 0 ? <span className="has-new-dot" aria-hidden="true"></span> : null}
+            </button>
+          )
+        })}
       </nav>
 
       {driverView === 'profile' ? (
@@ -5061,9 +5355,9 @@ const renderOnlineState = () => (
 
       {renderPakyawanPopup()}
 
-      {renderPakyawanConfirmedPopup()}
+      {renderPakyawanCompletedPopup()}
 
-      {renderDeliveryConfirmedPopup()}
+      {renderPakyawanConfirmedPopup()}
 
       {pakyawanChatAlert ? (
         <PakyawanChatAlertPopup
