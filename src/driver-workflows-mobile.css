@@ -1,0 +1,98 @@
+/* =========================================================
+   DRIVER WORKFLOWS — MOBILE PRESENTATION LAYER
+   Scoped, additive-only styles for the three mobile driver
+   workspaces: Pakyawan, Ride Queue (Ride Now), Delivery.
+
+   - No markup, logic, Supabase, or behavior changes.
+   - Desktop layouts are intentionally untouched.
+   - Shared classes below are used identically by Pakyawan
+     and Delivery cards, so both benefit consistently.
+   ========================================================= */
+
+/* ---- Route overflow safety (Pakyawan + Delivery cards) ---- */
+.pakyawan-route {
+  min-width: 0;
+}
+
+.pakyawan-route span,
+.pakyawan-route strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Customer row: wrap instead of squeeze on narrow screens ---- */
+.pakyawan-customer {
+  flex-wrap: wrap;
+  row-gap: 4px;
+}
+
+.pakyawan-customer span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+/* ---- Section headings: keep badges from squeezing titles ---- */
+.state-heading > div:first-child,
+.section-heading > div:first-child {
+  min-width: 0;
+}
+
+/* ---- Offer accent: dispatch offers read as actionable ---- */
+.pakyawan-item.pakyawan-offer {
+  border-color: rgba(255, 107, 26, 0.4);
+  box-shadow:
+    0 1px 2px rgba(7, 16, 18, 0.05),
+    0 6px 18px rgba(255, 107, 26, 0.1);
+}
+
+/* ---- Price proposal box (quote/fare priority, Pakyawan + Delivery) ---- */
+.pakyawan-price-box {
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: var(--color-gray-50);
+  border: 1px solid var(--border);
+}
+
+.pakyawan-price-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.pakyawan-price-row .input-field {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.pakyawan-price-row .secondary-action {
+  flex: 0 0 auto;
+}
+
+/* ---- Proof photo: never overflow its card ---- */
+.proof-preview {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
+}
+
+/* ---- Touch targets in driver action rows (44px minimum) ---- */
+.pakyawan-actions .compact-button,
+.pak-req-actions .compact-button,
+.notification-actions .compact-button,
+.notification-actions .ghost-button {
+  min-height: 44px;
+}
+
+/* ---- Narrow screens: stack, don't squeeze ---- */
+@media (max-width: 380px) {
+  .pak-req-split {
+    grid-template-columns: 1fr;
+  }
+
+  .driver-contact-actions {
+    grid-template-columns: 1fr;
+  }
+}

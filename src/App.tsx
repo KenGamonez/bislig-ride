@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import './App.css'
+import './driver-workflows-mobile.css'
 import { DriverLogin } from './components/DriverLogin'
 import { CustomerExperience } from './pages/CustomerExperience'
 import { DriverExperience } from './pages/DriverExperience'
